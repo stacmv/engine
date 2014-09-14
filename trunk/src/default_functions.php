@@ -10,7 +10,7 @@ if (!function_exists("apply_template")) {
         global $CFG;
         global $_DATA;
         
-        //dump($_PAGE,"page");
+        // dump($_DATA,"_DATA");
             
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
@@ -400,8 +400,11 @@ if (!function_exists("register_user_ip")) {
 if (!function_exists("render_template")){
     function render_template($template_file, $data = array() ){
         global $CFG;
+        global $_PAGE;
+        global $_USER;
+        
         if ( ! file_exists(TEMPLATES_DIR . $template_file)){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template_file."' for '".$template_name."' is not found.");
+            dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template_file."' is not found.");
             die("Code: df-".__LINE__);
         };
         
@@ -509,10 +512,11 @@ if (!function_exists("userHasRight")){
         global $_USER;
         $user = array();
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        if (!$login && !empty($_USER)){
-            $user = $_USER;
-            
-            $user["acl"] = explode(",",$user["profile"]["acl"]);
+        if ( ! $login ){
+            if ( empty($_USER["profile"]["acl"]) ){
+                return false;
+            };
+            $user_rights = explode(",",$_USER["profile"]["acl"]);
         }else {
             $users_ids = db_find("users", "login", $login);
             if (count($users_ids)==0){
@@ -523,10 +527,10 @@ if (!function_exists("userHasRight")){
                 return false;
             }else{
                 $user = db_get("users", $users_ids[0]);
-                $user["acl"] = explode(",",$user["acl"]);
+                $user_rights = explode(",",$user["acl"]);
             };
         };
-        $res = in_array($right, $user["acl"]);
+        $res = in_array($right, $user_rights);
         
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         return $res;
@@ -538,9 +542,9 @@ if (!function_exists("user_has_access_by_ip")){
         global $_USER;
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
-        // return true; // Отключить проверку IP.
+        return true; // Отключить проверку IP.
         
-        if ( userHasRight("partner") || $_USER["isGuest"] || ! isset($_USER )) return true; // Не ограничивать доступ партнееров, гостей и при вызове из "неинтернактивных" сценариев (lead.php, ...)
+        if ( userHasRight("account") || $_USER["isGuest"] || ! isset($_USER )) return true; // Не ограничивать доступ партнееров, гостей и при вызове из "неинтернактивных" сценариев (lead.php, ...)
         
         if ( ! $ip ) $ip = @$_SERVER["REMOTE_ADDR"];
         
