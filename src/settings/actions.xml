@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+    <action name="REDIRECT">
+        <params>
+            <param name="redirect_uri" type="string" source="state" />
+        </params>
+        <operations>
+            <function file="platform_functions.php" name="redirect" />
+        </operations>
+    </action>
+    <action name="NOT_AUTH">
+        <operations>
+            <function name="set_topmenu" />
+            <function name="show_forbiden" />
+        </operations>
+    </action>
+	<action name="LOGOUT">
+        <operations>
+            <function name="logout" />
+        </operations>
+    </action>
+	<action name="DO_NOTHING">
+        <operations>
+            <function name="set_topmenu" />
+        </operations>
+    </action>
+</actions>
