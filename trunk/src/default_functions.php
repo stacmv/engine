@@ -59,6 +59,15 @@ if (!function_exists("apply_template")) {
         return $HTML;
     };
 };
+if (!function_exists("dosyslog")){
+    function dosyslog($msg){
+              if (function_exists("glog_dosyslog")){
+            glog_dosyslog($msg);
+        }else{
+            die("Err: Nether app dosyslog() nor glog_dosyslog() are defined.");
+        };   
+    };
+};
 if (!function_exists("get_content")){
     function get_content($block_name){
         global $S;
