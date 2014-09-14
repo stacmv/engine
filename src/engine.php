@@ -4,7 +4,11 @@
 function APPLYPAGETEMPLATE(){
     global $_RESPONSE;
     global $_PAGE;
+    global $CFG;
+    
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+
+    if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
     
     if (empty($_PAGE["templates"]["content"]) ) set_template_for_user();
     
@@ -168,7 +172,6 @@ function IDENTICATE(){
 			if($user_profile){
 				$_USER["isUser"] = true;
 				$_USER["isGuest"] = false;
-				$_USER["isPartner"] = @$user_profile["partnerId"] ? true : false;
 				$_USER["isBot"] = @$user_profile["isBot"];
 				$_USER["profile"] = $user_profile;
 			}else{
