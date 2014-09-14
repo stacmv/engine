@@ -8,7 +8,7 @@ if (!function_exists("apply_template")) {
         global $_USER;
         global $_PAGE;
         global $CFG;
-        global $S;
+        global $_DATA;
         
         //dump($_PAGE,"page");
             
@@ -25,35 +25,20 @@ if (!function_exists("apply_template")) {
             die("Code: df-".__LINE__);
         };
         
-        if (empty($_PAGE->templates)){
-            dosyslog(__FUNCTION__.": FATAL ERROR: There no templates defined for page '".$_PAGE["uri"]."'. Check pages XML.");
+        if ( empty($_PAGE["templates"]) ){
+            dosyslog(__FUNCTION__.": FATAL ERROR: There no templates defined for page '".$_PAGE["uri"]."'. Check pages file.");
             die("Code: df-".__LINE__);
         };
-        $isFound = false;
-        foreach($_PAGE->templates->template as $xmltemplate){
-            if ($xmltemplate["name"] == $template_name){
-                
-                $template = (string) $xmltemplate;
-                if (file_exists(TEMPLATES_DIR . $template)){
-                    ob_start();
-                        include TEMPLATES_DIR . $template;
-                        $HTML .= ob_get_contents();
-                    ob_end_clean();
-                }else{  
-                    dosyslog(__FUNCTION__.": FATAL ERROR: Template file for '".$template_name."' is not found.");
-                    die("Code: df-".__LINE__);
-                };
-                $isFound = true;
-            };
-        };
+
         
-        if (!$isFound){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Template '".$template_name."' is not defined for page '".$_PAGE["uri"]."'. Check pages XML.");
+        if ( ! empty($_PAGE["templates"][$template_name]) ){
+            $template_file = $_PAGE["templates"][$template_name];
+            $HTML = render_template($template_file, $_DATA);
+        }else{
+            dosyslog(__FUNCTION__.": FATAL ERROR: ".get_callee() . ": Template '".$template_name."' is not defined for page '".$_PAGE["uri"]."'. Check pages file.");
             die("Code: df-".__LINE__);
         };   
-        
-        
-
+ 
         set_content($content_block, $HTML);  
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         return $HTML;
@@ -64,7 +49,7 @@ if (!function_exists("dosyslog")){
               if (function_exists("glog_dosyslog")){
             glog_dosyslog($msg);
         }else{
-            die("Err: Nether app dosyslog() nor glog_dosyslog() are defined.");
+            die("Err: Neither app dosyslog() nor glog_dosyslog() are defined.");
         };   
     };
 };
@@ -89,7 +74,7 @@ if (!function_exists("get_content")){
         $HTML = "";
         if (!empty($_PAGE->contents)){
             $isFound = false;
-            foreach($_PAGE->contents->content as $xmlcontent){
+            foreach($_PAGE["content"] as $xmlcontent){
                 if($xmlcontent["name"] == $block_name){
                     $HTML .= (string) $xmlcontent;
                     $isFound = true;
@@ -169,44 +154,65 @@ if (!function_exists("get_page_rights")){
         
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         $rights = array();
-        if (!empty($page->acl)){
-            foreach($page->acl->right as $xmlright){
-                if (!empty($xmlright["name"])){
-                    $rights[] = $xmlright["name"];
-                }else{
-                    dosyslog(__FUNCTION__.": FATAL ERROR: Found right without name for page '".$page["uri"]."'. Check pages xml.");
-                    die("Code: df-".__LINE__);
-                };
-            };
+        if ( ! empty($page["acl"]) ){
+            if ( is_array($page["acl"]) ){
+                $rights = $page["acl"];
+            }else{
+                dosyslog(__FUNCTION__.": FATAL ERROR: ACL for page '".$page["uri"]."' is ivalid. Check pages file.");
+            }
         }else{
-            // dosyslog(__FUNCTION__.": NOTICE: ACL for page '".$page["uri"]."' is not set.");
+            dosyslog(__FUNCTION__.": NOTICE: ACL for page '".$page["uri"]."' is not set.");
         };
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+   
         return $rights;
     };    
 };
-if (!function_exists("get_pages_xml")){
-    function get_pages_xml(){
+if (!function_exists("get_pages")){
+    function get_pages(){
         
         global $CFG;
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         $xml = false;
         
-        $pages_file = APP_DIR . "settings/pages.xml";
-        $xml = new SimpleXMLElement("<pages />");
-        if(is_file($pages_file)){
-            $xml = simplexml_load_file($pages_file);
-            //dump($xml,"xml");
-            if (!$xml){
-                dosyslog(__FUNCTION__."(".__LINE__."): ERROR: XML file '".$pages_file."' is invalid and can not be parsed.");
-            };
-        }else{
-            dosyslog(__FUNCTION__."(".__LINE__."): FATAL ERROR: CFG[PAGES][xml] file is not exists.");
-            die("Code: df-".__LINE__);
-        };
+
+        $pages_files = array(
+            "app"    => APP_DIR    . "settings/pages.json",
+            "engine" => ENGINE_DIR . "settings/pages.json",
+        );
+        
+        $pages = array();
+        foreach($pages_files as $app=>$file){
+            $str = glog_file_read($file);
+            if ($str){
+                $arr = json_decode($str, true);
+                if ( ! $arr ){
+                    dosyslog(__FUNCTION__.": FATAL ERROR: Can not decode JSON file '".$file."'.");
+                    die("Code: df-".__LINE__);
+                }
+            }else{
+                $arr = array();
+                dosyslog(__FUNCTION__.": FATAL ERROR: Can not read file '".$file."'.");
+                die("Code: df-".__LINE__);
+            }
             
+            if ( !empty($arr["pages"]) ){
+                $pages_tmp  = array();
+                foreach($arr["pages"] as $k=>$v){
+                    $pages_tmp[ $v["uri"] ] = $v;
+                };
+                unset($k,$v);
+            };
+            if ( $pages_tmp ) $pages = array_merge($pages, $pages_tmp);
+            unset($pages_tmp);
+        }
+        unset($app,$file);
+        
+        
+                
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        return $xml;
+     
+        return $pages;
     };
 };
 if (!function_exists("get_template_file")){
@@ -218,19 +224,15 @@ if (!function_exists("get_template_file")){
         
         $template_file = "";
     
-        $isFound = false;        
-        foreach($_PAGE->templates->template as $xmltemplate){
-            if($xmltemplate["name"] == $template_name){
-                $isFound = true;
-                $template_file = (string) $xmltemplate;
-            };
+        if ( ! empty($_PAGE["templates"][$template_name]) ){
+            $template_file = $_PAGE["templates"][$template_name];
         };
         
-        if(!$isFound) {
-            dosyslog(__FUNCTION__.": WARNING: Template '".$template_name."' for page '".$_PAGE["uri"]."' is not found. Check pages XML.");
+        if( ! $template_file) {
+            dosyslog(__FUNCTION__.": WARNING: ".get_callee().": Template '".$template_name."' for page '".$_PAGE["uri"]."' is not found. Check pages file.");
         };
         
-        dosyslog(__FUNCTION__.": NOTICE: Getting template '".$template_name."'... got '".$template_file.".");
+        dosyslog(__FUNCTION__.": NOTICE: Getting template '".$template_name."'... got '".$template_file."'.");
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
         return $template_file;
@@ -352,15 +354,16 @@ if (!function_exists("logout")){
     };
 };
 if (!function_exists("redirect")){
-    function redirect(){
-        
-        global $S;
+    function redirect($redirect_uri = ""){
+       
         global $_RESPONSE;
         global $CFG;
         global $ISREDIRECT;
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
-        $uri = $CFG["URL"]["base"] . @$S["redirect_uri"];
+        $uri = $CFG["URL"]["base"];
+        
+        if ( $redirect_uri ) $uri .= $redirect_uri;
         
         $_RESPONSE["headers"] = array("Location"=>$uri);
         $_RESPONSE["body"] = "<a href='".$uri."'>Click here</a>";
@@ -394,66 +397,49 @@ if (!function_exists("register_user_ip")) {
     }
 
 }
+if (!function_exists("render_template")){
+    function render_template($template_file, $data = array() ){
+        global $CFG;
+        if ( ! file_exists(TEMPLATES_DIR . $template_file)){
+            dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template_file."' for '".$template_name."' is not found.");
+            die("Code: df-".__LINE__);
+        };
+        
+        if (is_array($data)) extract($data);
+        ob_start();
+            include TEMPLATES_DIR . $template_file;
+            $HTML .= ob_get_contents();
+        ob_end_clean();
+
+        return $HTML;
+    }
+}
 if (!function_exists("set_template_file")){
     function set_template_file($template_name,$template_file){
         global $_PAGE;
 
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb."); 
-        dosyslog(__FUNCTION__.": NOTICE: Setting template '".$template_name."'.");
+        dosyslog(__FUNCTION__.": NOTICE: Setting template '".$template_name."' < '".$template_file."'.");
     
-		if (empty($_PAGE->templates->template)){
-            $xmltemplates = $_PAGE->addChild("templates");
-            $xmltemplate = $_PAGE->templates->addChild("template",$template);
-            $xmltemplate = $_PAGE->templates[0]->template;
-            $xmltemplate->addAttribute("name", $template_name); 
+		if ( empty($_PAGE["templates"])) {
+            $_PAGE["templates"] = array();
         };
+          
+        $_PAGE["templates"][$template_name] = $template_file;
 		
-		// Смотрим, какие шаблоны (атрибут name) есть у страницы
-		$t=array();
-		foreach($_PAGE->templates->template as $xmltemplate){
-			$t[] = (string) $xmltemplate["name"];
-		};
 		
-        $i = array_search($template_name, $t); 
-		if ( $i !== false ){ // есть шаблон с именам $template_name
-			$_PAGE->templates->template[$i] = $template_file;
-		}else{
-			$xmltemplate = $_PAGE->templates->addChild("template",$template_file);
-            $xmltemplate["name"] = $template_name;
-        };
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     }; // function
-	
-	
 };
 if (!function_exists("set_content")){
     function set_content($block_name, $content){
-        global $S;
         global $_PAGE;
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         dosyslog(__FUNCTION__.": NOTICE: Setting content block '".$block_name."'.");
         
-        if (empty($_PAGE->contents->content)){
-            $xmlcontents = $_PAGE->addChild("contents");
-            @$xmlcontent = $_PAGE->contents->addChild("content",$content); // ДОРАБОТАТЬ: проверить почему тут возникают Warning'и, например на странице /offer/4.html
-            @$xmlcontent = $_PAGE->contents[0]->content;
-            @$xmlcontent->addAttribute("name", $block_name); 
-            
-            //dump($_PAGE->contents->content,"page");
-            //dump($xmlcontent,"xmlcontent");
-            
-        }else{  //ДОРАБОТАТЬ: эта ветка не протестирована
-            $isAdded = false;
-            foreach($_PAGE->contents->content as $xmlcontent){
-                if($xmlcontent["name"] == $block_name){
-                    $content = "<![CDATA[\n".$content."\n<!]]>";
-                    $isAdded = true;
-                };
-            };
-            if(!$isAdded) {
-                $_PAGE->contents->addChild("<content name='".$block_name."'><![CDATA[\n".$content."\n<!]]></content>");
-            };
-        };
+        if (empty($_PAGE["content"])) $_PAGE["content"] = array();
+        $_PAGE["content"][$block_name] = $content;
+        
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     };
 };
@@ -489,8 +475,8 @@ if (!function_exists("show_page")){
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
         
-        if (empty($_PAGE->templates)){
-            dosyslog(__FUNCTION__.": FATAL ERROR: There no templates defined for page '".$_PAGE["uri"]."'. Check pages XML.");
+        if (empty($_PAGE["templates"])){
+            dosyslog(__FUNCTION__.": FATAL ERROR: There no templates defined for page '".$_PAGE["uri"]."'. Check pages file.");
             die();
         };
         
@@ -499,7 +485,7 @@ if (!function_exists("show_page")){
         $isFound = false;
         
         
-        foreach($_PAGE->templates->template as $xmltemplate){
+        foreach($_PAGE["templates"]->template as $xmltemplate){
             if ($xmltemplate["name"] == $template_name){
                 $template = (string) $xmltemplate;
                 if (file_exists($articles_dir . $template)){
@@ -513,7 +499,7 @@ if (!function_exists("show_page")){
             if ($isFound) break;
         };
         
-        if ( ! $isFound ) dosyslog(__FUNCTION__.": WARNING: Template 'content' is not found in page templates. Check pages XML.");
+        if ( ! $isFound ) dosyslog(__FUNCTION__.": WARNING: Template 'content' is not found in page templates. Check pages file.");
         
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     };
@@ -525,6 +511,7 @@ if (!function_exists("userHasRight")){
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         if (!$login && !empty($_USER)){
             $user = $_USER;
+            
             $user["acl"] = explode(",",$user["profile"]["acl"]);
         }else {
             $users_ids = db_find("users", "login", $login);

@@ -753,7 +753,8 @@ function db_get_table_from_xml($db_table){
     $db_table = db_get_table($db_table);
     
     $db_file = APP_DIR . "settings/db.xml";
-    $xml = simplexml_load_file($db_file);
+    $xml = xml_load_file($db_file);
+    $isFound = false;
     if ($xml){
         foreach($xml->db as $xmldb){
             if ($db_name == (string) $xmldb["name"]){
@@ -766,7 +767,6 @@ function db_get_table_from_xml($db_table){
 
     if (!$isFound){
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
-        debug_print_backtrace();
         die("platform_db:no-db-in-xml-1");
     };
     
