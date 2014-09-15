@@ -527,7 +527,12 @@ function SETPARAMS(){
                             dosyslog(__FUNCTION__.": ERROR: Parameter '". $fparam_name . "' of type '" . $fparam["type"] . "' does not satisfy to type requirements. Discarded. Action '" . $action . "'. URI: '" . $_URI ."'.");
                         };
                         break;
-                        
+                    case "array":
+                        if (!is_array($tmp)){
+                            $tmp = NULL;
+                            dosyslog(__FUNCTION__.": ERROR: Parameter '". $fparam_name . "' of type '" . $fparam["type"] . "' does not satisfy to type requirements (is not an array). Discarded. Action '" . $action . "'. URI: '" . $_URI ."'.");
+                        }
+                        break;
                     case "phone":
                         if (function_exists("validate_phone")){
                             $tmp = validate_phone($tmp);

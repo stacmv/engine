@@ -434,6 +434,14 @@ if (!function_exists("set_template_file")){
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     }; // function
 };
+if (!function_exists("set_template_for_form")){
+    function set_template_for_form(){
+        global $_PARAMS;
+        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        set_template_file("content", get_template_file($_PARAMS["action"]."_".$_PARAMS["db_name"]));
+        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    };
+};
 if (!function_exists("set_content")){
     function set_content($block_name, $content){
         global $_PAGE;
