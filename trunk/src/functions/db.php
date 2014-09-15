@@ -10,8 +10,6 @@ $_DB = array();
 **
 ** ******************************************************** */
 function db_add($db_table, $data, $comment=""){
-    
-    global $S;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
     
@@ -56,24 +54,20 @@ function db_add($db_table, $data, $comment=""){
                 $changes[$k]["to"] = $v;
             };
             
-            if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, $changes)){
+            if ( ! db_add_history($db_table, $added_id, $_USER["profile"]["id"], "db_add", $comment, $changes)){
                 // ДОРАБОТАТЬ: реализовать откат операции INSERT
                 
                 dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
-                $S["_DB_RESULT"] = "fail";
                 if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
                 return false;
             };
             
         };
             
-        $S["_DB_RESULT"] = "success";
-        $S["_DB_ADDED_ID"] = $added_id;
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        return true;
+        return  $added_id;
     }else{
-        $S["_DB_RESULT"] = "fail";
-        return false;    
+        return false;
     }    
 };
 function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $changes){
@@ -84,11 +78,19 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $ch
     $comment .= " IP:" . @$_SERVER["REMOTE_ADDR"];
     
     $db_name =  db_get_name($db_table);
-    
+    $table_name = db_get_table($db_table);
+
     db_set($db_name . ".history");
     
+
+    if ($db_name == $table_name){
+        $db = $db_name;
+    }else{
+        $db = $db_table;
+    };
+    
     $record = array(
-        "db"            =>  $db_table,
+        "db"            =>  $db,
         "objectId"      =>  (int) $objectId,
         "subjectId"     =>  (int) $subjectId,
         "action"        =>  $action,
@@ -267,7 +269,6 @@ function db_delete($db_table, $id, $comment=""){
     $object = db_get($id);
     if (empty($object)) {
         dosyslog(__FUNCTION__.": Attempt to delete object which is absent in DB '".$db_table."'. ID='".$id."'.");
-        $S["_DB_RESULT"] = "fail";
         return array(false, "wrong_id");
     };
     
@@ -275,14 +276,12 @@ function db_delete($db_table, $id, $comment=""){
     
     if (!array_key_exists("isDeleted", $object)){
         dosyslog(__FUNCTION__.": Attempt to delete object from DB '".$db_table."' which does not support delete operation. ID='".$id."'.");
-        $S["_DB_RESULT"] = "fail";
         return array(false, "delete_not_supported");
     };
     
     // Check if object is already deleted - field 'isDeleted' is set to some value.
     if (!empty($object["isDeleted"])){
         dosyslog(__FUNCTION__.": Attempt to delete object which is already deleted ('".date("Y-m-d H:i:s",$object["isDeleted"])."') from DB '".$db_table."'. ID='".$id."'.");
-        $S["_DB_RESULT"] = "success";
         return array(true, "already_deleted");
     };
     
@@ -295,7 +294,6 @@ function db_delete($db_table, $id, $comment=""){
        
     if (!$res){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'.");
-        $S["_DB_RESULT"] = "fail";
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         return array(false,"db_fail");
     }else{  
@@ -307,13 +305,11 @@ function db_delete($db_table, $id, $comment=""){
                 // ДОРАБОТАТЬ: реализовать откат операции UPDATE
                 
                 dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table od db '".$db_table."'.");
-                $S["_DB_RESULT"] = "fail";
                 if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
                 return array(false, "history_fail");
             };
         };
         
-        $S["_DB_RESULT"] = "success";
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         return array(true,"success");
         
@@ -321,16 +317,15 @@ function db_delete($db_table, $id, $comment=""){
 }
 function db_edit($db_table, $id, $changes, $comment=""){
     
-    global $S;
+    global $_USER;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
     
     //dump($comment,"comment");
     $dbh = db_set($db_table);
-    $object = db_get($id);
+    $object = db_get($db_table, $id);
     if (empty($object)) {
         dosyslog(__FUNCTION__.": Attempt to edit object which is absent in DB '".$db_table."'. ID='".$id."'.");
-        $S["_DB_RESULT"] = "fail";
         return array(false, "wrong_id");
     };
     
@@ -344,7 +339,6 @@ function db_edit($db_table, $id, $changes, $comment=""){
     
     if (empty($changes)){
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " No changes.");
-         $S["_DB_RESULT"] = "no-changes";
         return array(true, "no_changes");
     };
     
@@ -359,7 +353,6 @@ function db_edit($db_table, $id, $changes, $comment=""){
                 // dump($S["db_name"],"db_name");
                 // dump($object,"object");
                 // die();
-                $S["_DB_RESULT"] = "fail";
                 return array(false,"changes_conflict");
             };
         };
@@ -388,24 +381,33 @@ function db_edit($db_table, $id, $changes, $comment=""){
        
     if (!$res){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'.");
-        $S["_DB_RESULT"] = "fail";
         return array(false,"db_fail");
     }else{  
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Update db: '".$query."'");
         
-        if ($S["_DB_TABLE"] !== "history") {
-                        
-            if (!db_add_history($db_table, $id, @$_USER["profile"]["id"], "db_edit", $comment, $changes)){
+        if (db_get_table($db_table) !== "history") {
+            
+            if ( $_USER["isUser"] ){
+                if ( !empty($_USER["profile"]["id"]) ){
+                    $user_id = $_USER["profile"]["id"];
+                }else{
+                    dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " [" . $db_table . "]: user id is not set. Query: '".$query."'.");
+                    die("Code: db-" . __LINE__);
+                }
+            }elseif($_USER["isGuest"]){
+                $user_id = 0;
+            }else{
+              dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " [" . $db_table . "]: unkkown user. Query: '".$query."'.");
+              die("Code: db-" . __LINE__);
+            };
+            
+            if (!db_add_history($db_table, $id, $user_id, "db_edit", $comment, $changes)){
                 // ДОРАБОТАТЬ: реализовать откат операции UPDATE
                 
                 dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table od db '".$db_table."'.");
-                $S["_DB_RESULT"] = "fail";
                 return array(false, "history_fail");
             };
         };
-        
-        $S["_DB_RESULT"] = "success";
-        
  
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         return array(true,"success");
@@ -697,10 +699,8 @@ function db_select($db_table, $select_query){
         while ( ($row = $res->fetch(PDO::FETCH_ASSOC) ) !== false) {
             $result[] = $row;
         };
-		$S["_DB_RESULT"] = "success";
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  '".db_error($dbh)."'. Query: '".$select_query."'.");
-		$S["_DB_RESULT"] = "fail";
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
