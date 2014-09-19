@@ -2,6 +2,7 @@
 
 if (!defined("TEST_MODE")) define ("TEST_MODE", false);
 define("DB_NOTICE_QUERY",true); // писать запросы в лог
+define("DB_LIST_DELIMITER", "||"); // разделитель элементов в полях типа list
 
 $_DB = array();
 
@@ -11,9 +12,9 @@ $_DB = array();
 ** ******************************************************** */
 function db_add($db_table, $data, $comment=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    global $_USER;
+    
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
-    
-    
     
 	$dbh = db_set($db_table);
     $table_name = db_get_table($db_table);
@@ -26,18 +27,24 @@ function db_add($db_table, $data, $comment=""){
             $tmp[] = $k;
         };
     };
+    $tmp[] = "created";
+    
     $query .= implode(", ",$tmp);
     
     $query .= ") VALUES (";
     
     $tmp = array();
     foreach($data as $k=>$v){
-       if ( ($v!==NULL) && ($v!==false) ){
+       if (is_array($v)){
+            $tmp[] = $dbh->quote( implode(DB_LIST_DELIMITER, $v) );
+       }elseif ( ($v!==NULL) && ($v!==false) ){
 			$tmp[] = $dbh->quote($v);
         }elseif($v === NULL){
 			$tmp[] = "NULL";
 		};
     };
+    
+    $tmp[] = time();
 
     $query .= implode(", ",$tmp);
     
@@ -129,7 +136,7 @@ function db_check_schema($db_table){ // проверяет схему табли
 	$fields_to_del = array(); // поля, которые должны быть удалены (и за "бэкаплены" в поле extra)
 	
 	foreach($tables as $table){
-		$xml_table = db_get_table_from_xml($db_name, $table);
+		$xml_table = db_get_table_schema($db_name, $table);
 		if (empty($xml_table)){
 			echo "<p class='alert alert-warning'>Таблица ".$db_name.".".$table." не определена в XML.<p>";
 			continue;
@@ -256,8 +263,7 @@ function db_check_schema($db_table){ // проверяет схему табли
 	
 };
 function db_delete($db_table, $id, $comment=""){
-    
-    global $S;
+    global $_USER;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
     // или ДОРАБОТАТЬ: переписать функцию с использование db_edit.
@@ -266,7 +272,7 @@ function db_delete($db_table, $id, $comment=""){
     
 	$dbh = db_set($db_table);
 	
-    $object = db_get($id);
+    $object = db_get($db_table, $id);
     if (empty($object)) {
         dosyslog(__FUNCTION__.": Attempt to delete object which is absent in DB '".$db_table."'. ID='".$id."'.");
         return array(false, "wrong_id");
@@ -299,16 +305,14 @@ function db_delete($db_table, $id, $comment=""){
     }else{  
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Update db (delete): '".$query."'");
         
-        if ($S["_DB_TABLE"] !== "history") {
-                        
-            if (!db_add_history($db_table, $id, @$_USER["user_id"], "db_delete", $comment, array())){
-                // ДОРАБОТАТЬ: реализовать откат операции UPDATE
-                
-                dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table od db '".$db_table."'.");
-                if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-                return array(false, "history_fail");
-            };
+        if (!db_add_history($db_table, $id, $_USER["id"], "db_delete", $comment, array())){
+            // ДОРАБОТАТЬ: реализовать откат операции UPDATE
+            
+            dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table od db '".$db_table."'.");
+            if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+            return array(false, "history_fail");
         };
+
         
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         return array(true,"success");
@@ -348,18 +352,12 @@ function db_edit($db_table, $id, $changes, $comment=""){
             if (($what!="pass") && ($changes[$what]["from"]!=="")){
                 dosyslog(__FUNCTION__.": WARNING: " . get_callee() . " Changes conflict: object state changed during editing time.");
                 // dump($changes,"changes");
-                // dump($S["_DB_NAME"],"_DB_NAME");
-                // dump($S["_DB_TABLE"],"_DB_TABLE");
-                // dump($S["db_name"],"db_name");
                 // dump($object,"object");
-                // die();
+                // die("Code: changes_conflict");
                 return array(false,"changes_conflict");
             };
         };
     };
-    
-    
-    
     
     // Create query.
          
@@ -372,6 +370,7 @@ function db_edit($db_table, $id, $changes, $comment=""){
             $tmp[] = $k."=".$dbh->quote($v["to"])."";
         }
     };
+    $tmp[] = "modified = '" . time(). "'";
     $query .= implode(", ",$tmp);
     
     $query .= " WHERE id=".$id.";";
@@ -440,9 +439,20 @@ function db_find($db_table, $field, $keyOrValue, $value=false, $returnDeleted=fa
     
     $table = db_get_table($db_table);
     
-    $table_schema = db_get_table_from_xml($db_table);
-    $field_xml = $table_schema->xpath("field[@name='".$field."']");
-    $field_type = (string) $field_xml[0]["type"];
+    $table_schema = db_get_table_schema($db_table);
+    $field_data = null;
+    foreach($table_schema as $v){
+        if ($v["name"] == $field){
+            $field_data = $v;
+            break;
+        };
+    };
+    if ( ! $field_data ){
+        dosyslog(__FUNCTION__.": ERROR: Field '".$field."' does not exist in ".$db_table." schema. Check DB config.");
+        return array();
+    }
+    
+    $field_type = $field_data["type"];
         
     
     if($dbh) {
@@ -509,33 +519,56 @@ function db_get($db_table, $id){
     
     if ($res){
         $result = $res->fetchAll(PDO::FETCH_ASSOC); //  ДОРАБОТАТЬ: добавить обработку ситуации, когда найдено более одной запсии.
-        if (!empty($result)) $result = $result[0]; 
+        if (!empty($result)){
+            $result = $result[0]; 
+           
+            // Поля типа list преобразовать в массив
+            $schema = db_get_table_schema($db_table);
+            foreach($schema as $field){
+                if ($field["type"] == "list"){
+                
+                    if (isset($result[$field["name"]]) ){
+                        if (strpos($result[$field["name"]], DB_LIST_DELIMITER) !== false){
+                            $result[$field["name"]] = explode(DB_LIST_DELIMITER, trim($result[$field["name"]], DB_LIST_DELIMITER));
+                        }else{
+                            $result[$field["name"]] = array($result[$field["name"]]);
+                        };
+                    };
+                };
+            };
+        };
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh).". Query: ".$query);
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $result;
 };
-function db_get_list($db_table, $field = "id", $limit=""){
-    
-    global $S;
+function db_get_list($db_table, array $fields = array("id"), $limit=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     // ДОРАБОТАТЬ: проверить существования поля $field в БД.
+    
     $dbh = db_set($db_table);
 	
     $result = array();
     
-    $table = db_get_table($db_table);
+    $table_name = db_get_table($db_table);
     
     if($dbh) {
-        $query = "SELECT DISTINCT ".$field." FROM ".$table.($limit?" LIMIT ".((int)$limit):"").";";
+        $query = "SELECT DISTINCT ".implode(", ",$fields)." FROM ".$table_name.($limit?" LIMIT ".((int)$limit):"").";";
         
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
         $res = $dbh->query($query);
         if ($res){
             $tmp = $res->fetchAll(PDO::FETCH_ASSOC); 
-            foreach($tmp as $k=>$v) $result[] = $v[$field];
-            //dump($result,"result");
+            if (count($fields == 1)){
+                foreach($tmp as $k=>$v){
+                    if ( ! empty($v["id"]) ){
+                        $result[ $v["id"] ] = $v;
+                    }else{
+                        $result[] = $v[ $fields[0] ];
+                    };
+                };
+            };
         }else{
             dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh).". Query: ".$query);
         };
@@ -714,7 +747,7 @@ function db_get_create_table_query($db_table){
 
     $dbh = new PDO("sqlite::memory:");
     
-    $table = db_get_table_from_xml($db_table);
+    $table = db_get_table_schema($db_table);
     
     if (empty($table)){
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not get table '".$db_table."' from XML.");
@@ -726,7 +759,7 @@ function db_get_create_table_query($db_table){
     $query = "CREATE TABLE ".$dbh->quote($table_name);
     
     $aTmp = array();
-    foreach($table->field as $field){
+    foreach($table as $field){
         $tmp = (string) $field["name"];
         $type = (string) $field["type"];
         switch ($type){
@@ -741,7 +774,7 @@ function db_get_create_table_query($db_table){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $query;
 }; 
-function db_get_table_from_xml($db_table){
+function db_get_table_schema($db_table){
     
     global $CFG;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -766,22 +799,32 @@ function db_get_table_from_xml($db_table){
     };
 
     if (!$isFound){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
-        die("platform_db:no-db-in-xml-1");
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
+        return false;
     };
     
     if (!empty($db->table)){
         foreach($db->table as $xmltable){
             if ($db_table == $xmltable["name"]){
                 $table = $xmltable;
+                $table = xml_to_array($table);
                 break;
             };
         };
     };
     if (empty($table)){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not find table '".$db_table."' definition in db '".$db_name."' XML.");
-        die("platform_db:no-db-in-xml-2");
+        dosyslog(__FUNCTION__.": WARNING: " . get_callee() . " Can not find table '".$db_table."' definition in db '".$db_name."' XML.");
+        return false;
     };
+    
+     //
+    $tmp = $table["field"];
+    $table = array();
+    foreach($tmp as $v){
+        $table[] = $v["@attributes"];
+    };
+    unset($v, $tmp);
+    //
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $table;
