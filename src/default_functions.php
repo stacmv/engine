@@ -3,47 +3,94 @@
 **  ACTIONS
 **
 ** ******************************************************** */
-if (!function_exists("apply_template")) {
-    function apply_template($template_name, $content_block = ""){
-        global $_USER;
-        global $_PAGE;
-        global $CFG;
-        global $_DATA;
+if (!function_exists("check_application_already_in_db")){
+    function check_application_already_in_db($application){
+    
+        $already_in_db = array();
         
-        // dump($_DATA,"_DATA");
+        if ( empty($application) ){
+            dosyslog(__FUNCTION__.": ERROR: Application id is not set.");
+            die("Code: df-".__LINE__);
+        };
             
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+       // Проверка уникальности имени
         
-        dosyslog(__FUNCTION__.": NOTICE: Applying template '".$template_name."'.");
-        
-        if ( ! $content_block ) $content_block = $template_name;
-        
-        $HTML = "";
-        
-        if ( ! defined("TEMPLATES_DIR") ){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Templates directory is not set. Check define file.");
-            die("Code: df-".__LINE__);
+        $ids = db_find("users", "name", $application["name"]);
+        if (!empty($ids)){
+            $already_in_db["name"]["users"] = array();
+            foreach($ids as $id){
+                $already_in_db["name"]["users"][$id] = get_username_by_id($id,true);
+            };
         };
+        unset($ids, $id);
         
-        if ( empty($_PAGE["templates"]) ){
-            dosyslog(__FUNCTION__.": FATAL ERROR: There no templates defined for page '".$_PAGE["uri"]."'. Check pages file.");
-            die("Code: df-".__LINE__);
+        $ids = db_find("applications", "name",$application["name"]);
+        if (!empty($ids)){
+            $already_in_db["name"]["applications"] = array();
+            foreach($ids as $id){
+                if ($id !== $application["id"]){
+                    $already_in_db["name"]["applications"][] = $id;
+                };
+            };
         };
+        unset($ids, $id);
+        
+        
+        // Проверка уникальности телефона            
+        $ids = db_find("users", "phone",$application["phone"]);
+        if (!empty($ids)){
+            $already_in_db["phone"]["users"] = array();
+            foreach($ids as $id){
+                $already_in_db["phone"]["users"][] = get_username_by_id($id, true);
+            };
+        };
+        unset($ids, $id);
+        
+        $ids = db_find("accounts", "phone",$application["phone"]);
+        if (!empty($ids)){
+            $already_in_db["phone"]["accounts"] = array();
+            foreach($ids as $id){
+                $already_in_db["phone"]["accounts"][] = get_account_name_by_id($id);
+            };
+        };
+        unset($ids, $id);
+        
+        $ids = db_find("applications", "phone",$application["phone"]);
+        if (!empty($ids)){
+            $already_in_db["phone"]["applications"] = array();
+            foreach($ids as $id){
+                if ($id !== $application["id"]){
+                    $already_in_db["phone"]["applications"][] = $id;
+                };
+            };
+        };
+        unset($ids, $id);
+        
+        // Проверка уникальности e-mail
+        $ids = db_find("users", "email",$application["email"]);
+        if (!empty($ids)){
+            $already_in_db["email"]["users"] = array();
+            foreach($ids as $id){
+                $already_in_db["email"]["users"][] = get_username_by_id($id, true);
+            };
+        };
+        unset($ids, $id);
+        
+        $ids = db_find("applications", "email",$application["email"]);
+        if (!empty($ids)){
+            $already_in_db["email"]["applications"] = array();
+            foreach($ids as $id){
+                if ($id !== $application["id"]){
+                    $already_in_db["email"]["applications"][] = $id;
+                };
+            };
+        };
+        unset($ids, $id);
+        
+        return $already_in_db;
+    }
 
-        
-        if ( ! empty($_PAGE["templates"][$template_name]) ){
-            $template_file = $_PAGE["templates"][$template_name];
-            $HTML = render_template($template_file, $_DATA);
-        }else{
-            dosyslog(__FUNCTION__.": FATAL ERROR: ".get_callee() . ": Template '".$template_name."' is not defined for page '".$_PAGE["uri"]."'. Check pages file.");
-            die("Code: df-".__LINE__);
-        };   
- 
-        set_content($content_block, $HTML);  
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        return $HTML;
-    };
-};
+}
 if (!function_exists("dosyslog")){
     function dosyslog($msg){
               if (function_exists("glog_dosyslog")){
@@ -53,63 +100,16 @@ if (!function_exists("dosyslog")){
         };   
     };
 };
-if (!function_exists("get_content")){
-    function get_content($block_name){
-        global $S;
-        global $CFG;
-        global $_USER;
-        global $_PAGE;
-        
-        static $blocks_chain = array();
-        
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        dosyslog(__FUNCTION__.": NOTICE: Getting content block '".$block_name."'.");
-        
-        if (in_array($block_name,$blocks_chain)) {
-            return ""; // don't parse block if it contained in itself directly or indirectly.
-        }else{
-            array_push($blocks_chain, $block_name);
-        };
-           
-        $HTML = "";
-        if (!empty($_PAGE->contents)){
-            $isFound = false;
-            foreach($_PAGE["content"] as $xmlcontent){
-                if($xmlcontent["name"] == $block_name){
-                    $HTML .= (string) $xmlcontent;
-                    $isFound = true;
-                    dosyslog(__FUNCTION__.": NOTICE: Found block '".$block_name."' in page contents.");
-                };
-            };
-        };
-        
-        if(!$HTML) {
-            $HTML = apply_template($block_name);
-        };
-           
-        if ($HTML){
-            $res = preg_replace_callback("/%%([\w\d_\-\s]+)%%/",create_function('$m','return get_content($m[1]);'),$HTML); // all %%block%% replacing with result of get_content("block")
-                
-            $res = preg_replace_callback("/{cfg_(\w+)}/", create_function('$m', 'global $CFG; return $CFG["GENERAL"][$m[1]];'), $res);
-            
-            
-            if ($res !== NULL) {
-                $HTML = $res;
-                dosyslog(__FUNCTION__.": NOTICE: Included in '".$block_name."' blocks parsed.");
-            }else{
-                dosyslog(__FUNCTION__.": ERROR: There is an error in preg_replace_callback() while parsing block '".$block_name."'.");
-            };
-        }else{
-            dosyslog(__FUNCTION__.": ERROR: Content block '".$block_name."' for page '".$_PAGE["uri"]."' is not found.");
-        };
-        
-        if (array_pop($blocks_chain) !== $block_name) {
-            dosyslog(__FUNCTION__.": ERROR: Logic error in blocks chain.");
-        };
-           
-       
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        return $HTML;
+if (!function_exists("get_application_statuses")){
+    function get_application_statuses(){
+        return array(
+            4	=>	"подтвержденная",
+            8	=>	"на модерации",
+            1	=>	"не подтвержденная",
+            0	=>	"попытка заполнения",
+            16	=>	"одобренная",
+            32	=>	"отклоненная"
+        );
     };
 };
 if (!function_exists("get_gravatar")) {
@@ -148,25 +148,6 @@ if (!function_exists("get_page_by_uri")){
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         return false;
     };
-};
-if (!function_exists("get_page_rights")){
-    function get_page_rights($page){ // input - page, output - rights list
-        
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        $rights = array();
-        if ( ! empty($page["acl"]) ){
-            if ( is_array($page["acl"]) ){
-                $rights = $page["acl"];
-            }else{
-                dosyslog(__FUNCTION__.": FATAL ERROR: ACL for page '".$page["uri"]."' is ivalid. Check pages file.");
-            }
-        }else{
-            dosyslog(__FUNCTION__.": NOTICE: ACL for page '".$page["uri"]."' is not set.");
-        };
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-   
-        return $rights;
-    };    
 };
 if (!function_exists("get_pages")){
     function get_pages(){
@@ -216,28 +197,28 @@ if (!function_exists("get_pages")){
     };
 };
 if (!function_exists("get_template_file")){
-    function get_template_file($template_name){
+    // function get_template_file($template_name){
         
-        global $_PAGE;
-        global $S;
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");    
+        // global $_PAGE;
+        // global $S;
+        // if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");    
         
-        $template_file = "";
+        // $template_file = "";
     
-        if ( ! empty($_PAGE["templates"][$template_name]) ){
-            $template_file = $_PAGE["templates"][$template_name];
-        };
+        // if ( ! empty($_PAGE["templates"][$template_name]) ){
+            // $template_file = $_PAGE["templates"][$template_name];
+        // };
         
-        if( ! $template_file) {
-            dosyslog(__FUNCTION__.": WARNING: ".get_callee().": Template '".$template_name."' for page '".$_PAGE["uri"]."' is not found. Check pages file.");
-        };
+        // if( ! $template_file) {
+            // dosyslog(__FUNCTION__.": WARNING: ".get_callee().": Template '".$template_name."' for page '".$_PAGE["uri"]."' is not found. Check pages file.");
+        // };
         
-        dosyslog(__FUNCTION__.": NOTICE: Getting template '".$template_name."'... got '".$template_file."'.");
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        // dosyslog(__FUNCTION__.": NOTICE: Getting template '".$template_name."'... got '".$template_file."'.");
+        // if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
-        return $template_file;
+        // return $template_file;
         
-    }; // function
+    // }; // function
 };
 if (!function_exists("get_user_registered_ip")){
     function get_user_registered_ip($user_id="", $login="", $ip="", $register_new_ip = false){
@@ -316,30 +297,6 @@ if (!function_exists("get_user_registered_ip")){
         return $result;   
     }
 }
-if (!function_exists("import_tsv")){
-    function import_tsv($filename, $convertToUTF8=false, $returnHeaderOnly = false){
-        
-
-        $file = @file($filename);
-     
-        $res = false;
-        if (!$file){
-            dosyslog(__FUNCTION__."(".__LINE__."): ошибка: не найден или пустой файл '".$filename."'");
-        }else{
-            
-            $header = explode("\t", trim($file[0]));
-            if ($returnHeaderOnly) return $header;
-
-            // $res = parse_csv(implode("\n", $file), "\t"); 
-            
-            $importer = new CsvImporter($filename, true);
-            $res = $importer->get();
-            
-        };
-        
-        return $res;
-    };
-};
 if (!function_exists("logout")){
     function logout(){
         
@@ -350,27 +307,6 @@ if (!function_exists("logout")){
         unset($_SESSION["to"]);        
         $_SESSION["NOTLOGGED"] = true;
         unset($_SESSION["LOGGEDAS"]);
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    };
-};
-if (!function_exists("redirect")){
-    function redirect($redirect_uri = ""){
-       
-        global $_RESPONSE;
-        global $CFG;
-        global $ISREDIRECT;
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        
-        $uri = $CFG["URL"]["base"];
-        
-        if ( $redirect_uri ) $uri .= $redirect_uri;
-        
-        $_RESPONSE["headers"] = array("Location"=>$uri);
-        $_RESPONSE["body"] = "<a href='".$uri."'>Click here</a>";
-        
-        dosyslog(__FUNCTION__.": NOTICE: Prepare for  redirect to '".$uri."'.");
-        
-        $ISREDIRECT = true;
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     };
 };
@@ -397,26 +333,63 @@ if (!function_exists("register_user_ip")) {
     }
 
 }
-if (!function_exists("render_template")){
-    function render_template($template_file, $data = array() ){
+if (!function_exists("send_message")){
+    function send_message($emailOrUserId, $template, $data, $options=""){
         global $CFG;
-        global $_PAGE;
-        global $_USER;
         
-        if ( ! file_exists(TEMPLATES_DIR . $template_file)){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template_file."' is not found.");
+        if (! defined("EMAIL_TEMPLATES_DIR") ){
+            dosyslog(__FUNCTION__.": FATAL ERROR: Email templates dir is not defined. Emails could not be sent.");
             die("Code: df-".__LINE__);
         };
         
-        if (is_array($data)) extract($data);
-        ob_start();
-            include TEMPLATES_DIR . $template_file;
-            $HTML .= ob_get_contents();
-        ob_end_clean();
+        if (is_numeric($emailOrUserId)){
+            
+            $user = db_get("users", $emailOrUserId);
+            if (empty($user) || empty($user["email"])){
+                dosyslog(__FUNCTION__.": User width id '".@$emailOrUserId."' is not found. Message could not be sent.");
+                return false;
+            };
+            $email = $user["email"];
+        }else{
+            $email = $emailOrUserId;
+        };
+        
+        $t = glog_file_read(EMAIL_TEMPLATES_DIR.$template.".htm");
+        if (empty($t)){
+            dosyslog(__FUNCTION__.": ERROR: Email template is empty or template file '".$template."' is not found in email templates dir.");
+            if ($t == "") die("Code: df-".__LINE__); // убиваемся при ошибке конфигурирования (пустой шаблон), но работаем, если произошла ошибка чтения в продакшене
+            return false;
+        };
+        
+        // parse template.
+        
+        $t = str_replace("\r\n", "\n", $t);
+        $t = str_replace("\r", "\n", $t);
+        if (!empty($data) && is_array($data)){
+            foreach($data as $k=>$v){
+                $t = str_replace("%%".$k."%%", $v, $t);
+            };
+        };
+        $t = preg_replace("/%%[^%]+%%/","",$t); // удаляем все placeholders для которых нет данных во входных параметрах.
+        
+        $tmp = @explode("\n\n",$t,2);
+        $subject = @$tmp[0];
+        $message = @$tmp[1];
+        
+        if (!$subject){
+            dosyslog(__FUNCTION__.": WARNING: Subject is not set in email template '".$template."'.");
+            $subject = "Email from ".@$_SERVER["HTTP_HOST"];
+        };
+        if (!$message) dosyslog(__FUNCTION__.": WARNING: Empty message body in template '".$template."'.");
+        
+        $res = @mail($email, $subject, $message, "FROM:".$CFG["GENERAL"]["system_email"]."\nREPLY-TO:".$CFG["GENERAL"]["admin_email"]."\ncontent-type: text/html; charset=UTF-8");
+        
+        dosyslog(__FUNCTION__."\t".@$template."\t".@$emailOrUserId."\t".$email."\t".($res? "success" : "fail")."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
+        
+        return $res;    
+    };
+};
 
-        return $HTML;
-    }
-}
 if (!function_exists("set_template_file")){
     function set_template_file($template_name,$template_file){
         global $_PAGE;
@@ -434,26 +407,6 @@ if (!function_exists("set_template_file")){
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     }; // function
 };
-if (!function_exists("set_template_for_form")){
-    function set_template_for_form(){
-        global $_PARAMS;
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        set_template_file("content", get_template_file($_PARAMS["action"]."_".$_PARAMS["db_name"]));
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    };
-};
-if (!function_exists("set_content")){
-    function set_content($block_name, $content){
-        global $_PAGE;
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        dosyslog(__FUNCTION__.": NOTICE: Setting content block '".$block_name."'.");
-        
-        if (empty($_PAGE["content"])) $_PAGE["content"] = array();
-        $_PAGE["content"][$block_name] = $content;
-        
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    };
-};
 if (!function_exists("show")){
     function show($var){
         global $CFG;
@@ -466,6 +419,113 @@ if (!function_exists("show")){
         else return false;
         
     }
+};
+if (!function_exists("prepare_application_data")){
+    function prepare_application_data($application_id){
+        global $_DATA;
+        
+        $application = db_get("applications", $application_id);
+        $already_in_db = array();
+        
+        if ( empty($application) ){
+            dosyslog(__FUNCTION__.": ERROR: Application id is not set.");
+            die("Code: df-".__LINE__);
+        }else{
+            
+           // Проверка уникальности имени
+            
+            $ids = db_find("users", "name", $application["name"]);
+            if (!empty($ids)){
+                $already_in_db["name"]["users"] = array();
+                foreach($ids as $id){
+                    $already_in_db["name"]["users"][$id] = get_username_by_id($id,true);
+                };
+            };
+            unset($ids, $id);
+            
+            $ids = db_find("applications", "name",$application["name"]);
+            if (!empty($ids)){
+                $already_in_db["name"]["applications"] = array();
+                foreach($ids as $id){
+                    if ($id !== $application["id"]){
+                        $already_in_db["name"]["applications"][] = $id;
+                    };
+                };
+            };
+            unset($ids, $id);
+            
+            
+            // Проверка уникальности телефона            
+            $ids = db_find("users", "phone",$application["phone"]);
+            if (!empty($ids)){
+                $already_in_db["phone"]["users"] = array();
+                foreach($ids as $id){
+                    $already_in_db["phone"]["users"][] = get_username_by_id($id, true);
+                };
+            };
+            unset($ids, $id);
+            
+            $ids = db_find("accounts", "phone",$application["phone"]);
+            if (!empty($ids)){
+                $already_in_db["phone"]["accounts"] = array();
+                foreach($ids as $id){
+                    $already_in_db["phone"]["accounts"][] = get_account_name_by_id($id);
+                };
+            };
+            unset($ids, $id);
+            
+            $ids = db_find("applications", "phone",$application["phone"]);
+            if (!empty($ids)){
+                $already_in_db["phone"]["applications"] = array();
+                foreach($ids as $id){
+                    if ($id !== $application["id"]){
+                        $already_in_db["phone"]["applications"][] = $id;
+                    };
+                };
+            };
+            unset($ids, $id);
+            
+            // Проверка уникальности e-mail
+            $ids = db_find("users", "email",$application["email"]);
+            if (!empty($ids)){
+                $already_in_db["email"]["users"] = array();
+                foreach($ids as $id){
+                    $already_in_db["email"]["users"][] = get_username_by_id($id, true);
+                };
+            };
+            unset($ids, $id);
+            
+            $ids = db_find("applications", "email",$application["email"]);
+            if (!empty($ids)){
+                $already_in_db["email"]["applications"] = array();
+                foreach($ids as $id){
+                    if ($id !== $application["id"]){
+                        $already_in_db["email"]["applications"][] = $id;
+                    };
+                };
+            };
+            unset($ids, $id);
+            
+            // ----------------------------
+        
+        
+            if (empty($_SESSION["to"])){ //если есть ранее введенные в форму данные, заменим ими данные, полученные из БД и покажем в полях формы.
+                if(!isset($application)) $application = array();
+                foreach($application as $k=>$v){
+                    $_SESSION["to"][$k] = $v;
+                };
+            };
+            
+        };
+        
+        $_DATA["fields_form"] = form_prepare("applications", "edit_application"); // поля заявки, которые заполнил пользователь
+        $_DATA["fields_db"]   = form_prepare("applications", "approve_application"); // поля, которые должны быть заполнены для регистрации (поля формы + поля, которые заполнит менеджер)
+        
+        $_DATA["application"] = $application;
+        $_DATA["already_in_db"] = $already_in_db;
+        $_DATA["statuses"] = get_application_statuses();
+        
+   };
 };
 if (!function_exists("show_forbiden")){
     function show_forbiden(){
@@ -491,7 +551,7 @@ if (!function_exists("show_page")){
             die();
         };
         
-        $articles_dir = APPLICATION_DIR . "ARTICLES/";
+        $articles_dir = APP_DIR . "content/";
         $template_name = "content";
         $isFound = false;
         
@@ -500,7 +560,7 @@ if (!function_exists("show_page")){
             if ($xmltemplate["name"] == $template_name){
                 $template = (string) $xmltemplate;
                 if (file_exists($articles_dir . $template)){
-                    $xmltemplate[0] = str_replace(APPLICATION_DIR, "../", $articles_dir) . $template;
+                    $xmltemplate[0] = str_replace(APP_DIR, "../", $articles_dir) . $template;
                 }else{  
                     dosyslog(__FUNCTION__.": FATAL ERROR: Article file '".$articles_dir . $template."' is not found.");
                     die();
@@ -524,7 +584,7 @@ if (!function_exists("userHasRight")){
             if ( empty($_USER["profile"]["acl"]) ){
                 return false;
             };
-            $user_rights = explode(",",$_USER["profile"]["acl"]);
+            $user_rights = $_USER["profile"]["acl"];
         }else {
             $users_ids = db_find("users", "login", $login);
             if (count($users_ids)==0){
@@ -535,7 +595,7 @@ if (!function_exists("userHasRight")){
                 return false;
             }else{
                 $user = db_get("users", $users_ids[0]);
-                $user_rights = explode(",",$user["acl"]);
+                $user_rights = $user["acl"];
             };
         };
         $res = in_array($right, $user_rights);
@@ -588,68 +648,3 @@ if (!function_exists("user_has_access_by_ip")){
     }
 }
 
-class CsvImporter 
-{ 
-    private $fp; 
-    private $parse_header; 
-    private $header; 
-    private $delimiter; 
-    private $length; 
-    //-------------------------------------------------------------------- 
-    function __construct($file_name, $parse_header=false, $delimiter="\t", $length=8000) 
-    { 
-        $this->fp = fopen($file_name, "r"); 
-        $this->parse_header = $parse_header; 
-        $this->delimiter = $delimiter; 
-        $this->length = $length; 
-        // $this->lines = $lines; 
-
-        if ($this->parse_header) 
-        { 
-           $this->header = fgetcsv($this->fp, $this->length, $this->delimiter); 
-        } 
-
-    } 
-    //-------------------------------------------------------------------- 
-    function __destruct() 
-    { 
-        if ($this->fp) 
-        { 
-            fclose($this->fp); 
-        } 
-    } 
-    //-------------------------------------------------------------------- 
-    function get($max_lines=0) 
-    { 
-        //if $max_lines is set to 0, then get all the data 
-
-        $data = array(); 
-
-        if ($max_lines > 0) 
-            $line_count = 0; 
-        else 
-            $line_count = -1; // so loop limit is ignored 
-
-        while ($line_count < $max_lines && ($row = fgetcsv($this->fp, $this->length, $this->delimiter)) !== FALSE) 
-        { 
-            if ($this->parse_header) 
-            { 
-                foreach ($this->header as $i => $heading_i) 
-                { 
-                    $row_new[$heading_i] = @$row[$i]; 
-                } 
-                $data[] = $row_new; 
-            } 
-            else 
-            { 
-                $data[] = $row; 
-            } 
-
-            if ($max_lines > 0) 
-                $line_count++; 
-        } 
-        return $data; 
-    } 
-    //-------------------------------------------------------------------- 
-
-} 

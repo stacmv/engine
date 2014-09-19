@@ -10,9 +10,10 @@ function APPLYPAGETEMPLATE(){
 
     if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
     
-    if (empty($_PAGE["templates"]["content"]) ) set_template_for_user();
-    
-    $_RESPONSE["body"] = get_content("page");
+    if (! empty($_PAGE["templates"]["page"]) ){
+        if (empty($_PAGE["templates"]["content"]) ) set_template_for_user();
+        $_RESPONSE["body"] = get_content("page");
+    };
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
@@ -70,8 +71,6 @@ function AUTHORIZE(){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     
-    $page_rights = get_page_rights($_PAGE);
-	
 	if ( ! isset($_USER["isUser"]) || ! isset($_USER["autentication_type"]) ) {
 		dosyslog(__FUNCTION__.": FATAL ERROR: User is not IDENTICATEd and/or authenticated. Functions IDENTICATE() and AUTENTICATE() have to be called before AUTHORIZE(). User: '".serialize($_USER)."'.");
         dump($_USER);
@@ -83,9 +82,9 @@ function AUTHORIZE(){
     
     $access = true;
        
-    if ( ! empty($page_rights)){
+    if ( ! empty($_PAGE["acl"]) ){
         if ( $_USER["autentication_type"] !== "none" ){
-            foreach($page_rights as $right){
+            foreach($_PAGE["acl"] as $right){
                 $right = (string) $right;
                 if ( ! userHasRight( $right ) ){
                     dosyslog(__FUNCTION__.": User '".$_USER["profile"]["login"]."' has not right '" . $right. "' for page '" . (string)$_PAGE["uri"]."'.");
@@ -143,9 +142,8 @@ function IDENTICATE(){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 	$_USER = array("isUser"=>false, "isGuest"=>false, "isPartner"=>false, "isBot"=>false, "autentication_type"=>false);
-	$page_rights = get_page_rights($_PAGE);
-    
-    if (  ! empty($page_rights) &&
+
+    if (  ! empty($_PAGE["acl"]) &&
           ( !isset($_SERVER["PHP_AUTH_USER"]) || 
             ( ($_SERVER["PHP_AUTH_USER"] != @$_SESSION["LOGGEDAS"]) && ! empty($_SESSION["LOGGEDAS"]) )  ||
             isset($_SESSION["NOTLOGGED"])
@@ -441,7 +439,7 @@ function SETPARAMS(){
                 case "post":
                     $tmp = isset($_POST[$fparam_name]) ? $_POST[$fparam_name] : null;
                     if ("file" == $fparam["type"]){
-                        if ( $_FILES[$fparam_name]["name"] ){
+                        if ( !empty($_FILES[$fparam_name]["name"]) ){
                             $tmp = FILES_DIR . get_filename(pathinfo($_FILES[$fparam_name]["name"],PATHINFO_FILENAME)."__".time(), ".".pathinfo($_FILES[$fparam_name]["name"],PATHINFO_EXTENSION));
                         }else{
                             $tmp = null;
@@ -517,9 +515,9 @@ function SETPARAMS(){
                         break;
                     case "list":
                         if (is_string($tmp)){
-                            $tmp = explode(",",$tmp); foreach($tmp as $kl=>$vl) $tmp[$kl] = trim($vl);
+                            $tmp = explode(DB_LIST_DELIMITER,$tmp); foreach($tmp as $kl=>$vl) $tmp[$kl] = trim($vl);
                         }else{
-                            $tmp = explode(",",implode(",",$tmp)); foreach($tmp as $kl=>$vl) $tmp[$kl] = trim($vl);
+                            $tmp = explode(DB_LIST_DELIMITER,implode(",",$tmp)); foreach($tmp as $kl=>$vl) $tmp[$kl] = trim($vl);
                         };
                         
                         if (!$tmp){
@@ -567,13 +565,15 @@ function SETPARAMS(){
             
             $_PARAMS[$fparam_name] = $tmp;
             
-            // dump($tmp,"param[".$fparam_name."]");
+            if ($fparam_name == "to") $_SESSION["to"] = $tmp; // сохраняем ввод пользователя в сессию
             
         }; // foreach
     }; // if
-   
+    
+    dosyslog(__FUNCTION__.": NOTICE: Params set: {". urldecode(http_build_query($_PARAMS)) . "} for page '".$_PAGE["uri"]."'.");
+    
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-   
+    return $_PARAMS;
 };
 
 

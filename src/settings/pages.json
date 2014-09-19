@@ -13,7 +13,7 @@
 		"title":"Вход в систему",
 		"actions": ["redirect"],
 		"templates": {
-			"content":"empty.htm",
+			"content":"login.htm",
 			"page":"page.htm",
 			"login_form":"login_form.block.htm"
 		},
@@ -29,7 +29,7 @@
 		},
 		"actions": ["import_first_user"],
 		"templates": {
-			"content":"empty.htm",
+			"content":"html.htm",
 			"page":"page.htm"
 		}
 	},

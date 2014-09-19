@@ -4,118 +4,137 @@ function add_data_action($db_table=""){
     global $_DATA;
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    $db_name = $_PARAMS["db_name"]."s";  //uri: add/account.html, but db = accounts; add/user => users.
-    if (!$db_table) $db_table = $db_name;
+    
+    if (!$db_table){
+        $db_table = $_PARAMS["object"]."s";  //uri: add/account.html, but db = accounts; add/user => users.
+    };
     
     $result = "";
     
     // Проверка прав доступа 
         if ( ! user_has_access_by_ip() ){
-            $S["action"] = "add"; // needed by set_session_msg();
             dosyslog(__FUNCTION__ . ": WARNING: Отказ в обслуживании.");
-            $result = "deny";
+            return array(false, "deny");
         }
     //
     
-    $table = db_get_table_from_xml($db_name, $db_table);
     
-    $isDataValid = true;
-    $data=array();
-    foreach($table as $field){
-        $type = (string) $field["type"];
-        $name = (string) $field["name"];
-        
-        if($type=="file"){
-            if ( ! is_dir(FILES_DIR) ) mkdir(FILES_DIR, 0777, true);
-            if ($_PARAMS[$name] && !move_uploaded_file($_FILES[$name]["tmp_name"],$S[$name])){
-                dosyslog(__FUNCTION__.": ERROR: Can not move uploaded file to storage path '".$S["name"]);
-                die("Code: a-" . __LINE__);
-            };           
-        };
-        
-                        
-        $res = validate_data($field, @$_PARAMS[$name], "add", $db_name, $db_table);
-        if ($res[0]){
-            if (!empty($res[1])) {
-                $S["msg"][] = array(
-                    "class"=> "alert alert-info",
-                    "text"=>$res[1]
-                );
-            };
-            if (!empty($res[2])){
-                $data[$name] = $res[2];
-            }else{
-                
-                if (!empty($_PARAMS[$name])){
-                    switch($type){
-                        case "list":
-                            $data[$name] = implode(",",$_PARAMS[$name]);
-                            break;
-                        case "json":
-                            $data[$name] = json_encode($_PARAMS[$name]);
-                            break;
-                        default:
-                            $data[$name] = $_PARAMS[$name];
-                    };
-                };
-            };
-        }else{
-            $isDataValid = false;
-            dosyslog(__FUNCTION__ . ": WARNING: Поле '" . $name . "' = '".$_PARAMS[$name]."' не валидно.");
-            if (!empty($res[1])) {
-                if (!isset($_SESSION["msg"])) $_SESSION["msg"] = array();
-                $_SESSION["msg"][] = array(
-                    "class"=> "alert alert-error",
-                    "text"=>$res[1]
-                );
-            };
-        };
-    };//foreach
+    list($res, $reason) = add_data($db_table, $_PARAMS);
     
-     
-    foreach($data as $what=>$v){
-        $data[$what] = htmlspecialchars($data[$what]);
-    };
-    
-
-    if ($isDataValid){
-            
-            $comment = get_db_comment($db_name . ($db_table != $db_name ? ":" . $db_table : ""),"add",$data);
-            
-            $added_id = db_add($db_name.".".$db_table, $data,$comment);
-            if ( ! $added_id ){
-                dosyslog(__FUNCTION__ . ": WARNING: Ошибка db_add().");
-                $result = "fail";
-            }else{
-                $result = "success";
-            };
-            
-    }else{
-        dosyslog(__FUNCTION__ . ": WARNING: Данные не валидны.");
-        $result = "fail";
-    };   
-    $S["action"] = "add"; // needed by set_session_msg();
-    
-    if ($result == "fail"){
-        $_SESSION["to"] = array();
-        foreach($data as $what=>$v){
-             $_SESSION["to"][$what] = $data[$what]; // needed in store_userinput_in_session();
-        };
+       
+    if (! $res){
+        $_SESSION["to"] = $_PARAMS["to"];
     }else{
         unset($_SESSION["to"]);
     };   
     
-    
-    
-    dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$result);
+    dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    if ($res){
+        redirect($db_table);
+    }else{
+        redirect("form/add/".$_PARAMS["object"]);
+    };
 
-    $_DATA["db_name"] = $db_name;
-    $_DATA["action"] = "add";
-    $_DATA["result"] = $result;
-    return ! empty($added_id) ? array(true, $added_id) : array(false, $result);
 };
+function approve_application_action(){
+    global $_PARAMS;
+    global $_DATA;
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    
+    
+    $result = "";
+    
+    // Проверка прав доступа 
+        if ( ! user_has_access_by_ip() ){
+            dosyslog(__FUNCTION__ . ": WARNING: Отказ в обслуживании.");
+            return array(false, "deny");
+        }
+    //
+    
+    if ( ! userHasRight("manager") ) return array(false, "deny");
+    
+    list($res, $reason) = edit_data("applications", $_PARAMS);
+    set_session_msg("applications_edit_".$reason,$reason);
+    if (! $res){
+        
+    
+    }else{
+        $_PARAMS["to"]["acl"] = "access||consultant";
+        unset($_PARAMS["to"]["status"]);
+        list($res, $reason) = add_data("users", $_PARAMS);
+        if (! $res){
+            set_session_msg("users_edit_".$reason,"error");
+        }
+    };
+    
+       
+    if (! $res){
+        $_SESSION["to"] = $_PARAMS["to"];
+        set_session_msg("applications_approve_".$reason,"error");
+    }else{
+        unset($_SESSION["to"]);
+    };   
+    
+    dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    if ($res){
+        redirect("applications");
+    }else{
+        redirect("form/approve/".$_PARAMS["object"]."/".$_PARAMS["id"]);
+    };
+    
+    
+    
+};
+function confirm_email_action(){
+    global $CFG;
+    global $_PARAMS;
+    global $_DATA;
+    
+    
+    $code = @$_PARAMS["id"];
+    
+    if(empty($code)) {
+        dosyslog(__FUNCTION__.": ERROR: Mandatory parameter id is not set. Check pages file.");
+        return false;
+    };
 
+    $code_c = explode("...",$code);
+    
+    $id = $code_c[0];
+    
+    $application = db_get("applications", $id);
+    if ($application){
+        if ( ($application["status"] == 1) || ($application["status"] == 4) ){
+            if ( ($md5 = md5($application["email"].date("Y-m-d",$application["created"]).$id) == $code_c[1]) && ($code_c[2] == $application["email"]) ){
+                list($res,$reason) = db_edit("applications", $id, array("status"=>array("from"=>$application["status"],"to"=>4)), "Подтвержден e-mail '".@$application["email"]."'.");
+                if ($res){
+                    dosyslog(__FUNCTION__.": NOTICE: E-mail '".@$application["email"]."' confirmed with code: ".$code.".");
+                    $application["status"] = 4;
+                }else{
+                    dosyslog(__FUNCTION__.": ERROR: E-mail '".@$application["email"]."' confirmation with code: ".$code.". is not registered in DB.");
+                };
+                
+            }else{
+                dosyslog(__FUNCTION__.": WARNING: Somebody (IP:'".@$_SERVER["REMOTE_ADDR"]."') tries to confirm e-mail '".@$code[2]."' for application (id: '".@$id."') with invalide code '".@$code."'.");
+            };
+        }else{
+            dosyslog(__FUNCTION__.": NOTICE: Somebody (IP:'".@$_SERVER["REMOTE_ADDR"]."') tries to confirm e-mail '".@$code[2]."' for application (id: '".@$id."') which is already confirmed.");
+        };
+    }else{
+        dosyslog(__FUNCTION__.": ERROR: Somebody (IP:'".@$_SERVER["REMOTE_ADDR"]."') tries to confirm e-mail '".@$code[2]."' for application (id: '".@$id."') which is not found in DB.");
+    };
+    
+    
+    $_DATA["application_id"] = $id;
+    $_DATA["application_status"] = $application["status"];
+    
+};
 function do_nothing_action(){
     // do nothing
 }
@@ -132,15 +151,18 @@ function edit_data_action(){
         }
     //
     
-	$db_name = $_PARAMS["db_name"]."s";  //uri: add/account.html, but db = accounts; add/user => users.
-	
+    $object = ! empty($_PARAMS["object"]) ? $_PARAMS["object"] : null;
+    if ( ! $object ){
+        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'object' is not set. Check form or pages file.");
+        die("Code: ea-".__LINE__);
+    };
     
-    $err_msg_prefix = "";
+	$err_msg_prefix = "";
     if (userHasRight("manager")){
-		switch ($db_name){
-			case "users": $err_msg_prefix = "Данные пользователя: ";break;
-			case "accounts": $err_msg_prefix = "Данные партнера: ";break;
-			case "applications": $err_msg_prefix = "Данные заявки: ";break;
+		switch ($object){
+			case "user": $err_msg_prefix = "Данные пользователя: ";break;
+			case "account": $err_msg_prefix = "Данные партнера: ";break;
+			case "application": $err_msg_prefix = "Данные заявки: ";break;
 			default: $err_msg_prefix = "";
 		};
         $err_msg = array(
@@ -152,9 +174,9 @@ function edit_data_action(){
             "no_changes"=>$err_msg_prefix."Данные в БД не изменились."
         );
     }else{
-		switch ($db_name){
-			case "users": $err_msg_prefix = "Личные данные: ";break;
-			case "accounts": $err_msg_prefix = "Платежные данные: ";break;
+		switch ($object){
+			case "user": $err_msg_prefix = "Личные данные: ";break;
+			case "account": $err_msg_prefix = "Платежные данные: ";break;
 		};
         $err_msg = array(
             "success" => $err_msg_prefix."Изменения сохранены",
@@ -164,168 +186,118 @@ function edit_data_action(){
             "history_fail" => $err_msg_prefix."Произошла ошибка.  Обратитесь к менеджеру партнерской программы.",
             "no_changes"=>$err_msg_prefix."Нет изменений."
         );
-    };    
-    
-    $isDataValid = true;
-    
-    $id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
-    
-    if (!$id){
-        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'objectId' is not set. Check pages XML and edit form template.");
-        die("Code: ea-" . __LINE__);
-    };
-    
-    $table = db_get_table_from_xml($db_name);
-     
-    $isDataValid = true;
-    $changes=array();
-    $_PARAMS["to"] = (array) $_PARAMS["to"];
-    $_PARAMS["from"] = (array) $_PARAMS["from"];    
-    
+    };  
 
+    list($res, $reason) = edit_data($object."s", $_PARAMS, "", $err_msg);
     
-    foreach($_PARAMS["to"] as $key=>$value){
-        $type = "";
-        foreach($table as $field){ // есть ли такое поле в таблице БД?
-            if ( (string) (string) $field["name"] == $key) {
-                $type = (string) $field["type"];
-                $name = (string) (string) $field["name"];
-                break;
-            }
-        };
-        
-        if ( ! $type){
-            dosyslog(__FUNCTION__ . ": ERROR: Parameter '".$key."' does not found in DB.");
-            $isDataValid = false;
-           
-            $S["msg"][] = array(
-                "class"=> "alert alert-error",
-                "text"=> "Ошибка в поле '".htmlspecialchars($key)."'. Поле не существует."
-            );
-            break;
-        }
-        
-        if($type=="file"){
-            if (!empty($_PARAMS[$name])){
-                if ( ! is_dir(FILES_DIR) ) mkdir(FILES_DIR, 0777, true);
-                if (move_uploaded_file($_FILES[$name]["tmp_name"],$_PARAMS[$name])){
-                    dosyslog(__FUNCTION__.": NOTICE: File '".$name."' moved to storage path.");
-                    $_PARAMS["to"][$name] = $_PARAMS[$name];
-                }else{
-                    dosyslog(__FUNCTION__.": ERROR: Can not move uploaded file to storage path '".$_PARAMS["name"]);
-                    die("Code: ea-" . __LINE__);
-                };
-            };           
-        };
-        
-        $res = validate_data($field, $_PARAMS["to"][$name], "edit", $db_name, $_PARAMS["from"][$name]);
-        
-        // dump($name,"name");
-        // dump($type,"type");
-        // dump(@$_PARAMS["to"][$name],"value");
-        // dump($res,"validate");
-        
-        if ($res[0]){   
-            if (!empty($res[1])) {
-                if ( empty($_SESSION["msg"]) ) $_SESSION["msg"] = array();
-                $_SESSION["msg"][] = array(
-                    "class"=> "alert alert-info",
-                    "text"=>$res[1]
-                );
-            };
-            
-            
-            if (!empty($res[2])){
-                $changes[$name]["to"] = $res[2];
-                $changes[$name]["from"] = $_PARAMS["from"][$name];
-               
-            }else{
-                
-                if (isset($_PARAMS["to"][$name])){
-                    $changes[$name]["from"] = $_PARAMS["from"][$name];
-                    switch($type){
-                        case "list":
-                            $changes[$name]["to"] = implode(",",(array) $_PARAMS["to"][$name]);
-                            break;
-                        case "json":
-                            $changes[$name]["to"] = json_encode($_PARAMS["to"][$name]);
-                            break;
-                        default:
-                            $changes[$name]["to"] = $_PARAMS["to"][$name];
-                    };
-                };
-            };
-        }else{
-            $isDataValid = false;
-            if (empty($res[1])) $res[1] = "Ошибка в поле '".(string) $field["name"]."'.";
-            
-            if ( empty($_SESSION["msg"]) )$_SESSION["msg"] = array();
-            $_SESSION["msg"][] = array(
-                "class"=> "alert alert-error",
-                "text"=>$res[1]
-            );
-        };
-    };//foreach
-    
-    foreach ($changes as $what=>$v){
-        $changes[$what]["from"] = htmlspecialchars($changes[$what]["from"]);
-        $changes[$what]["to"] = htmlspecialchars($changes[$what]["to"]);
-        if ($changes[$what]["from"] == $changes[$what]["to"]){
-            unset($changes[$what]);
-        };
-    };
-    
-
-    if ($isDataValid){
-            
-            // dump($_PARAMS["from"],"from");
-            // dump($_PARAMS["to"],"to");
-            // dump($changes,"changes");
-            
-
-            $comment = get_db_comment($db_name,"edit",$changes);
-            
-            list($res, $reason) = db_edit($db_name, $id, $changes, $comment);
-            
-            if ($reason) {
-                $tmp = array(
-                    "class"=> "alert ".($reason=="success"?"alert-success":($reason=="no_changes"?"alert-info":"alert-error")),
-                    "text"=> isset($err_msg[$reason]) ? $err_msg[$reason] : "Ошибка БД. Код ошибки: ".@$reason
-                
-                );
-                switch(@$reason){
-                    case "changes_conflict":
-                    case "no_changes":
-                        $tmp["actions"][] = array("action"=>"repeat_edit", "href" => "form/edit/".$S["db_name"]."/".$id.$CFG["URL"]["ext"], "caption" => "Повторить редактирование");
-                        break;
-                };                
-                if ( empty($_SESSION["msg"]) )$_SESSION["msg"] = array();
-                $_SESSION["msg"][] = $tmp;
-            };
-            
-            
+    if (! $res){
+        $_SESSION["to"] = $_PARAMS["to"];
+        set_session_msg($object."s_edit_".$reson);
     }else{
-        $reason = "fail";
+        unset($_SESSION["to"]);
     };   
     
-    dosyslog(__FUNCTION__.": NOTICE: result: ".$res."; reason: ".$reason);
+    dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
+    
+
+    if ($res){
+        $redirect_uri = $object."s";
+        if ( ($object == "application") ){
+            $redirect_uri = "process_application/".$_PARAMS["id"];
+        };
+        redirect($redirect_uri);
+    }else{
+        redirect("form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
+    };
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+};
+function delete_data_action(){
+    global $_PARAMS;
+    global $_DATA;
+    
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
-    $_DATA["result"] = $reason;
+    // Проверка прав доступа 
+        if ( ! user_has_access_by_ip() ){
+            return array(false,"deny");
+        }
+    //
     
-    return array($res, $reason);
+    
+	$id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
+	if (!$id){
+		dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter id is not set. Check form.");
+		die("Code: ea-".__LINE__);
+	};
+	
+    $db_table = $_PARAMS["object"] . "s"; 
+    $result = "fail";
+    
+    $confirm = ! empty($_PARAMS["confirm"]) ? $_PARAMS["confirm"] : null;
+    
+    if ($confirm){
+        
+		$item = db_get($db_table, $id);
+		if ($item){
+			list($res, $reason) = db_delete($db_table, $id, get_db_comment($db_name, "delete", $item) );
+            if ($res){
+                dosyslog(__FUNCTION__.": NOTICE: Object '".$_PARAMS["object"]."' width id '".$id."' is marked as deleted.");
+            }else{
+                dosyslog(__FUNCTION__.": ERROR: WARNING '".$_PARAMS["object"]."' width id '".$id."' is not deleted by reason '".$reason."'.");
+            }
+		}else{
+			dosyslog(__FUNCTION__.": ERROR: Object '".$_PARAMS["object"]."' width id '".$id."' is not found in DB.");
+		};
+        
+    }else{
+        $res = false;
+        $reason = "not_confirmed";
+    }
+    
+    if (! $res){
+        $_SESSION["to"] = $_PARAMS["to"];
+    }else{
+        unset($_SESSION["to"]);
+    };   
+    
+    dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    if ($res){
+        redirect($db_table);
+    }else{
+        redirect("form/edit/".$_PARAMS["object"]);
+    };
+
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
-
 function form_action(){
-
-    set_topmenu_action();
-    set_objects_action();
-    set_template_for_form();
-
+    global $_PARAMS;
+    global $_DATA;
+    
+    $action = $_PARAMS["action"];
+    $object = $_PARAMS["object"];
+    $form_name = $action."_".$object;
+    $db_name = $object ."s";
+    
+    set_objects_action($form_name);
+    
+    if ( $action == "add" ){
+        $_DATA["fields_form"] = form_prepare($db_name, $form_name);
+    }else{
+        if ( ! isset($_DATA[$object]) ){
+            die("Code: ea-".__LINE__);
+        };
+        $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);
+    };
+    
+    set_template_file("content", $form_name . "_form.htm");
 }
 function import_first_user_action(){
     global $_PARAMS;
+    global $_DATA;
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
@@ -344,14 +316,14 @@ function import_first_user_action(){
     
     if (empty($res)){
         if (db_add("users", array("login"=>$login,"pass"=>$pass, "acl"=>$rights), "Импортирован первый пользователь с логином '".$login."' и правами '".$rights."'.") ){
-            set_content("content","<h1>Пользователь импортирован</h1><p>Добавлен пользователь:</p><ul><li><b>login:</b> ".htmlspecialchars($login)."</li><li><b>Пароль:</b> ".htmlspecialchars($pass)."</li><li><b>Права: </b> ".htmlspecialchars($rights)."</li></ul>");
+            $_DATA["html"] = "<h1>Пользователь импортирован</h1><p>Добавлен пользователь:</p><ul><li><b>login:</b> ".htmlspecialchars($login)."</li><li><b>Пароль:</b> ".htmlspecialchars($pass)."</li><li><b>Права: </b> ".htmlspecialchars($rights)."</li></ul>";
             dosyslog(__FUNCTION__.": WARNING: First user imported into db: user '".htmlspecialchars($login)."' with rights '".htmlspecialchars($rights)."' to db. IP:".$_SERVER["REMOTE_ADDR"]);
         }else{
-            set_content("content","<h1>Ошибка импорта пользователя</h1>");
+            $_DATA["html"] = "<h1>Ошибка импорта пользователя</h1>";
             dosyslog(__FUNCTION__.": ERROR: Can not add user '".htmlspecialchars($login)."' with rights '".htmlspecialchars($rights)."' to db. IP:".@$_SERVER["REMOTE_ADDR"]);
         };
     }else{
-        set_content("content","<h1>Операция не доступна</h1>");
+        $_DATA["html"] = "<h1>Операция не доступна</h1>";
         dosyslog(__FUNCTION__.": ERROR: Attempt to import user '".htmlspecialchars($login)."' and rights '".htmlspecialchars($rights)."' to db. IP:".@$_SERVER["REMOTE_ADDR"]);
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -369,114 +341,212 @@ function not_auth_action(){
     }else{
         set_content("page", "<h1>Доступ запрещен</h1>");
     };
+    
+    logout();
 }
-function parse_post_data_action(){
+function process_application_action(){
     global $_PARAMS;
-    global $_PAGE;
+    global $CFG;
+    global $_DATA;
     
-    if (TEST_MODE) $ERROR[] = __FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.";
+    $id = $_PARAMS["id"];
+    if(!$id){
+        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'objectId' is not set.");
+        die("Code: ea-" . __LINE__);
+    };
     
-    $action = $_PARAMS["action"];
-           
-    switch ($action){
-        case "add":
-            $db_name = $_PARAMS["db_name"]."s";  //uri: add/account.html, but db = accounts; add/user => users.
-            $table = db_get_table_from_xml($db_name);
-            foreach($table as $field){
-                $type = (string) $field["type"];
-                switch($type){
-                    case "autoincrement":  // theese parameters set automaticaly, not from user input
-                    case "timestamp":
-                        break;
-                    default:
-                        
-                        $_PAGE["params"][ (string) $field["name"] ] = array(
-                            "type"=> $field["type"],
-                            "source" => "post",
-                        );
-                    
-                }; // switch
-            }; //foreach
-            break;
-        case "edit":
-            $_PAGE["params"]["id"] = array(
-                "type" => "number",
-                "source" => "post",
-            );
-            //
-            $_PAGE["params"]["from"] = array(
-                "type" => "array",
-                "source" => "post",
-            );
-            //
-            $_PAGE["params"]["to"] = array(
-                "type" => "array",
-                "source" => "post",
-            );
-            
-            // Были ли переданы файлы вместе с формой?
-            if (!empty($_FILES)){
-                foreach($_FILES as $k=>$v){
-                    $_PAGE["params"][ $k ] = array(
-                        "type" => "file",
-                        "source" => "post",
-                    );
-                };
-            };            
-            
-            break;
-        case "approve": // approve_application
-            $tables = array("applications", "users", "accounts");
-            foreach ($tables as $db_name){
-                $table = db_get_table_from_xml($db_name);
+    
+    $application = db_get("applications", $id);
+    if (empty($application)){
+        dosyslog(__FUNCTION__.": ERROR: Application with id '".@$id."' is not found in applications DB.");
+        return false;
+    };
+    
+    $status = (int) $application["status"];
+    
+    $_DATA["application_id"] = $id;
+    $_DATA["application_status"] = $status;
+    
+    
+    
+    switch($status){
+        case 0: // если необходимые поля в заявке заполнены, изменить статус на следующий.
+            if ( !empty($_SESSION["application_id"]) && ($id == $_SESSION["application_id"]) ) { // страницу статуса открывает тот, кто заполнил заявку.
+                
+                $table = db_get_table_schema("applications");
+                $res = true;
+                $empty_fields = array();
                 foreach($table as $field){
-                    $type = (string) $field["type"];
-                    switch($type){
-                        case "autoincrement":  // theese parameters set automaticaly, not from user input
-                        case "timestamp":
-                            break;
-                        default:
-                            
-                            $_PAGE["params"][ (string) $field["name"] ] = array(
-                                "type" => $field["type"],
-                                "source" => "post",
-                            );
+                    if ( ! empty($field["required"]) && ($application[ $field["name"] ] == NULL) ){ // если хоть одно из обязательных полей не заполено.
+                        // dump($application,"application");
+                        // die();
+                        $res = false; 
+                        $empty_fields[] = (string)$field["name"];
+                    };
+                };
+                if ($res) {
+                    $md5 = md5($application["email"].date("Y-m-d",$application["created"]).$id);
+                    $confirm_link = $CFG["URL"]["base"] . "confirm_email/".urlencode($id."...".$md5."...".$application["email"]).$CFG["URL"]["ext"];
+                    if (send_message($application["email"], "confirm_email", array("confirm_link"=>$confirm_link, "cfg_app_name"=>$CFG["GENERAL"]["app_name"]))){
                         
-                    }; // switch
-                }; //foreach table
-            }; // foreach tables
+                        list($res_edit, $reason) = db_edit("applications", $id, array("status"=>array("from"=>0,"to"=>1) ),  "Отправлено письмо со ссылкой подтверждения e-mail '".@$application["email"]."'.");
+                        dosyslog(__FUNCTION__.": NOTICE: Confirmation link was sent to e-mail '".@$application["email"]."': ".$confirm_link.".");
+                        
+                        if ( $res ) $_DATA["application_status"] = 1;
+                        
+                    }else{
+
+                        dosyslog(__FUNCTION__.": ERROR:  An error occur while sendinng confirmation link to e-mail '".@$application["email"]."'.");
+                        set_session_msg("applications_process_email_error");
+                        
+                    };
+                }else{
+                    dosyslog(__FUNCTION__.": NOTICE: Confirmation link was NOT sent to e-mail '".@$application["email"]."'.");
+                    dosyslog(__FUNCTION__.": NOTICE: Mandatory fields are not filled: '".implode(", ",$empty_fields)."'. Status remains unchanged: '".@$status."'.");
+                };
+                
+                return $res;
+            };
             break;
-		case "delete": 
-			$_PAGE["params"]["id"] = array(
-                "type" => "number",
-                "source" => "post",
-            );
-			//
-			$_PAGE["params"]["confirm"] = array(
-                "type" => "number",
-                "source" => "post",
-            );
-			break;
-    }; // switch
-    
-           
-    SETPARAMS();
-    if (TEST_MODE) $ERROR[] = __FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.";    
+        
+        case 2:  // email подтвержден
+
+        };   
 };
 function redirect_action(){
     global $_REDIRECT_URI;
     return redirect($_REDIRECT_URI);
 }
+function register_application_action(){ // регистрация в БД новой заявки на регистрацию в партнерской программе.
+    global $CFG;
+    global $_PARAMS;
+  
+	$S["object"] = "application"; // without 's' at the end.
+    $status = 0;     
+    
+    
+    $data = array("status"=>$status);
+    $comment = "Начата регистрация нового партнера.";
+        
+    $added_id = db_add("applications", $data, $comment);
+    
+    if ($added_id){
+        $_SESSION["application_id"] = $added_id;
+        redirect("form/edit/application/" . $added_id);
+        unset($_SESSION["to"]);
+    }else{
+        redirect("process_application");
+        unset($_SESSION["application_id"]);
+    };
+    
 
+};
+function send_registration_approval_action(){
+	
+	global $S;
+	global $DONTSHOWERRORS;
+	
+    // Проверка прав доступа 
+        if ( ! user_has_access_by_ip() ){
+            dosyslog(__FUNCTION__ . ": WARNING: Отказ в обслуживании.");
+            die("Отказ");
+            return false;
+        }
+    //
+    
+	$email = @$S["email"];
+	$email_token = @$S["email_token"];
+	$valid_email_token = md5($email.substr(date("Y-m-d H:i"),0,-1));
+	$login = @$S["login"];
+	$pass = @$S["key"];
+	$name = @$S["name"];
+	
+	$HTML = "";
+	
+	if (!$email){
+		$HTML .= "<div class='alert alert-error'>Не указан e-mail.</div>";
+	}elseif($email_token!==$valid_email_token){
+		$HTML .= "<div class='alert alert-error'>Истекло разрешенное для отправки письма время.</div>";
+	}elseif(empty($login)){
+		$HTML .= "<div class='alert alert-error'>Не указан логин.</div>";
+	}elseif(empty($pass)){
+		$HTML .= "<div class='alert alert-error'>Не указан пароль.</div>";
+	}elseif(empty($name)){
+		$HTML .= "<div class='alert alert-error'>Не указано имя пользователя.</div>";
+	}else{
+		if (send_message($email, 'send_registration_approval', array("name"=>$name, "login"=>$login, "pass"=>$pass, "cfg_app_name"=>$CFG["GENERAL"]["app_name"], "login_url"=>$CFG["app_url"] . $CFG["login_uri"] . $CFG["URL"]["ext"], "cfg_app_url"=>$CFG["app_url"], "cfg_system_email"=>$CFG["GENERAL"]["system_email"]))){
+			$HTML .= "<div class='alert alert-success'>Письмо отправлено.</div>";
+		}else{
+			$HTML .= "<div class='alert alert-error'>Не удалось отправить письмо. <br>Отправьте письмо пользователю самостоятельно. <br><b>Сообщите администратору о проблемах с отправкой e-mail.</b></div>";
+		};
+	};
+	
+	$DONTSHOWERRORS = true;
+	exit($HTML);
+};
+function send_registration_repetition_request_action(){
+	global $CFG;
+	global $_PARAMS;
+
+    // Проверка прав доступа 
+        if ( ! user_has_access_by_ip() ){
+            dosyslog(__FUNCTION__ . ": WARNING: Отказ в обслуживании.");
+            die("Отказ");
+            return false;
+        }
+    //
+	
+	$email = ! empty($_PARAMS["email"]) ? $_PARAMS["email"] : null;
+	$email_token = ! empty($_PARAMS["email_token"]) ? $_PARAMS["email_token"] : null;
+	$valid_email_token = md5($email.substr(date("Y-m-d H:i"),0,-1));
+	$date_str =  ! empty($_PARAMS["date_str"]) ? $_PARAMS["date_str"] : null;
+	$phone =  ! empty($_PARAMS["phone"]) ? $_PARAMS["phone"] : null;
+	$name = ! empty($_PARAMS["name"]) ? $_PARAMS["name"] : null;
+    $app_id = ! empty($_PARAMS["app_id"]) ? $_PARAMS["app_id"] : null;
+	
+	$HTML = "";
+	
+	if ( ! $email ){
+		$HTML .= "<div class='alert alert-error'>Не указан e-mail.</div>";
+	}elseif( $email_token !== $valid_email_token ){
+		$HTML .= "<div class='alert alert-error'>Истекло разрешенное для отправки письма время.</div>";
+	}elseif( empty($phone) ){
+		$HTML .= "<div class='alert alert-error'>Не указан телефон.</div>";
+	}elseif( empty($date_str) ){
+		$HTML .= "<div class='alert alert-error'>Не указана дата.</div>";
+	}elseif( empty($name) ){
+		$HTML .= "<div class='alert alert-error'>Не указано имя пользователя.</div>";
+	}else{
+		if (send_message($email, 'send_registration_repetition_request', array("name"=>$name, "phone"=>$phone, "date_str"=>$date_str, "cfg_app_name"=>$CFG["GENERAL"]["app_name"], "cfg_app_url"=>$CFG["URL"]["base"], "cfg_system_email"=>$CFG["GENERAL"]["system_email"]))){
+			$HTML .= "<div class='alert alert-success'>Письмо отправлено.<p><a href='form/delete/application/".$app_id.".html'>Заявку можно удалить</a></p></div>";
+		}else{
+			$HTML .= "<div class='alert alert-error'>Не удалось отправить письмо. <br>Отправьте письмо пользователю самостоятельно. <br><b>Сообщите администратору о проблемах с отправкой e-mail.</b></div>";
+		};
+	};
+	exit($HTML);
+};
 function set_template_for_user(){
     global $_USER;
+    global $_PAGE;
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     if ($_USER["isUser"] && !$_USER["isGuest"]){
-        set_template_file("content", get_template_file("user"));
+        if ( ! empty($_PAGE["templates"]["user"])){
+            set_template_file("content", $_PAGE["templates"]["user"]);
+        }else{
+            dosyslog(__FUNCTION__.": FATAL ERROR: template 'user' is not set for page '".$_PAGE["uri"]."'");
+            die("Code: ea-".__LINE__);
+        }
     }else{
-        set_template_file("content", get_template_file("guest"));
-		if (get_template_file("page_guest")) set_template_file("page", get_template_file("page_guest"));
+        if ( ! empty($_PAGE["templates"]["guest"])){
+            set_template_file("content", $_PAGE["templates"]["guest"]);
+            if ( ! empty($_PAGE["templates"]["page_guest"])){
+                set_template_file("page", get_template_file("page_guest"));
+            };
+        }else{
+            dosyslog(__FUNCTION__.": FATAL ERROR: template 'guest' is not set for page '".$_PAGE["uri"]."'");
+            die("Code: ea-".__LINE__);
+        }
     };
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");

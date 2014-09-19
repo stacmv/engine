@@ -4,7 +4,8 @@ function xml_load_file($file){
     $sxe = simplexml_load_file($file);
     if (!$sxe) {
         foreach(libxml_get_errors() as $error) {
-            dosyslog(__FUNCTION__.": ERROR: ".get_callee() .": XML ERROR in file '".$file."': " . trim($error->message) );
+            dosyslog(__FUNCTION__.": FATAL ERROR: ".get_callee() .": XML ERROR in file '".$file."': " . trim($error->message) );
+            die("Code: ex-".__LINE__);
         }
         return false;
     }
