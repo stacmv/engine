@@ -8,9 +8,15 @@ function set_session_msg($message, $class="info", array $options=array() ){
     // Класс сообщения
     if ( $class && ($class != "info") ){
         switch($class){
+        case "success":
+            $class="success";
+            break;
         case "error":
         case "fail":
             $class="danger";
+            break;
+        case "no_changes":
+            $class="info";
             break;
         default:
             $class="warning";
@@ -25,6 +31,7 @@ function set_session_msg($message, $class="info", array $options=array() ){
     
     if ( isset($predefined_messages[$message]) ) {  // msg это код предопределенного сообщения
         $msg["text"] = $predefined_messages[$message];
+        $msg["class"] .= " ".$message;
     }else{                                      // msg это произвольный текст (html)
         $msg["text"] = $message;
     };

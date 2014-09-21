@@ -138,4 +138,18 @@ function set_content($block_name, $content){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
+function set_template_file($template_name,$template_file){
+    global $_PAGE;
 
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb."); 
+    dosyslog(__FUNCTION__.": NOTICE: Setting template '".$template_name."' < '".$template_file."'.");
+
+    if ( empty($_PAGE["templates"])) {
+        $_PAGE["templates"] = array();
+    };
+      
+    $_PAGE["templates"][$template_name] = $template_file;
+    
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+}; // function
