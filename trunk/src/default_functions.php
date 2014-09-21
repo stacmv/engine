@@ -19,6 +19,7 @@ if (!function_exists("check_application_already_in_db")){
         if (!empty($ids)){
             $already_in_db["name"]["users"] = array();
             foreach($ids as $id){
+                if ($id == $application["id"]) continue;
                 $already_in_db["name"]["users"][$id] = get_username_by_id($id,true);
             };
         };
@@ -28,7 +29,7 @@ if (!function_exists("check_application_already_in_db")){
         if (!empty($ids)){
             $already_in_db["name"]["applications"] = array();
             foreach($ids as $id){
-                if ($id !== $application["id"]){
+                if ($id != $application["id"]){
                     $already_in_db["name"]["applications"][] = $id;
                 };
             };
@@ -41,6 +42,7 @@ if (!function_exists("check_application_already_in_db")){
         if (!empty($ids)){
             $already_in_db["phone"]["users"] = array();
             foreach($ids as $id){
+                if ($id == $application["id"]) continue;
                 $already_in_db["phone"]["users"][] = get_username_by_id($id, true);
             };
         };
@@ -50,6 +52,7 @@ if (!function_exists("check_application_already_in_db")){
         if (!empty($ids)){
             $already_in_db["phone"]["accounts"] = array();
             foreach($ids as $id){
+                if ($id == $application["id"]) continue;
                 $already_in_db["phone"]["accounts"][] = get_account_name_by_id($id);
             };
         };
@@ -59,7 +62,7 @@ if (!function_exists("check_application_already_in_db")){
         if (!empty($ids)){
             $already_in_db["phone"]["applications"] = array();
             foreach($ids as $id){
-                if ($id !== $application["id"]){
+                if ($id != $application["id"]){
                     $already_in_db["phone"]["applications"][] = $id;
                 };
             };
@@ -71,6 +74,7 @@ if (!function_exists("check_application_already_in_db")){
         if (!empty($ids)){
             $already_in_db["email"]["users"] = array();
             foreach($ids as $id){
+                if ($id == $application["id"]) continue;
                 $already_in_db["email"]["users"][] = get_username_by_id($id, true);
             };
         };
@@ -80,7 +84,7 @@ if (!function_exists("check_application_already_in_db")){
         if (!empty($ids)){
             $already_in_db["email"]["applications"] = array();
             foreach($ids as $id){
-                if ($id !== $application["id"]){
+                if ($id != $application["id"]){
                     $already_in_db["email"]["applications"][] = $id;
                 };
             };
@@ -169,7 +173,7 @@ if (!function_exists("get_pages")){
                 $arr = json_decode($str, true);
                 if ( ! $arr ){
                     dosyslog(__FUNCTION__.": FATAL ERROR: Can not decode JSON file '".$file."'.");
-                    die("Code: df-".__LINE__);
+                    die("Code: df-".__LINE__."-pages_json");
                 }
             }else{
                 $arr = array();
@@ -388,24 +392,6 @@ if (!function_exists("send_message")){
         
         return $res;    
     };
-};
-
-if (!function_exists("set_template_file")){
-    function set_template_file($template_name,$template_file){
-        global $_PAGE;
-
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb."); 
-        dosyslog(__FUNCTION__.": NOTICE: Setting template '".$template_name."' < '".$template_file."'.");
-    
-		if ( empty($_PAGE["templates"])) {
-            $_PAGE["templates"] = array();
-        };
-          
-        $_PAGE["templates"][$template_name] = $template_file;
-		
-		
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    }; // function
 };
 if (!function_exists("show")){
     function show($var){

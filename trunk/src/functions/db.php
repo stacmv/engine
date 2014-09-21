@@ -3,6 +3,7 @@
 if (!defined("TEST_MODE")) define ("TEST_MODE", false);
 define("DB_NOTICE_QUERY",true); // писать запросы в лог
 define("DB_LIST_DELIMITER", "||"); // разделитель элементов в полях типа list
+define("DB_DONT_EXPLODE_LISTS", 1); // флаг для db_get(), что не надо десериализовать поля типа list, т.е. вернуть строку, а не массив.
 
 $_DB = array();
 
@@ -19,6 +20,7 @@ function db_add($db_table, $data, $comment=""){
 	$dbh = db_set($db_table);
     $table_name = db_get_table($db_table);
     
+    $data["created"] = time();
 	
     $query = "INSERT INTO ".$table_name." (";
     $tmp = array();
@@ -27,8 +29,7 @@ function db_add($db_table, $data, $comment=""){
             $tmp[] = $k;
         };
     };
-    $tmp[] = "created";
-    
+
     $query .= implode(", ",$tmp);
     
     $query .= ") VALUES (";
@@ -43,8 +44,6 @@ function db_add($db_table, $data, $comment=""){
 			$tmp[] = "NULL";
 		};
     };
-    
-    $tmp[] = time();
 
     $query .= implode(", ",$tmp);
     
@@ -305,7 +304,7 @@ function db_delete($db_table, $id, $comment=""){
     }else{  
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Update db (delete): '".$query."'");
         
-        if (!db_add_history($db_table, $id, $_USER["id"], "db_delete", $comment, array())){
+        if (!db_add_history($db_table, $id, $_USER["profile"]["id"], "db_delete", $comment, array())){
             // ДОРАБОТАТЬ: реализовать откат операции UPDATE
             
             dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table od db '".$db_table."'.");
@@ -327,7 +326,7 @@ function db_edit($db_table, $id, $changes, $comment=""){
     
     //dump($comment,"comment");
     $dbh = db_set($db_table);
-    $object = db_get($db_table, $id);
+    $object = db_get($db_table, $id, DB_DONT_EXPLODE_LISTS);
     if (empty($object)) {
         dosyslog(__FUNCTION__.": Attempt to edit object which is absent in DB '".$db_table."'. ID='".$id."'.");
         return array(false, "wrong_id");
@@ -340,6 +339,7 @@ function db_edit($db_table, $id, $changes, $comment=""){
             unset($changes[$what]);
         };
     };
+    unset($what, $v);
     
     if (empty($changes)){
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " No changes.");
@@ -347,17 +347,32 @@ function db_edit($db_table, $id, $changes, $comment=""){
     };
     
     // Check if object is in state it supposed to be in.
+    $conflicted = array(); // список полей, у которых состояние from не совпадает с теекущим состоянием в БД.
+    $not_existed = array(); // поля, которые отсутствуют у объекта, взятого из БД.
     foreach ($changes as $what=>$v){
-        if ($changes[$what]["from"] != @$object[$what]){ // при смене пароля оригинальный пароль (или хэш) на сервер от клиента не приходит, только новый.
-            if (($what!="pass") && ($changes[$what]["from"]!=="")){
-                dosyslog(__FUNCTION__.": WARNING: " . get_callee() . " Changes conflict: object state changed during editing time.");
-                // dump($changes,"changes");
-                // dump($object,"object");
-                // die("Code: changes_conflict");
-                return array(false,"changes_conflict");
-            };
+        if ( ! array_key_exists($what, $object) ){
+            $not_existed[] = $what;
+            continue;
+        };
+        
+        if ( ($what == "pass") && ($changes[$what]["from"] == "") ) { // при смене пароля оригинальный пароль (или хэш) на сервер от клиента не приходит, только новый.
+            continue;
+        }
+        
+        if ($changes[$what]["from"] != $object[$what]){ 
+            $conflicted[] = $what . "(from: '".$changes[$what]["from"]."', in db: '".$object[$what]."')";
         };
     };
+    unset($what, $v);
+    
+    if ( ! empty($not_existed) ){
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Theese fields are not exist in [".$db_table."]: ". implode(", ", $not_existed).".");
+    };
+    if ( ! empty($conflicted) ){
+        dosyslog(__FUNCTION__.": WARNING " . get_callee() . " Changes conflict: object state changed during editing time: ". implode(",", $conflicted) . ".");
+        return array(false,"changes_conflict");
+    };
+    
     
     // Create query.
          
@@ -501,7 +516,7 @@ function db_find($db_table, $field, $keyOrValue, $value=false, $returnDeleted=fa
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");   
     return $result;
 };
-function db_get($db_table, $id){
+function db_get($db_table, $id, $flags=0){
     
     global $S;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -522,16 +537,18 @@ function db_get($db_table, $id){
         if (!empty($result)){
             $result = $result[0]; 
            
-            // Поля типа list преобразовать в массив
-            $schema = db_get_table_schema($db_table);
-            foreach($schema as $field){
-                if ($field["type"] == "list"){
-                
-                    if (isset($result[$field["name"]]) ){
-                        if (strpos($result[$field["name"]], DB_LIST_DELIMITER) !== false){
-                            $result[$field["name"]] = explode(DB_LIST_DELIMITER, trim($result[$field["name"]], DB_LIST_DELIMITER));
-                        }else{
-                            $result[$field["name"]] = array($result[$field["name"]]);
+            if ( ! ($flags & DB_DONT_EXPLODE_LISTS) ){
+                // Поля типа list преобразовать в массив
+                $schema = db_get_table_schema($db_table);
+                foreach($schema as $field){
+                    if ($field["type"] == "list"){
+                    
+                        if (isset($result[$field["name"]]) ){
+                            if (strpos($result[$field["name"]], DB_LIST_DELIMITER) !== false){
+                                $result[$field["name"]] = explode(DB_LIST_DELIMITER, trim($result[$field["name"]], DB_LIST_DELIMITER));
+                            }else{
+                                $result[$field["name"]] = array($result[$field["name"]]);
+                            };
                         };
                     };
                 };

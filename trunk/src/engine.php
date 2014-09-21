@@ -10,9 +10,11 @@ function APPLYPAGETEMPLATE(){
 
     if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
     
-    if (! empty($_PAGE["templates"]["page"]) ){
+    if ( ! empty($_PAGE["templates"]["page"]) ){
         if (empty($_PAGE["templates"]["content"]) ) set_template_for_user();
         $_RESPONSE["body"] = get_content("page");
+    }else{
+        die("Code: e-".__LINE__."-page_tmpl");
     };
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -276,11 +278,12 @@ function HASNEXTACTION(){
     global $_ACTIONS;
     global $S;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    $res = false;
+    
     if (isset($_ACTIONS)){
         if (isset($_ACTIONS[0])){
             $res = true;
         }else{ 
+            $res = false;
             dosyslog(__FUNCTION__.": NOTICE: _ACTIONS list is empty.");;
         };
     }else{
@@ -440,7 +443,7 @@ function SETPARAMS(){
                     $tmp = isset($_POST[$fparam_name]) ? $_POST[$fparam_name] : null;
                     if ("file" == $fparam["type"]){
                         if ( !empty($_FILES[$fparam_name]["name"]) ){
-                            $tmp = FILES_DIR . get_filename(pathinfo($_FILES[$fparam_name]["name"],PATHINFO_FILENAME)."__".time(), ".".pathinfo($_FILES[$fparam_name]["name"],PATHINFO_EXTENSION));
+                            $tmp = true;
                         }else{
                             $tmp = null;
                         };
@@ -570,7 +573,11 @@ function SETPARAMS(){
         }; // foreach
     }; // if
     
-    dosyslog(__FUNCTION__.": NOTICE: Params set: {". urldecode(http_build_query($_PARAMS)) . "} for page '".$_PAGE["uri"]."'.");
+    if ( ! empty($_PARAMS) ){
+        dosyslog(__FUNCTION__.": DEBUG: Params set: {". urldecode(http_build_query($_PARAMS)) . "} for page '".$_PAGE["uri"]."'.");
+    }else{
+        dosyslog(__FUNCTION__.": DEBUG: No params are set for page '".$_PAGE["uri"]."'.");
+    }
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $_PARAMS;

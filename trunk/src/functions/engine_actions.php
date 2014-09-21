@@ -20,7 +20,7 @@ function add_data_action($db_table=""){
     
     
     list($res, $reason) = add_data($db_table, $_PARAMS);
-    
+    set_session_msg($db_table."_add_".$reason, $reason);
        
     if (! $res){
         $_SESSION["to"] = $_PARAMS["to"];
@@ -57,21 +57,40 @@ function approve_application_action(){
     
     if ( ! userHasRight("manager") ) return array(false, "deny");
     
-    list($res, $reason) = edit_data("applications", $_PARAMS);
-    set_session_msg("applications_edit_".$reason,$reason);
-    if (! $res){
-        
     
-    }else{
-        $_PARAMS["to"]["acl"] = "access||consultant";
-        unset($_PARAMS["to"]["status"]);
-        list($res, $reason) = add_data("users", $_PARAMS);
-        if (! $res){
-            set_session_msg("users_edit_".$reason,"error");
-        }
+    $application_data = $_PARAMS;
+    
+    // Сохранить измененные данные заявки
+    list($res, $reason) = edit_data("applications", $application_data);
+    set_session_msg("applications_edit_".$reason,$reason);
+    if ($res){
+        
+        $application_data["from"] = $application_data["to"]; // заявка изменена
+        // Создать пользователя-консультанта
+        $user_data = $_PARAMS;
+        $user_data["to"]["acl"] = "access||consultant";
+        $user_data["to"]["is_consultant"] = "yes";
+        unset($user_data["to"]["status"]);
+        
+        list($res, $added_id) = add_data("users", $user_data);
+        $reason = ((int)$added_id) ? "success" : $added_id;
+        set_session_msg("users_add_".$reason,$reason);
+        if ($res){
+            
+            // Записать пароль в сессию
+            $_SESSION["application_key_".$application_data["id"]] = $user_data["to"]["pass"];
+            
+            // Изменить статус заявки на одобренный
+            $application_data["to"]["status"] = 16; // одобрено
+            if ($application_data["from"]["status"] == 32){
+                $application_data["to"]["isDeleted"] = null; // отмена удаления, если одобряемая заявка была до этого удалена
+            };
+            list($res, $reason) = edit_data("applications", $application_data);
+            set_session_msg("applications_approve_".$reason,$reason);
+        };
     };
     
-       
+    // Сохранить введенные данные в сессию
     if (! $res){
         $_SESSION["to"] = $_PARAMS["to"];
         set_session_msg("applications_approve_".$reason,"error");
@@ -82,13 +101,8 @@ function approve_application_action(){
     dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
-    if ($res){
-        redirect("applications");
-    }else{
-        redirect("form/approve/".$_PARAMS["object"]."/".$_PARAMS["id"]);
-    };
     
-    
+    redirect("form/approve/".$_PARAMS["object"]."/".$_PARAMS["id"]); // при любом результате    
     
 };
 function confirm_email_action(){
@@ -157,42 +171,11 @@ function edit_data_action(){
         die("Code: ea-".__LINE__);
     };
     
-	$err_msg_prefix = "";
-    if (userHasRight("manager")){
-		switch ($object){
-			case "user": $err_msg_prefix = "Данные пользователя: ";break;
-			case "account": $err_msg_prefix = "Данные партнера: ";break;
-			case "application": $err_msg_prefix = "Данные заявки: ";break;
-			default: $err_msg_prefix = "";
-		};
-        $err_msg = array(
-            "success" => $err_msg_prefix."Изменения сохранены",
-            "wrong_id"=> $err_msg_prefix."Попытка изменения не существующего объекта.",
-            "changes_conflict" => $err_msg_prefix."Конфликт: за время редактирования другой пользователь внес изменения.",
-            "db_fail" => $err_msg_prefix."Ошибка БД.",
-            "history_fail" => $err_msg_prefix."Ошибка журналирования.",
-            "no_changes"=>$err_msg_prefix."Данные в БД не изменились."
-        );
-    }else{
-		switch ($object){
-			case "user": $err_msg_prefix = "Личные данные: ";break;
-			case "account": $err_msg_prefix = "Платежные данные: ";break;
-		};
-        $err_msg = array(
-            "success" => $err_msg_prefix."Изменения сохранены",
-            "wrong_id"=> $err_msg_prefix."Произошла ошибка. Данные не могут быть сохранены. Обратитесь к менеджеру партнерской программы.",
-            "changes_conflict" => $err_msg_prefix."Конфликт: за время редактирования другой пользователь внес изменения.",
-            "db_fail" => $err_msg_prefix."Произошла ошибка. Обратитесь к менеджеру партнерской программы.",
-            "history_fail" => $err_msg_prefix."Произошла ошибка.  Обратитесь к менеджеру партнерской программы.",
-            "no_changes"=>$err_msg_prefix."Нет изменений."
-        );
-    };  
-
     list($res, $reason) = edit_data($object."s", $_PARAMS, "", $err_msg);
+    set_session_msg($object."s_edit_".$reson);
     
     if (! $res){
         $_SESSION["to"] = $_PARAMS["to"];
-        set_session_msg($object."s_edit_".$reson);
     }else{
         unset($_SESSION["to"]);
     };   
@@ -241,7 +224,10 @@ function delete_data_action(){
         
 		$item = db_get($db_table, $id);
 		if ($item){
-			list($res, $reason) = db_delete($db_table, $id, get_db_comment($db_name, "delete", $item) );
+			
+            list($res, $reason) = db_delete($db_table, $id, get_db_comment($db_table, "delete", $item) );
+            set_session_msg($db_table."_add_".$reason, $reason);
+            
             if ($res){
                 dosyslog(__FUNCTION__.": NOTICE: Object '".$_PARAMS["object"]."' width id '".$id."' is marked as deleted.");
             }else{
@@ -403,6 +389,10 @@ function process_application_action(){
                 }else{
                     dosyslog(__FUNCTION__.": NOTICE: Confirmation link was NOT sent to e-mail '".@$application["email"]."'.");
                     dosyslog(__FUNCTION__.": NOTICE: Mandatory fields are not filled: '".implode(", ",$empty_fields)."'. Status remains unchanged: '".@$status."'.");
+                    
+                    set_session_msg("applications_edit_fail","error");
+                    redirect("form/edit/application/".$id);
+                    
                 };
                 
                 return $res;
@@ -442,10 +432,8 @@ function register_application_action(){ // регистрация в БД нов
 
 };
 function send_registration_approval_action(){
-	
-	global $S;
-	global $DONTSHOWERRORS;
-	
+	global $_PARAMS;
+    global $CFG;
     // Проверка прав доступа 
         if ( ! user_has_access_by_ip() ){
             dosyslog(__FUNCTION__ . ": WARNING: Отказ в обслуживании.");
@@ -453,35 +441,36 @@ function send_registration_approval_action(){
             return false;
         }
     //
-    
-	$email = @$S["email"];
-	$email_token = @$S["email_token"];
-	$valid_email_token = md5($email.substr(date("Y-m-d H:i"),0,-1));
-	$login = @$S["login"];
-	$pass = @$S["key"];
-	$name = @$S["name"];
+
+	$login       = ! empty($_PARAMS["login"])       ? $_PARAMS["login"]       : null;
+	$pass        = ! empty($_PARAMS["key"])         ? $_PARAMS["key"]         : null;
+	$name        = ! empty($_PARAMS["name"])        ? $_PARAMS["name"]        : null;
+	$email       = ! empty($_PARAMS["email"])       ? $_PARAMS["email"]       : null;
+	$email_token = ! empty($_PARAMS["email_token"]) ? $_PARAMS["email_token"] : null;
+	
+    $valid_email_token = md5($email.substr(date("Y-m-d H:i"),0,-1));
+
 	
 	$HTML = "";
 	
-	if (!$email){
+	if ( ! $email ){
 		$HTML .= "<div class='alert alert-error'>Не указан e-mail.</div>";
-	}elseif($email_token!==$valid_email_token){
+	}elseif( $email_token !== $valid_email_token ){
 		$HTML .= "<div class='alert alert-error'>Истекло разрешенное для отправки письма время.</div>";
-	}elseif(empty($login)){
+	}elseif( empty($login) ){
 		$HTML .= "<div class='alert alert-error'>Не указан логин.</div>";
-	}elseif(empty($pass)){
+	}elseif( empty($pass) ){
 		$HTML .= "<div class='alert alert-error'>Не указан пароль.</div>";
-	}elseif(empty($name)){
+	}elseif( empty($name) ){
 		$HTML .= "<div class='alert alert-error'>Не указано имя пользователя.</div>";
 	}else{
-		if (send_message($email, 'send_registration_approval', array("name"=>$name, "login"=>$login, "pass"=>$pass, "cfg_app_name"=>$CFG["GENERAL"]["app_name"], "login_url"=>$CFG["app_url"] . $CFG["login_uri"] . $CFG["URL"]["ext"], "cfg_app_url"=>$CFG["app_url"], "cfg_system_email"=>$CFG["GENERAL"]["system_email"]))){
+		if ( send_message($email, 'send_registration_approval', array("name"=>$name, "login"=>$login, "pass"=>$pass, "cfg_app_name"=>$CFG["GENERAL"]["app_name"], "login_url"=>$CFG["URL"]["base"] . "login" . $CFG["URL"]["ext"], "cfg_app_url"=>$CFG["URL"]["base"], "cfg_system_email"=>$CFG["GENERAL"]["system_email"])) ){
 			$HTML .= "<div class='alert alert-success'>Письмо отправлено.</div>";
 		}else{
 			$HTML .= "<div class='alert alert-error'>Не удалось отправить письмо. <br>Отправьте письмо пользователю самостоятельно. <br><b>Сообщите администратору о проблемах с отправкой e-mail.</b></div>";
 		};
 	};
 	
-	$DONTSHOWERRORS = true;
 	exit($HTML);
 };
 function send_registration_repetition_request_action(){

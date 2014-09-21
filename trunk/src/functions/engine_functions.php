@@ -13,33 +13,46 @@ function add_data($db_table, $data){
         $name = (string) $field["name"];
         
         if($type=="file"){
-            if ( ! is_dir(FILES_DIR) ) mkdir(FILES_DIR, 0777, true);
-            if (!empty($data[$name]) && !move_uploaded_file($_FILES[$name]["tmp_name"],$data[$name])){
-                dosyslog(__FUNCTION__.": FATAL ERROR: Can not move uploaded file to storage path '".$data["name"]);
-                die("Code: ef-" . __LINE__);
-            };           
-        };
-        
-        if ( ! isset($data[$name]) ) $data[$name] = null;
-        $res = validate_data($field, $data[$name], "add", $db_table);
-        
-        if ($res[0]){
-            if (!empty($res[1])) {
-                $S["msg"][] = array(
-                    "class"=> "alert alert-info",
-                    "text"=>$res[1]
-                );
-            };
-            if (!empty($res[2])){
-                $data[$name] = $res[2];
+            
+            if ( ! $data[$name] ) continue;
+            
+            $storage_name = $db_table;
+            list($res, $dest_file) = upload_file($name, $storage_name);
+            
+            if ($res){
+                $msg = "upload_file_success";
+                $data[$name] = $dest_file;
+            }else{
+                $msg = "upload_file_".$dest_file;
+                $isDataValid = false;
             };
         }else{
-            $isDataValid = false;
-            dosyslog(__FUNCTION__ . ": WARNING: Поле '" . $name . "' = '".@$data[$name]."' не валидно.");
-            if (!empty($res[1])) {
-                set_session_msg($res[1], "error");
+                    
+            if ( ! isset($data[$name]) ) $data[$name] = null;
+            $validate_result = validate_data($field, $data[$name], "add", $db_table);
+       
+            $res = $validate_result[0];
+            $msg = $validate_result[1];
+            $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
+        
+            if ($res){
+                if ( ! empty($msg)) {
+                   set_session_msg($msg, "info");
+                };
+            
+                if ( ! empty($proposed_value) ){
+                    $data[$name] = $proposed_value;
+                };
+            }else{
+                $isDataValid = false;
+                dosyslog(__FUNCTION__ . ": WARNING: Поле '" . $name . "' = '".@$data[$name]."' не валидно.");
+                if (!empty($msg)) {
+                    set_session_msg($msg, "error");
+                };
             };
+
         };
+        
     };//foreach
        
 
@@ -101,86 +114,77 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
             dosyslog(__FUNCTION__ . ": ERROR: Parameter '".$key."' does not found in '".$db_table."'.");
             $isDataValid = false;
            
-            $S["msg"][] = array(
-                "class"=> "alert alert-error",
-                "text"=> "Ошибка в поле '".htmlspecialchars($key)."'. Поле не существует."
-            );
+            set_session_msg("Ошибка в поле '".htmlspecialchars($key)."'. Поле не существует.","error");
             break;
         }
         
         if($type=="file"){
             if (!empty($data[$name])){
-                if ( ! is_dir(FILES_DIR) ) mkdir(FILES_DIR, 0777, true);
-                if (move_uploaded_file($_FILES[$name]["tmp_name"],$data[$name])){
-                    dosyslog(__FUNCTION__.": NOTICE: File '".$name."' moved to storage path.");
-                    $data["to"][$name] = $data[$name];
+                $storage_name = $db_table;
+                list($res, $dest_file) = upload_file($name, $storage_name);
+                if ($res){
+                    $msg = "upload_file_success";
+                    $data[$name] = $dest_file;
                 }else{
-                    dosyslog(__FUNCTION__.": ERROR: Can not move uploaded file to storage path '".$data["name"]);
-                    die("Code: ea-" . __LINE__);
+                    $msg = "upload_file_".$dest_file;
+                    $isDataValid = false;
                 };
-            };           
-        };
-        // dump($data["to"][$name], $name);
-        $validate_result = validate_data($field, $data["to"][$name], "edit", $db_table, isset($data["from"][$name]) ? $data["from"][$name] : "");
-       
-        $res = $validate_result[0];
-        $msg = $validate_result[1];
-        $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
-       
-       
-        if ($res){
-            if (!empty($msg)) {
-               set_session_msg($msg, "info");
             };
-            
-            
-            if (!empty($proposed_value)){
-                $changes[$name]["to"] = $proposed_value;
-                $changes[$name]["from"] = $data["from"][$name];
-               
-            }else{
+        }else{;
+        
+            $validate_result = validate_data($field, $data["to"][$name], "edit", $db_table, isset($data["from"][$name]) ? $data["from"][$name] : "");
+           
+            $res = $validate_result[0];
+            $msg = $validate_result[1];
+            $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
+           
+           
+            if ($res){
+                if (!empty($msg)) {
+                   set_session_msg($msg, "info");
+                };
                 
-                if (isset($data["to"][$name])){
+                
+                if (!empty($proposed_value)){
+                    $changes[$name]["to"] = $proposed_value;
                     $changes[$name]["from"] = $data["from"][$name];
-                    $changes[$name]["to"] = $data["to"][$name];
-                    switch($type){
-                        case "list":
-                            if (is_array($changes[$name]["from"])){
-                                $changes[$name]["from"] = implode(DB_LIST_DELIMITER,(array) $data["from"][$name]);
-                            };
-                            if (is_array($changes[$name]["to"])){
-                                $changes[$name]["to"] = implode(DB_LIST_DELIMITER,(array) $data["to"][$name]);
-                            };
-                            break;
-                        case "json":
-                            if (is_array($changes[$name]["from"])){
-                                $changes[$name]["from"] = json_encode($data["rom"][$name]);
-                            };
-                            if (is_array($changes[$name]["to"])){
-                                $changes[$name]["to"] = json_encode($data["to"][$name]);
-                            };
-                            break;
-                        default:
-                            $changes[$name]["to"] = $data["to"][$name];
+                   
+                }else{
+                    
+                    if (isset($data["to"][$name])){
+                        $changes[$name]["from"] = $data["from"][$name];
+                        $changes[$name]["to"] = $data["to"][$name];
+                        switch($type){
+                            case "list":
+                                if (is_array($changes[$name]["from"])){
+                                    $changes[$name]["from"] = implode(DB_LIST_DELIMITER,(array) $data["from"][$name]);
+                                };
+                                if (is_array($changes[$name]["to"])){
+                                    $changes[$name]["to"] = implode(DB_LIST_DELIMITER,(array) $data["to"][$name]);
+                                };
+                                break;
+                            case "json":
+                                if (is_array($changes[$name]["from"])){
+                                    $changes[$name]["from"] = json_encode($data["rom"][$name]);
+                                };
+                                if (is_array($changes[$name]["to"])){
+                                    $changes[$name]["to"] = json_encode($data["to"][$name]);
+                                };
+                                break;
+                            default:
+                                $changes[$name]["to"] = $data["to"][$name];
+                        };
                     };
                 };
-            };
-        }else{
-            $isDataValid = false;
-            if (empty($msg)) $msg = "Ошибка в поле '". $field["name"]."'.";
-            set_session_msg($msg, "error");
+            }else{
+                $isDataValid = false;
+                if (empty($msg)) $msg = "Ошибка в поле '". $field["name"]."'.";
+                set_session_msg($msg, "error");
 
+            };
         };
     };//foreach
     unset($key, $value, $res);
-    
-    foreach ($changes as $what=>$v){
-        $changes[$what]["from"] = htmlspecialchars($changes[$what]["from"]);
-        $changes[$what]["to"] = htmlspecialchars($changes[$what]["to"]);
-        if ($changes[$what]["from"] == $changes[$what]["to"]){
-            unset($changes[$what]);
-        };
-    };
     
 
     if ($isDataValid){
@@ -216,12 +220,39 @@ function parse_post_data($data, $action){
     case "add":
         if (isset($data["from"]["id"])) unset($data["from"]["id"]);
         if (isset($data["to"]["id"])) unset($data["to"]["id"]);
-        // no break here between add and edit cases
-    case "edit":
+
         if (isset($data["from"]["created"])) unset($data["from"]["created"]);
         if (isset($data["to"]["created"])) unset($data["to"]["created"]);
         if (isset($data["from"]["modified"])) unset($data["from"]["modified"]);
         if (isset($data["to"]["modified"])) unset($data["to"]["modified"]);
+        break;
+        
+    case "edit":
+        // Проверить, все ли поля имеют пару from и to (старое и новое значения)
+        // TODO: Проверить, как это рабоатет, аозможно усилить защиту - удалять непарные элементы и т.п.
+        $diff1 = array_diff(array_keys($data["to"]), array_keys($data["from"]));
+        if ( ! empty($diff1) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'to' are absent in 'from' data:" . implode(", ",$diff1).".");
+        $diff2 = array_diff(array_keys($data["from"]), array_keys($data["to"]));
+        if ( ! empty($diff2) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'from' are absent in 'to' data:" . implode(", ",$diff1).".");
+        
+        // Убрать поля, значения которых не будут меняться (одинаковые)
+        $deleted = array();
+        foreach($data["to"] as $k=>$v){
+            if ( ! isset($data["from"][$k])) continue;
+            
+            if ( $data["to"][$k] == $data["from"][$k] ){
+                unset($data["to"][$k], $data["from"][$k]);
+                $deleted[] =$k;
+            };
+        };
+        dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Удалены поля '".implode(", ",$deleted)."'.");
+       
+        if (isset($data["from"]["created"])) unset($data["from"]["created"]);
+        if (isset($data["to"]["created"])) unset($data["to"]["created"]);
+        if (isset($data["from"]["modified"])) unset($data["from"]["modified"]);
+        if (isset($data["to"]["modified"])) unset($data["to"]["modified"]);
+        
+        dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Оставлены поля [to] '".implode(", ",array_keys($data["to"]))."'.");
     }
     
     return $data;

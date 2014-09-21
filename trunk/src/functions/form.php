@@ -14,25 +14,6 @@ function form_prepare($db_table, $form_name, $object=""){
         $template = ! empty($v["form_template"]) ? $v["form_template"] : null;
         
         switch ($template){
-        case "input":
-        case "file":
-            $field["name"]      = $v["name"];
-            $field["name_from"] = "from[".$v["name"]."]";
-            $field["name_to"]   = "to[".$v["name"]."]";
-            $field["id"]        = $v["name"];
-            
-            if ( strpos($v["name"], "phone") !== false ) $field["class"] = "phone";
-            if ( strpos($v["name"], "date")  !== false ) $field["class"] = "date";
-            if ( strpos($v["name"], "time")  !== false ) $field["class"] = "time";
-            
-            $field["value"] = "";
-            if ( isset($v["form_value_default"]) )    $field["value"] = $v["form_value_default"];
-            if ( ! empty($object[ $v["name"] ]))      $field["value"] = $object[ $v["name"] ];
-            if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
-            
-            $field["label"] = $v["label"];
-            break;
-        
         case "checkboxes":        
             $field["name"]      = $v["name"];
             $field["name_from"] = "from[".$v["name"]."][]";
@@ -51,11 +32,6 @@ function form_prepare($db_table, $form_name, $object=""){
             };
             
             $field["values"] = form_get_field_values($v);
-            
-            $field["value"] = array(); // выбраные значения
-            if ( isset($v["form_value_default"]) )    $field["value"] = $v["form_value_default"];
-            if ( ! empty($object[ $v["name"] ]))      $field["value"] = $object[ $v["name"] ];
-            if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
             
             $field["label"] = $v["label"];
             break;
@@ -80,14 +56,9 @@ function form_prepare($db_table, $form_name, $object=""){
             
             $field["values"] = form_get_field_values($v);
             
-            $field["value"] = ""; // выбраные значения селекта
-            if ( isset($v["form_value_default"]) )    $field["value"] = $v["form_value_default"];
-            if ( ! empty($object[ $v["name"] ]))      $field["value"] = $object[ $v["name"] ];
-            if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
-            
             $field["label"] = $v["label"];
             break;
-                
+             
         case "hidden":
             $field["name"]      = $v["name"];
             $field["name_from"] = "from[".$v["name"]."]";
@@ -96,22 +67,58 @@ function form_prepare($db_table, $form_name, $object=""){
             if ( strpos($v["name"], "date")  !== false ) $field["class"] = "date";
             if ( strpos($v["name"], "time")  !== false ) $field["class"] = "time";
             
-            $field["value"] = "";
-            if ( isset($v["form_value_default"]) )    $field["value"] = $v["form_value_default"];
-            if ( ! empty($object[ $v["name"] ]))      $field["value"] = $object[ $v["name"] ];
-            if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
             
             $field["label"] = "";
             break;
+        case "input":
+        case "textarea":
+        case "file":
         default:
-            dosyslog(__FUNCTION__.": FATAL ERROR: Unsupported template '".$template."' for field '".$v["name"]."' in '".$db_table."'.");
-            die("Code: ef-".__LINE__."-".$template);
+            $field["name"]      = $v["name"];
+            $field["name_from"] = "from[".$v["name"]."]";
+            $field["name_to"]   = "to[".$v["name"]."]";
+            $field["id"]        = $v["name"];
+            
+            if ( strpos($v["name"], "phone") !== false ) $field["class"] = "phone";
+            if ( strpos($v["name"], "date")  !== false ) $field["class"] = "date";
+            if ( strpos($v["name"], "time")  !== false ) $field["class"] = "time";
+            
+            $field["label"] = $v["label"];
+            break;
         }; // switch
         
+        
+        // from значение поля 
+        $field["value_from"] = "";
+        if ( isset($object[ $v["name"] ]))        $field["value_from"] = $object[ $v["name"] ];
+        if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
+        
+        // to значение поля 
+        $field["value"] = "";
+        if ( isset($v["form_value_default"]) )    $field["value"] = $v["form_value_default"];
+        if ( isset($object[ $v["name"] ]))        $field["value"] = $object[ $v["name"] ];
+        if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
+        if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
+        
+        
+        
+        // Подсказки, обязательность, ...
+        $field["hint"]      = ! empty($v["form_hint"]) ? $v["form_hint"] : "";
+        $field["required"]  = ! empty($v["required"])  ? $v["required"]  : "";
+        
+         
+         
+         // Шаблон поля : показывать ли поле на форме и как именно
         if ( $field && $template ){
             $field["template_file"] = TEMPLATES_DIR . "form/" . $template . ".form.htm";
+            if ( ! file_exists($field["template_file"]) ){
+                dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template."' for form '".$form_name."' is not found.");
+                die("Code: ef-".__LINE__."-".$template);
+            };
+            
             $fields[] = $field;
-        };
+            
+        };        
     }
     unset($v);
     
@@ -170,6 +177,7 @@ function form_get_field_values($field){
     switch($field["form_values"]){
     case "lst":
         $values = glog_file_read_as_array( APP_DIR . "settings/" . glog_codify($field["name"]) . ".lst" );
+        $values = array_map("trim", $values);
         break;
 
     case "tsv":
@@ -177,7 +185,7 @@ function form_get_field_values($field){
         $tsv = import_tsv( APP_DIR . "settings/" . glog_codify($field["name"]) . ".tsv" );
         if ($tsv){
             foreach($tsv as $record){
-                $values[ $record["caption"] ] = $record[ $field["name"] ];
+                $values[ trim($record["caption"]) ] = trim($record[ $field["name"] ]);
             }
             unset($record);
         }
@@ -194,6 +202,9 @@ function form_get_field_values($field){
             dosyslog(__FUNCTION__.": ERROR: Values for select field '" . $field["name"] . "' have unknown format. Check DB config.");
             die("Code: ef-".__LINE__);
         }
+        
+        $values = array_map("trim", $values);
+        
     }; // switch form_values
     
     return $values;
