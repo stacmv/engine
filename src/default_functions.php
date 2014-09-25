@@ -173,7 +173,7 @@ if (!function_exists("get_pages")){
                 $arr = json_decode($str, true);
                 if ( ! $arr ){
                     dosyslog(__FUNCTION__.": FATAL ERROR: Can not decode JSON file '".$file."'.");
-                    die("Code: df-".__LINE__."-pages_json");
+                    die("Code: df-".__LINE__."-".$app."_pages_json");
                 }
             }else{
                 $arr = array();

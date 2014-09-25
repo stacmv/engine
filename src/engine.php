@@ -401,10 +401,6 @@ function SETPARAMS(){
        
     if ( ! empty($_PAGE["params"]) ) {
     
-        // dump($_POST,"_POST");
-        // dump($_FILES,"_FILES");
-        // dump($_PAGE->params,"params");
-        
         foreach ($_PAGE["params"] as $fparam_name=>$fparam){
             $tmp = NULL;
             switch ($fparam["source"]){
@@ -443,7 +439,7 @@ function SETPARAMS(){
                     $tmp = isset($_POST[$fparam_name]) ? $_POST[$fparam_name] : null;
                     if ("file" == $fparam["type"]){
                         if ( !empty($_FILES[$fparam_name]["name"]) ){
-                            $tmp = true;
+                            $tmp = $_FILES[$fparam_name]["name"];
                         }else{
                             $tmp = null;
                         };

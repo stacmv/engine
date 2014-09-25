@@ -57,7 +57,7 @@ function add_data($db_table, $data){
        
 
     if ($isDataValid){
-            
+
             $comment = get_db_comment($db_table,"add",$data);
             
             $added_id = db_add($db_table, $data,$comment);
@@ -99,7 +99,7 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
     $isDataValid = true;
     $changes=array();
     $data = parse_post_data($data, "edit");
-
+    
     foreach($data["to"] as $key=>$value){
         $type = "";
         foreach($table as $field){ // есть ли такое поле в таблице БД?
@@ -118,13 +118,14 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
             break;
         }
         
-        if($type=="file"){
-            if (!empty($data[$name])){
+        if($type == "file"){
+            if (!empty($data["to"][$name])){
                 $storage_name = $db_table;
                 list($res, $dest_file) = upload_file($name, $storage_name);
                 if ($res){
                     $msg = "upload_file_success";
-                    $data[$name] = $dest_file;
+                    $changes[$name]["from"] = $data["from"][$name];
+                    $changes[$name]["to"] = $dest_file;
                 }else{
                     $msg = "upload_file_".$dest_file;
                     $isDataValid = false;
@@ -185,27 +186,17 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
         };
     };//foreach
     unset($key, $value, $res);
-    
+
 
     if ($isDataValid){
 
-        $comment = get_db_comment($db_table,"edit",$changes);
+        $comment_data = $changes;
+        $comment_data["id"] = $id;
+        $comment = get_db_comment($db_table,"edit",$comment_data);
         
         list($res, $reason) = db_edit($db_table, $id, $changes, $comment);
-        
-       
-        if (! $res ) {
-            $msg = array(
-                "class"=> ($reason=="success"?"success":($reason=="no_changes"?"info":"error")),
-                "text"=> isset($err_msg[$reason]) ? $err_msg[$reason] : "Ошибка БД. Код ошибки: ".@$reason
-            
-            );
-           
-            set_session_msg($msg["text"], $msg["class"]);
-            unset($msg);
-        };
-            
-            
+        if (! $res) set_session_msg($db_table."_edit_".$reason, $reason);
+                      
     }else{
         $res = false;
         $reason = "fail";
@@ -215,6 +206,16 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
     
 };
 function parse_post_data($data, $action){
+
+    // Обработка загружаемых файлов
+    $files = array();
+    if ( ! empty($_FILES["to"]["name"]) ){
+        foreach($_FILES["to"]["name"] as $file_param_name=>$file_name){
+            $data["to"][$file_param_name] = $file_name;
+            $files[] = $file_param_name."=".$file_name;
+        };
+    };
+    if ( $files ) dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".implode(", ",$files)."'.");
 
     switch($action){
     case "add":
@@ -235,6 +236,17 @@ function parse_post_data($data, $action){
         $diff2 = array_diff(array_keys($data["from"]), array_keys($data["to"]));
         if ( ! empty($diff2) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'from' are absent in 'to' data:" . implode(", ",$diff1).".");
         
+        // Обработка загружаемых файлов
+        $files = array();
+        if ( ! empty($_FILES["to"]["name"]) ){
+            foreach($_FILES["to"]["name"] as $file_param_name=>$file_name){
+                $data["to"][$file_param_name] = $file_name;
+                $files[] = $file_param_name."=".$file_name;
+            };
+        };
+        if ( $files ) dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".implode(", ",$files)."'.");
+        
+        
         // Убрать поля, значения которых не будут меняться (одинаковые)
         $deleted = array();
         foreach($data["to"] as $k=>$v){
@@ -246,7 +258,7 @@ function parse_post_data($data, $action){
             };
         };
         dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Удалены поля '".implode(", ",$deleted)."'.");
-       
+        
         if (isset($data["from"]["created"])) unset($data["from"]["created"]);
         if (isset($data["to"]["created"])) unset($data["to"]["created"]);
         if (isset($data["from"]["modified"])) unset($data["from"]["modified"]);
