@@ -34,6 +34,9 @@ function form_prepare($db_table, $form_name, $object=""){
             $field["values"] = form_get_field_values($v);
             
             $field["label"] = $v["label"];
+            
+            // dump($field, $v["name"]);
+            
             break;
             
         case "select":
@@ -122,7 +125,10 @@ function form_prepare($db_table, $form_name, $object=""){
     }
     unset($v);
     
-    dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){return $i["name"];}, $fields)) );
+    // dump($table,"table");
+    // dump($fields,"fields");die("Well");
+    
+    dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){ return $i["name"];}, $fields)) );
     
     return $fields;
 }
@@ -203,9 +209,20 @@ function form_get_field_values($field){
             die("Code: ef-".__LINE__);
         }
         
-        $values = array_map("trim", $values);
+        $keys = array_keys($values);
+        if ( ! is_array($values[ $keys[0] ]) ){ // одномерный список значений
+            $values = array_map("trim", $values);
+        }else{
+            $tsv = $values;
+            $values = array();
+            foreach($tsv as $record){
+                $values[ trim($record["caption"]) ] = trim($record["value"]);
+            };
+            unset($record);
+        };
         
     }; // switch form_values
     
     return $values;
 }
+

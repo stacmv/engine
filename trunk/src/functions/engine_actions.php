@@ -19,7 +19,12 @@ function add_data_action($db_table=""){
     //
     
     
-    list($res, $reason) = add_data($db_table, $_PARAMS);
+    list($res, $added_id) = add_data($db_table, $_PARAMS);
+    if ( (int) $added_id ){
+        $reason = "success";
+    }else{
+        $reason = $added_id;
+    };
     set_session_msg($db_table."_add_".$reason, $reason);
        
     if (! $res){
@@ -171,8 +176,8 @@ function edit_data_action(){
         die("Code: ea-".__LINE__);
     };
     
-    list($res, $reason) = edit_data($object."s", $_PARAMS, "", $err_msg);
-    set_session_msg($object."s_edit_".$reson);
+    list($res, $reason) = edit_data($object."s", $_PARAMS);
+    set_session_msg($object."s_edit_".$reason);
     
     if (! $res){
         $_SESSION["to"] = $_PARAMS["to"];
@@ -181,7 +186,7 @@ function edit_data_action(){
     };   
     
     dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
-    
+
 
     if ($res){
         $redirect_uri = $object."s";
@@ -226,7 +231,7 @@ function delete_data_action(){
 		if ($item){
 			
             list($res, $reason) = db_delete($db_table, $id, get_db_comment($db_table, "delete", $item) );
-            set_session_msg($db_table."_add_".$reason, $reason);
+            set_session_msg($db_table."_delete_".$reason, $reason);
             
             if ($res){
                 dosyslog(__FUNCTION__.": NOTICE: Object '".$_PARAMS["object"]."' width id '".$id."' is marked as deleted.");
@@ -278,7 +283,7 @@ function form_action(){
         };
         $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);
     };
-    
+
     set_template_file("content", $form_name . "_form.htm");
 }
 function import_first_user_action(){
