@@ -17,7 +17,11 @@ function add_data($db_table, $data){
             if ( ! $data[$name] ) continue;
             
             $storage_name = $db_table;
-            list($res, $dest_file) = upload_file($name, $storage_name);
+            if ( filter_var($data[$name], FILTER_VALIDATE_URL) ){   // передан URL
+                list($res, $dest_file) = upload_file($data[$name], $storage_name, $isUrl = true);
+            }else{                                                  // загружен файл
+                list($res, $dest_file) = upload_file($name, $storage_name);
+            };
             
             if ($res){
                 $msg = "upload_file_success";
@@ -56,6 +60,7 @@ function add_data($db_table, $data){
     };//foreach
        
 
+    $added_id = false;
     if ($isDataValid){
 
             $comment = get_db_comment($db_table,"add",$data);
