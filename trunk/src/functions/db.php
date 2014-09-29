@@ -120,9 +120,7 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $ch
     return $res;
 };
 function db_check_schema($db_table){ // проверяет схему таблицы $db_table базыданных $db_name на соответствие файлу db.xml
-	global $S;
-	
-	
+
 	if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 	
     $db_name = db_get_name($db_table);
@@ -135,14 +133,16 @@ function db_check_schema($db_table){ // проверяет схему табли
 	$fields_to_del = array(); // поля, которые должны быть удалены (и за "бэкаплены" в поле extra)
 	
 	foreach($tables as $table){
-		$xml_table = db_get_table_schema($db_name, $table);
-		if (empty($xml_table)){
+		$schema = db_get_table_schema($db_name . ".". $table);
+		if (empty($schema)){
 			echo "<p class='alert alert-warning'>Таблица ".$db_name.".".$table." не определена в XML.<p>";
 			continue;
 		};
         $dbh = db_set($db_name . "." . $table);
-		$columns[$table] = $dbh->query("SELECT * FROM ".$table." LIMIT 1");
-        if (empty($columns[$table])){ // таблица не существует в БД
+		$tmp = $dbh->query("SELECT * FROM ".$table." LIMIT 1")->fetchAll(PDO::FETCH_ASSOC);
+        if (!empty($tmp[0])){
+            $columns[$table] = array_keys($tmp[0]);
+        }else{ // таблица не существует в БД
             echo "Таблица ".$table." отсутсвует в БД ".$db_name.". Она будет создана движком при первом реальном использовании. <br>";
             continue;                 // на надо создавать таблицу в ходе миграции, она будет создана движком при первом реальном использовании.
         }
@@ -151,14 +151,14 @@ function db_check_schema($db_table){ // проверяет схему табли
 		$fields_to_add[$table] = array();
 		$fields_to_be[$table] = array();
 		$fields_to_del[$table] = array();
-		foreach($xml_table->field as $field){
+		foreach($schema as $field){
 			$fields_to_be[$table][] = (string) $field["name"];
-			if (!isset($columns[$table][(string) $field["name"]])){ // поле есть в xml, но нет в реальной БД.
-				$fields_to_add[$table][] = (string) $field["name"];
+			if ( ! in_array($field["name"], $columns[$table]) ){ // поле есть в xml, но нет в реальной БД.
+				$fields_to_add[$table][] = $field["name"];
 			};
 		};
 		foreach($columns[$table] as $k=>$v){
-			if (!in_array($k, $fields_to_be[$table])) $fields_to_del[$table][] = $k;
+			if (!in_array($v, $fields_to_be[$table])) $fields_to_del[$table][] = $v;
 		};
 		
 		if (!empty($fields_to_add[$table])){
@@ -177,7 +177,7 @@ function db_check_schema($db_table){ // проверяет схему табли
 				$temp_table = $table."_".date("Y_m_d__H_i")."_bak";
 				$query = array();
 				if (!empty($fields)){
-					$query[] = "CREATE TABLE ".$temp_table." (".implode(", ",array_keys($columns[$table])).", " . implode(", ", $fields).");\n";
+					$query[] = "CREATE TABLE ".$temp_table." (".implode(", ",$columns[$table]).", " . implode(", ", $fields).");\n";
 					$query[] = "INSERT INTO ".$temp_table." SELECT *, " . implode(", ", array_fill(0, count($fields), "NULL")) . " FROM ".$table.";\n";
 					if (!empty($fields_to_del[$table])){
 						$query[] = "backup";
@@ -858,39 +858,37 @@ function db_get_tables_list_from_xml($db_name=""){
     
     $db_name = db_get_name($db_name);
     
-    if (isset($CFG["db_xml"])){
-        $isFound=false;
-        foreach ($CFG["db_xml"] as $k=>$xmlfile){
-            $xml = simplexml_load_file($xmlfile);
-            if ($xml){
-                
-                foreach($xml->db as $xmldb){
-                    if ($db_name == (string) $xmldb["name"]){
-                        $db = $xmldb;
-                        $isFound = true;
-                        break;
-                    };
-                }; //foreach xml
-                
-            };
-            if (!empty($db)) break;
-        }; //foreach CFG
-        if (!$isFound){
-            dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
-            die();
+    $db_files = array(APP_DIR . "settings/db.xml");
+    
+    $isFound=false;
+    foreach ($db_files as $k=>$xmlfile){
+        $xml = xml_load_file($xmlfile);
+        if ($xml){
+            
+            foreach($xml->db as $xmldb){
+                if ($db_name == (string) $xmldb["name"]){
+                    $db = $xmldb;
+                    $isFound = true;
+                    break;
+                };
+            }; //foreach xml
+            
         };
-        
-        
-        
-        if (!empty($db->table)){
-            foreach($db->table as $xmltable){
-                $tables_list[] = (string) $xmltable["name"];
-            };
-        };
-    }else{
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " No one db_xml is defined in config files.");
-        die();
+        if (!empty($db)) break;
     };
+    if (!$isFound){
+        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
+        die("Code: db-".__LINE__);
+    };
+        
+        
+        
+    if (!empty($db->table)){
+        foreach($db->table as $xmltable){
+            $tables_list[] = (string) $xmltable["name"];
+        };
+    };
+    
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $tables_list;
 };

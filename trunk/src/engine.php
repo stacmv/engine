@@ -441,7 +441,8 @@ function SETPARAMS(){
                         if ( !empty($_FILES[$fparam_name]["name"]) ){
                             $tmp = $_FILES[$fparam_name]["name"];
                         }else{
-                            $tmp = null;
+                            $tmp = filter_var($tmp, FILTER_VALIDATE_URL);
+                            if ( ! $tmp ) $tmp = null;
                         };
                     };
                     break;
