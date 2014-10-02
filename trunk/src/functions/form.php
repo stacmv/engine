@@ -34,9 +34,6 @@ function form_prepare($db_table, $form_name, $object=""){
             $field["values"] = form_get_field_values($v);
             
             $field["label"] = $v["label"];
-            
-            // dump($field, $v["name"]);
-            
             break;
             
         case "select":
@@ -113,6 +110,7 @@ function form_prepare($db_table, $form_name, $object=""){
          
          // Шаблон поля : показывать ли поле на форме и как именно
         if ( $field && $template ){
+            $field["template"] = $template;
             $field["template_file"] = TEMPLATES_DIR . "form/" . $template . ".form.htm";
             if ( ! file_exists($field["template_file"]) ){
                 dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template."' for form '".$form_name."' is not found.");
@@ -124,9 +122,6 @@ function form_prepare($db_table, $form_name, $object=""){
         };        
     }
     unset($v);
-    
-    // dump($table,"table");
-    // dump($fields,"fields");die("Well");
     
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){ return $i["name"];}, $fields)) );
     

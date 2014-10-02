@@ -31,6 +31,8 @@ function upload_file($param_name, $storage_name, $isUrl = false){
             $orig_filename  = pathinfo($_FILES["to"]["name"][$param_name],PATHINFO_FILENAME);
             $orig_extension = pathinfo($_FILES["to"]["name"][$param_name],PATHINFO_EXTENSION);
             
+            if ( ! $orig_extension ) $orig_extension = "jpg";
+            
             $dest_name = $upload_dir . get_filename($orig_filename."__".date("YmdHis"), ".".$orig_extension);
             
             if ( move_uploaded_file($_FILES["to"]["tmp_name"][$param_name],$dest_name) ){
@@ -49,11 +51,15 @@ function upload_file($param_name, $storage_name, $isUrl = false){
         $orig_filename  = pathinfo($param_name,PATHINFO_FILENAME);
         $orig_extension = pathinfo($param_name,PATHINFO_EXTENSION);
         
+        if ( ! $orig_extension ) $orig_extension = "jpg";
+        
         $dest_name = $upload_dir . get_filename($orig_filename."__".date("YmdHis"), ".".$orig_extension);
         
         // TODO: добавить проверку доступности удаленного файла, его типа и размера.
         if (file_put_contents( $dest_name, file_get_contents($param_name)) ){
             dosyslog(__FUNCTION__.": NOTICE: Downloaded file from '".$param_name."' and moved to storage path '".$dest_name."'.");
+            
+            
             return array(true, $dest_name);
         }else{
             dosyslog(__FUNCTION__.": ERROR: Can not download file from '".$param_name."' and save to storage path '".$dest_name);

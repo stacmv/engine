@@ -538,20 +538,7 @@ function db_get($db_table, $id, $flags=0){
             $result = $result[0]; 
            
             if ( ! ($flags & DB_DONT_EXPLODE_LISTS) ){
-                // Поля типа list преобразовать в массив
-                $schema = db_get_table_schema($db_table);
-                foreach($schema as $field){
-                    if ($field["type"] == "list"){
-                    
-                        if (isset($result[$field["name"]]) ){
-                            if (strpos($result[$field["name"]], DB_LIST_DELIMITER) !== false){
-                                $result[$field["name"]] = explode(DB_LIST_DELIMITER, trim($result[$field["name"]], DB_LIST_DELIMITER));
-                            }else{
-                                $result[$field["name"]] = array($result[$field["name"]]);
-                            };
-                        };
-                    };
-                };
+                $result = db_parse_result($db_table, $result);
             };
         };
     }else{
@@ -724,7 +711,7 @@ function db_set($db_table){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 	return $dbh;
 };
-function db_select($db_table, $select_query){
+function db_select($db_table, $select_query, $flags=0){
     
     global $S;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -747,7 +734,11 @@ function db_select($db_table, $select_query){
     
     if ($res){
         while ( ($row = $res->fetch(PDO::FETCH_ASSOC) ) !== false) {
-            $result[] = $row;
+            if ( ! ($flags & DB_DONT_EXPLODE_LISTS) ){
+                $result[] = db_parse_result($db_table, $row);
+            }else{
+                $result[] = $row;
+            };
         };
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  '".db_error($dbh)."'. Query: '".$select_query."'.");
@@ -892,3 +883,21 @@ function db_get_tables_list_from_xml($db_name=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $tables_list;
 };
+function db_parse_result($db_table, $result){
+
+    // Поля типа list преобразовать в массив
+    $schema = db_get_table_schema($db_table);
+    foreach($schema as $field){
+        if ($field["type"] == "list"){
+            if (isset($result[$field["name"]]) ){
+                if (strpos($result[$field["name"]], DB_LIST_DELIMITER) !== false){
+                    $result[$field["name"]] = explode(DB_LIST_DELIMITER, trim($result[$field["name"]], DB_LIST_DELIMITER));
+                }else{
+                    $result[$field["name"]] = array($result[$field["name"]]);
+                };
+            };
+        };
+    };
+
+    return $result;
+}
