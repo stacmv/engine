@@ -535,7 +535,7 @@ function set_template_for_user(){
         if ( ! empty($_PAGE["templates"]["guest"])){
             set_template_file("content", $_PAGE["templates"]["guest"]);
             if ( ! empty($_PAGE["templates"]["page_guest"])){
-                set_template_file("page", get_template_file("page_guest"));
+                set_template_file("page", $_PAGE["templates"]["page_guest"]);
             };
         }else{
             dosyslog(__FUNCTION__.": FATAL ERROR: template 'guest' is not set for page '".$_PAGE["uri"]."'");
