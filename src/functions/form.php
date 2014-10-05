@@ -14,7 +14,8 @@ function form_prepare($db_table, $form_name, $object=""){
         $template = ! empty($v["form_template"]) ? $v["form_template"] : null;
         
         switch ($template){
-        case "checkboxes":        
+        case "checkboxes": 
+        case "checkboxes_pub":
             $field["name"]      = $v["name"];
             $field["name_from"] = "from[".$v["name"]."][]";
             $field["name_to"]   = "to[".$v["name"]."][]";

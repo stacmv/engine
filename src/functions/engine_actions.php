@@ -1,5 +1,5 @@
 <?php
-function add_data_action($db_table=""){
+function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fail=""){
     global $_PARAMS;
     global $_DATA;
     
@@ -37,9 +37,9 @@ function add_data_action($db_table=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     if ($res){
-        redirect($db_table);
+        redirect($redirect_on_success ? $redirect_on_success : $db_table);
     }else{
-        redirect("form/add/".$_PARAMS["object"]);
+        redirect($redirect_on_fail ? $redirect_on_fail : "form/add/".$_PARAMS["object"]);
     };
 
 };
@@ -266,6 +266,7 @@ function delete_data_action(){
 };
 function form_action(){
     global $_PARAMS;
+    global $_PAGE;
     global $_DATA;
     
     $action = $_PARAMS["action"];
@@ -283,8 +284,10 @@ function form_action(){
         };
         $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);
     };
+    
+    $form_template = !empty($_PAGE["templates"][$form_name]) ? $_PAGE["templates"][$form_name] : $form_name . "_form.htm";
 
-    set_template_file("content", $form_name . "_form.htm");
+    set_template_file("content", $form_template);
 }
 function import_first_user_action(){
     global $_PARAMS;

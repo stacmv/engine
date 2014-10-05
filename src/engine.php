@@ -360,8 +360,8 @@ function SETACTIONLIST(){
       
         
     if (empty($_PAGE["actions"])) {
-        dosyslog(__FUNCTION__.": FATAL ERROR: There are no actions set for page '".$_PAGE["uri"]."' in pages file.");
-        die("Code: e-".__LINE__);
+        dosyslog(__FUNCTION__.": NOTICE: There are no actions set for page '".$_PAGE["uri"]."' in pages file.");
+        return;
     };
     
     
