@@ -91,8 +91,8 @@ function get_content($block_name){
             dosyslog(__FUNCTION__.": ERROR: There is an error in preg_replace_callback() while parsing block '".$block_name."'.");
         };
     }else{
-        dosyslog(__FUNCTION__.":  FATAL ERROR: Content block '".$block_name."' for page '".$_PAGE["uri"]."' is empty.");
-        die("Code: et-".__LINE__);
+        dosyslog(__FUNCTION__.":  WARNING: Content block '".$block_name."' for page '".$_PAGE["uri"]."' is empty.");
+        // die("Code: et-".__LINE__);
     };
     
     if (array_pop($blocks_chain) !== $block_name) {
@@ -130,7 +130,8 @@ function set_content($block_name, $content){
     dosyslog(__FUNCTION__.": NOTICE: Setting content block '".$block_name."'.");
     
     if (empty($content)){
-        die("Code: et-".__LINE__);
+        dosyslog(__FUNCTION__.": WARNING: Content for block '".$block_name."' is empty.");
+        // die("Code: et-".__LINE__);
     };
     
     if (empty($_PAGE["content"])) $_PAGE["content"] = array();
