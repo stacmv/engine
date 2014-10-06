@@ -41,6 +41,8 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     }else{
         redirect($redirect_on_fail ? $redirect_on_fail : "form/add/".$_PARAMS["object"]);
     };
+    
+    return array($res, $added_id);
 
 };
 function approve_application_action(){
@@ -200,7 +202,7 @@ function edit_data_action(){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
-function delete_data_action(){
+function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_fail=""){
     global $_PARAMS;
     global $_DATA;
     
@@ -213,6 +215,9 @@ function delete_data_action(){
         }
     //
     
+    if (!$db_table){
+        $db_table = $_PARAMS["object"]."s";  //uri: add/account.html, but db = accounts; add/user => users.
+    };
     
 	$id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
 	if (!$id){
@@ -220,7 +225,6 @@ function delete_data_action(){
 		die("Code: ea-".__LINE__);
 	};
 	
-    $db_table = $_PARAMS["object"] . "s"; 
     $result = "fail";
     
     $confirm = ! empty($_PARAMS["confirm"]) ? $_PARAMS["confirm"] : null;
@@ -257,9 +261,9 @@ function delete_data_action(){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     if ($res){
-        redirect($db_table);
+        redirect($redirect_on_success ? $redirect_on_success : $db_table);
     }else{
-        redirect("form/edit/".$_PARAMS["object"]);
+        redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"]);
     };
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -522,30 +526,5 @@ function send_registration_repetition_request_action(){
 	};
 	exit($HTML);
 };
-function set_template_for_user(){
-    global $_USER;
-    global $_PAGE;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    if ($_USER["isUser"] && !$_USER["isGuest"]){
-        if ( ! empty($_PAGE["templates"]["user"])){
-            set_template_file("content", $_PAGE["templates"]["user"]);
-        }else{
-            dosyslog(__FUNCTION__.": FATAL ERROR: template 'user' is not set for page '".$_PAGE["uri"]."'");
-            die("Code: ea-".__LINE__);
-        }
-    }else{
-        if ( ! empty($_PAGE["templates"]["guest"])){
-            set_template_file("content", $_PAGE["templates"]["guest"]);
-            if ( ! empty($_PAGE["templates"]["page_guest"])){
-                set_template_file("page", $_PAGE["templates"]["page_guest"]);
-            };
-        }else{
-            dosyslog(__FUNCTION__.": FATAL ERROR: template 'guest' is not set for page '".$_PAGE["uri"]."'");
-            die("Code: ea-".__LINE__);
-        }
-    };
-
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-};
 
