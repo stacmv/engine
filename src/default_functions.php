@@ -393,6 +393,34 @@ if (!function_exists("send_message")){
         return $res;    
     };
 };
+if (!function_exists("set_template_for_user")){
+    function set_template_for_user(){
+        global $_USER;
+        global $_PAGE;
+        
+        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        if ($_USER["isUser"] && !$_USER["isGuest"]){
+            if ( ! empty($_PAGE["templates"]["user"])){
+                set_template_file("content", $_PAGE["templates"]["user"]);
+            }else{
+                dosyslog(__FUNCTION__.": FATAL ERROR: template 'user' is not set for page '".$_PAGE["uri"]."'");
+                die("Code: ea-".__LINE__);
+            }
+        }else{
+            if ( ! empty($_PAGE["templates"]["guest"])){
+                set_template_file("content", $_PAGE["templates"]["guest"]);
+                if ( ! empty($_PAGE["templates"]["page_guest"])){
+                    set_template_file("page", $_PAGE["templates"]["page_guest"]);
+                };
+            }else{
+                dosyslog(__FUNCTION__.": FATAL ERROR: template 'guest' is not set for page '".$_PAGE["uri"]."'");
+                die("Code: ea-".__LINE__);
+            }
+        };
+
+        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    };
+};
 if (!function_exists("show")){
     function show($var){
         global $CFG;
@@ -566,10 +594,15 @@ if (!function_exists("userHasRight")){
         global $_USER;
         $user = array();
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        
+        
+        
         if ( ! $login ){
             if ( empty($_USER["profile"]["acl"]) ){
+                dosyslog(__FUNCTION__.": ERROR: ".$login.": права не заданы.");
                 return false;
             };
+            $login = $_USER["profile"]["login"];
             $user_rights = $_USER["profile"]["acl"];
         }else {
             $users_ids = db_find("users", "login", $login);
@@ -587,6 +620,9 @@ if (!function_exists("userHasRight")){
         $res = in_array($right, $user_rights);
         
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        
+        dosyslog(__FUNCTION__.": DEBUG: ".$login." ".($res?"имеет право " : "не имеет права "). $right);
+        
         return $res;
     };
 };

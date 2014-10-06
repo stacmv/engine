@@ -205,16 +205,18 @@ function form_get_field_values($field){
             die("Code: ef-".__LINE__);
         }
         
-        $keys = array_keys($values);
-        if ( ! is_array($values[ $keys[0] ]) ){ // одномерный список значений
-            $values = array_map("trim", $values);
-        }else{
-            $tsv = $values;
-            $values = array();
-            foreach($tsv as $record){
-                $values[ trim($record["caption"]) ] = trim($record["value"]);
+        if ( is_array($values) ){
+            $keys = array_keys($values);
+            if ( ! is_array($values[ $keys[0] ]) ){ // одномерный список значений
+                $values = array_map("trim", $values);
+            }else{
+                $tsv = $values;
+                $values = array();
+                foreach($tsv as $record){
+                    $values[ trim($record["caption"]) ] = trim($record["value"]);
+                };
+                unset($record);
             };
-            unset($record);
         };
         
     }; // switch form_values
