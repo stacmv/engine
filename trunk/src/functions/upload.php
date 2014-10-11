@@ -1,11 +1,14 @@
 <?php
-function upload_get_dir($storage_name){
+function upload_get_dir($storage_name, $folder = ""){
     global $_USER;
     
     
     $dir = FILES_DIR . glog_codify($storage_name) ."/";
     if ( ! empty($_USER["profile"]["id"]) ){
         $dir .= glog_codify($_USER["profile"]["id"]) . "/";
+    };
+    if ( $folder ){
+        $dir .= glog_codify($folder) . "/";
     };
     
    

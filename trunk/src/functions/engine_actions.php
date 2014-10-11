@@ -159,7 +159,7 @@ function confirm_email_action(){
 function do_nothing_action(){
     // do nothing
 }
-function edit_data_action(){
+function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fail=""){
     global $_PARAMS;
     global $_DATA;
     global $CFG;
@@ -171,15 +171,21 @@ function edit_data_action(){
             return array(false, "deny");
         }
     //
+    if (!$db_table){
+        $object = $_PARAMS["object"];
+        $db_table = $object."s";  //uri: edit/account.html, but db = accounts; edit/user => users.
+    }else{
+        $object = substr($db_table,0,-1);
+    }
     
-    $object = ! empty($_PARAMS["object"]) ? $_PARAMS["object"] : null;
     if ( ! $object ){
         dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'object' is not set. Check form or pages file.");
         die("Code: ea-".__LINE__);
     };
+  
     
-    list($res, $reason) = edit_data($object."s", $_PARAMS);
-    set_session_msg($object."s_edit_".$reason);
+    list($res, $reason) = edit_data($db_table, $_PARAMS);
+    set_session_msg($db_table."_edit_".$reason);
     
     if (! $res){
         $_SESSION["to"] = $_PARAMS["to"];
@@ -191,13 +197,13 @@ function edit_data_action(){
 
 
     if ($res){
-        $redirect_uri = $object."s";
-        if ( ($object == "application") ){
+        $redirect_uri = $redirect_on_success ? $redirect_on_success : $db_table;
+        if ( $object == "application" && ! userHasRight("manager") ){ // обработка заявки на регистрацию пользователя // TODO Убрать этот фрагмент в клиентский код
             $redirect_uri = "process_application/".$_PARAMS["id"];
         };
         redirect($redirect_uri);
     }else{
-        redirect("form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
+        redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
     };
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -272,6 +278,8 @@ function form_action(){
     global $_PARAMS;
     global $_PAGE;
     global $_DATA;
+    
+    set_topmenu_action();
     
     $action = $_PARAMS["action"];
     $object = $_PARAMS["object"];

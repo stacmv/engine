@@ -17,39 +17,9 @@ function db_add($db_table, $data, $comment=""){
     
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
     
-	$dbh = db_set($db_table);
-    $table_name = db_get_table($db_table);
-    
     $data["created"] = time();
-	
-    $query = "INSERT INTO ".$table_name." (";
-    $tmp = array();
-    foreach($data as $k=>$v){
-        if ( ($v!==NULL) || ($v!==false) ){
-            $tmp[] = $k;
-        };
-    };
-
-    $query .= implode(", ",$tmp);
     
-    $query .= ") VALUES (";
-    
-    $tmp = array();
-    foreach($data as $k=>$v){
-       if (is_array($v)){
-            $tmp[] = $dbh->quote( implode(DB_LIST_DELIMITER, $v) );
-       }elseif ( ($v!==NULL) && ($v!==false) ){
-			$tmp[] = $dbh->quote($v);
-        }elseif($v === NULL){
-			$tmp[] = "NULL";
-		};
-    };
-
-    $query .= implode(", ",$tmp);
-    
-    $query .= ");";
-    
-    $added_id = db_insert($db_table, $query);
+    $added_id = db_insert($db_table, $data);
        
     if ( $added_id ){
        
@@ -183,7 +153,7 @@ function db_check_schema($db_table){ // проверяет схему табли
 						$query[] = "backup";
 					};
 					$query[] = "DROP TABLE ".$table.";\n";
-					$query[] = db_get_create_table_query($db_name, $table)."\n";
+					$query[] = db_create_table_query($db_name, $table)."\n";
 					$query[] = "INSERT INTO ".$table." SELECT ".implode(", ",$fields_to_be[$table])." FROM ".$temp_table.";";
 					echo "<p>table <b>".$table."</b>:</p>";
 				};
@@ -609,33 +579,24 @@ function db_get_table($db_table){
     
     return $table;
 }
-function db_insert($db_table, $insert_query){
-    
-    global $S;
+function db_insert($db_table, $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = false;
     
     $dbh = db_set($db_table);
     
-    if (substr($insert_query,0,strlen("INSERT ")) !== "INSERT "){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Only INSERT query is allowed. Query: '".htmlspecialchars($insert_query)."'. IP:".$_SERVER["REMOTE_ADDR"]);
-        die();
-    };
+    $query = db_create_insert_query($db_table, $data);
     
-    if ( (strpos($insert_query,";") !== false) && (strpos($insert_query,";") < strlen($insert_query)-1) ){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Only one INSERT query is allowed. Query: '".htmlspecialchars($insert_query)."'. IP:".$_SERVER["REMOTE_ADDR"]);
-        die();
-    };
     
-    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$insert_query."'.");
-    $res = $dbh->exec($insert_query);
+    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
+    $res = $dbh->exec($query);
     
     if ($res){
         
         $result = $dbh->lastInsertId();
         
     }else{
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$insert_query."'.");
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'.");
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
@@ -682,7 +643,7 @@ function db_set($db_table){
         //
     
         if ( ! (int) $dbh->query($query_table_check)->fetchColumn() ){  // создаем таблицу, если она не сущестует
-            $query = db_get_create_table_query($db_table);
+            $query = db_create_table_query($db_table);
             // dump($query,"q");
             dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Creating table ".$db_table.".");
             
@@ -747,7 +708,41 @@ function db_select($db_table, $select_query, $flags=0){
     
     return $result;
 };
-function db_get_create_table_query($db_table){
+function db_create_insert_query($db_table, $data){
+	
+    $dbh = db_set($db_table);
+    $table_name = db_get_table($db_table);
+    
+    $query = "INSERT INTO ".$table_name." (";
+    $tmp = array();
+    foreach($data as $k=>$v){
+        if ( ($v!==NULL) || ($v!==false) ){
+            $tmp[] = $k;
+        };
+    };
+
+    $query .= implode(", ",$tmp);
+    
+    $query .= ") VALUES (";
+    
+    $tmp = array();
+    foreach($data as $k=>$v){
+       if (is_array($v)){
+            $tmp[] = $dbh->quote( implode(DB_LIST_DELIMITER, $v) );
+       }elseif ( ($v!==NULL) && ($v!==false) ){
+			$tmp[] = $dbh->quote($v);
+        }elseif($v === NULL){
+			$tmp[] = "NULL";
+		};
+    };
+
+    $query .= implode(", ",$tmp);    
+    $query .= ");";
+    
+    return $query;
+
+}
+function db_create_table_query($db_table){
     
     global $CFG;
     

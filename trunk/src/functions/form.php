@@ -13,6 +13,20 @@ function form_prepare($db_table, $form_name, $object=""){
         $field["type"] = $v["type"]; // тип поля в БД
         $template = ! empty($v["form_template"]) ? $v["form_template"] : null;
         
+        
+         // from значение поля 
+        $field["value_from"] = "";
+        if ( isset($object[ $v["name"] ]))        $field["value_from"] = $object[ $v["name"] ];
+        if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
+        
+        // to значение поля 
+        $field["value"] = "";
+        if ( isset($v["form_value_default"]) )    $field["value"] = $v["form_value_default"];
+        if ( isset($object[ $v["name"] ]))        $field["value"] = $object[ $v["name"] ];
+        if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
+        if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
+        
+        
         switch ($template){
         case "checkboxes": 
         case "checkboxes_pub":
@@ -58,6 +72,18 @@ function form_prepare($db_table, $form_name, $object=""){
             $field["values"] = form_get_field_values($v);
             
             $field["label"] = $v["label"];
+            
+            
+            if ( is_array($field["value"]) ){
+                if (count($field["value"]) == 1){
+                    $field["value"] = $field["value"][0];
+                }else{
+                    dosyslog(__FUNCTION__.": FATAL ERROR: Value of array type for " . $template . " field in form '".$form_name."'. Check form config.");
+                    die("Code: efr-".__LINE__);
+                }
+            }
+            
+            
             break;
              
         case "hidden":
@@ -89,17 +115,6 @@ function form_prepare($db_table, $form_name, $object=""){
         }; // switch
         
         
-        // from значение поля 
-        $field["value_from"] = "";
-        if ( isset($object[ $v["name"] ]))        $field["value_from"] = $object[ $v["name"] ];
-        if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
-        
-        // to значение поля 
-        $field["value"] = "";
-        if ( isset($v["form_value_default"]) )    $field["value"] = $v["form_value_default"];
-        if ( isset($object[ $v["name"] ]))        $field["value"] = $object[ $v["name"] ];
-        if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
-        if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
         
         
         
@@ -115,7 +130,7 @@ function form_prepare($db_table, $form_name, $object=""){
             $field["template_file"] = TEMPLATES_DIR . "form/" . $template . ".form.htm";
             if ( ! file_exists($field["template_file"]) ){
                 dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template."' for form '".$form_name."' is not found.");
-                die("Code: ef-".__LINE__."-".$template);
+                die("Code: efrm-".__LINE__."-".$template);
             };
             
             $fields[] = $field;
@@ -134,7 +149,7 @@ function form_get_fields($db_table, $form_name){
     
     if ( ! $schema ){
         dosyslog(__FUNCTION__.": FATAL ERROR: '".$db_table."' is not found in DB config.");
-        die("Code: ef-".__LINE__);
+        die("Code: efrm-".__LINE__);
     };
     
     $fields = array();
@@ -202,7 +217,7 @@ function form_get_field_values($field){
             $values = call_user_func($field["form_values"]);
         }else{
             dosyslog(__FUNCTION__.": ERROR: Values for select field '" . $field["name"] . "' have unknown format. Check DB config.");
-            die("Code: ef-".__LINE__);
+            die("Code: efrm-".__LINE__);
         }
         
         if ( is_array($values) ){

@@ -39,12 +39,28 @@ function apply_template($template_name, $content_block = ""){
         };
     };
     
-    $HTML = render_template($template_file, $_DATA);
+    $HTML = render_template($template_file, array_map("escape_template_data", (array) $_DATA) );
 
     set_content($content_block, $HTML);  
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $HTML;
 };
+function escape_template_data($data_item){
+
+    if ( is_array($data_item) ){
+        return array_map("escape_template_data", $data_item);
+    }else{
+        return htmlspecialchars($data_item, ENT_QUOTES, "UTF-8"); 
+    };
+}
+function unescape_template_data($data_item, $mode="html"){
+
+    if ( is_array($data_item) ){
+        return array_map("unescape_template_data", $data_item,$mode);
+    }else{
+        return htmlspecialchars_decode($data_item, ENT_QUOTES); 
+    };
+}
 function get_content($block_name){
     global $S;
     global $CFG;

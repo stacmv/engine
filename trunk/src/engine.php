@@ -156,6 +156,9 @@ function IDENTICATE(){
         $_RESPONSE["headers"] = $headers;
         unset($_SESSION["NOTLOGGED"]);
         SENDHEADERS();
+        if ( file_exists(ENGINE_DIR . "settings/not_logged.htm") ){
+            readfile(ENGINE_DIR . "settings/not_logged.htm");
+        };
         exit;
     };    
     
@@ -593,7 +596,8 @@ session_start();
 
 $DONTSHOWERRORS = false; // когда вывод ошибок недопустим (при вызове методов API, например, надо устанавливать эту переменную в true.
 $ISERRORSREGISTERED = false; // зарегистрированы ли ошибки? Функция REGISTERERRORS() устанавливает переменную в true. Иначе, регистрация ошибок будет в shutdown().
-$ISREDIRECT = false;
+$ISREDIRECT  = false;
+$IS_API_CALL = false;
 
 
 GETURI();
@@ -610,7 +614,7 @@ while(HASNEXTACTION()){
 
 };
 
-if (!$ISREDIRECT){
+if ( ! $ISREDIRECT && ! $IS_API_CALL){
    
     APPLYPAGETEMPLATE();
   

@@ -162,8 +162,8 @@ if (!function_exists("get_pages")){
         
 
         $pages_files = array(
-            "app"    => APP_DIR    . "settings/pages.json",
             "engine" => ENGINE_DIR . "settings/pages.json",
+            "app"    => APP_DIR    . "settings/pages.json",
         );
         
         $pages = array();
@@ -599,7 +599,9 @@ if (!function_exists("userHasRight")){
         
         if ( ! $login ){
             if ( empty($_USER["profile"]["acl"]) ){
-                dosyslog(__FUNCTION__.": ERROR: ".$login.": права не заданы.");
+                if ( ! $_USER["isGuest"] ){
+                    dosyslog(__FUNCTION__.": ERROR: ".$login.": права не заданы.");
+                };
                 return false;
             };
             $login = $_USER["profile"]["login"];
@@ -621,7 +623,7 @@ if (!function_exists("userHasRight")){
         
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
-        dosyslog(__FUNCTION__.": DEBUG: ".$login." ".($res?"имеет право " : "не имеет права "). $right);
+        // dosyslog(__FUNCTION__.": DEBUG: ".$login." ".($res?"имеет право " : "не имеет права "). $right);
         
         return $res;
     };
