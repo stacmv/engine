@@ -421,6 +421,30 @@ if (!function_exists("set_template_for_user")){
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     };
 };
+if (!function_exists("set_topmenu")){
+    function set_topmenu(){
+        $menu = array();
+        $menu_file = APP_DIR . "settings/menu.tsv";
+        $tmp = import_tsv($menu_file);
+        if (!$tmp){
+            dosyslog(__FUNCTION__.": FATAL ERROR: Can not import menu file.");
+            die("Code: df-".__LINE__."-topmenu");
+        };
+        $menu = $tmp;
+       
+            
+        // формирование topmenu для конкретного пользователя
+        $topmenu = array();
+       
+        foreach($menu as $menuItem){
+            $rights = isset($menuItem["rights"]) ? explode(",",$menuItem["rights"]) : array();
+            $isOk = false;
+            if (!empty($rights)) foreach($rights as $right) $isOk = userHasRight( trim($right) );
+            
+            if ($isOk) $topmenu[] = $menuItem;
+        };
+    };
+}
 if (!function_exists("show")){
     function show($var){
         global $CFG;

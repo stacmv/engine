@@ -534,5 +534,14 @@ function send_registration_repetition_request_action(){
 	};
 	exit($HTML);
 };
+function set_topmenu_action(){
+    global $_DATA;
     
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");  
+ 
+    $_DATA["topmenu"] = set_topmenu();
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+};    
 
