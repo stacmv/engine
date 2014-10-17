@@ -1,6 +1,11 @@
 <?php
 function add_data($db_table, $data){
     
+    if ( ! isset($data["to"]) ){
+        dosyslog(__FUNCTION__.": Data array does not have  item 'to'.");
+        die("Code: ef-".__LINE__);
+    };
+    
     $data = parse_post_data($data,"add");
     $data = $data["to"];
     
