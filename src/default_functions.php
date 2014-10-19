@@ -443,6 +443,8 @@ if (!function_exists("set_topmenu")){
             
             if ($isOk) $topmenu[] = $menuItem;
         };
+        
+        return $topmenu;
     };
 }
 if (!function_exists("show")){
