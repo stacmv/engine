@@ -192,28 +192,29 @@ function db_check_schema($db_table){ // проверяет схему табли
 									$extra_encoded = json_encode($extra);
 									
 									if (!empty($extra) && ($extra_encoded != $row["extra"]) ){
-										$qu = "UPDATE ".$temp_table." SET extra = ".$dbh->quote($extra_encoded)." WHERE id='".$row["id"]."';";
+										$qu = "UPDATE ".$temp_table." SET extra = ".$dbh->quote($extra_encoded)." WHERE id=".(int) $row["id"].";";
 										echo "<li>$qu</li>";
                                         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$qu."'.");
 										$res_u = $dbh->exec($qu);
 
 										if(!$res_u){
-											dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not backup data while migrate DB schema. Query failed: '$qu'.");
-											die();
+                                            dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $temp_table . "]: '".db_error($dbh)."'. Query: '".$qu."'.");
+											dosyslog(__FUNCTION__.": FATAL ERROR: Can not backup data while migrate DB schema. Query failed: '$qu'.");
+											die("FATAL ERROR: Can not backup data while migrate DB schema.");
 										};
 									};
 								}; //while
 								echo "</ol>";
 							}else{
 								dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not backup data while migrate DB schema. Query failed: '$qb'.");
-								die();
+								die("FATAL ERROR: Can not backup data while migrate DB schema.");
 							};
 						}else{
                             if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$q."'.");
 							$res[$table][$q] = $dbh->query($q);
 							if(!$res[$table][$q]){
 								dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not backup data while migrate DB schema. Query failed: '$q'.");
-								die();
+								die("FATAL ERROR: Can not backup data while migrate DB schema.");
 							};
 						};
 						echo "</li>";
