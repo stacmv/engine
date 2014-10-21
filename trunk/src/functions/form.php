@@ -30,6 +30,7 @@ function form_prepare($db_table, $form_name, $object=""){
         switch ($template){
         case "checkboxes": 
         case "checkboxes_pub":
+        case "multiselect":
             $field["name"]      = $v["name"];
             $field["name_from"] = "from[".$v["name"]."][]";
             $field["name_to"]   = "to[".$v["name"]."][]";
