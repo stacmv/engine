@@ -157,7 +157,7 @@ function IDENTICATE(){
         unset($_SESSION["NOTLOGGED"]);
         SENDHEADERS();
         if ( file_exists(ENGINE_DIR . "settings/not_logged.htm") ){
-            readfile(ENGINE_DIR . "settings/not_logged.htm");
+            include(ENGINE_DIR . "settings/not_logged.htm");
         };
         exit;
     };    

@@ -128,7 +128,7 @@ function form_prepare($db_table, $form_name, $object=""){
          // Шаблон поля : показывать ли поле на форме и как именно
         if ( $field && $template ){
             $field["template"] = $template;
-            $field["template_file"] = TEMPLATES_DIR . "form/" . $template . ".form.htm";
+            $field["template_file"] = form_get_template_file($template);
             if ( ! file_exists($field["template_file"]) ){
                 dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template."' for form '".$form_name."' is not found.");
                 die("Code: efrm-".__LINE__."-".$template);
@@ -240,3 +240,6 @@ function form_get_field_values($field){
     return $values;
 }
 
+function form_get_template_file($template){
+    return TEMPLATES_DIR . "form/" . $template . ".form.htm";
+}
