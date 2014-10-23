@@ -287,7 +287,7 @@ function form_action(){
     $db_name = $object ."s";
     
     set_objects_action($form_name);
-    
+        
     if ( $action == "add" ){
         $_DATA["fields_form"] = form_prepare($db_name, $form_name);
     }else{

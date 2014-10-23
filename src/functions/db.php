@@ -768,6 +768,9 @@ function db_create_table_query($db_table){
         $type = (string) $field["type"];
         switch ($type){
             case "autoincrement": $tmp .= " INTEGER PRIMARY KEY"; break;
+            case "number":        $tmp .= " NUMERIC"; break;
+            case "timestamp":     $tmp .= " NUMERIC"; break;
+            case "string":        $tmp .= " TEXT"; break;
             case "json": $tmp .=" TEXT"; break;
         };
         $aTmp[] = $tmp;
