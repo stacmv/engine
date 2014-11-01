@@ -79,9 +79,10 @@ function form_prepare($db_table, $form_name, $object=""){
                 if (count($field["value"]) == 1){
                     $field["value"] = $field["value"][0];
                 }else{
-                    dosyslog(__FUNCTION__.": FATAL ERROR: Value of array type for " . $template . " field in form '".$form_name."'. Check form config.");
-                    die("Code: efr-".__LINE__);
-                }
+                    
+                    // Несколько выбранных значений, при том, что может быть только одно. Не устанавливаем значение по умолчанию, перекладываем выбор на пользователя
+                    dosyslog(__FUNCTION__.": WARNING: Value of array type for " . $template . " field '".$field["name"]."' in form '".$form_name."'. Field[value]: '".json_encode($field["value"])."'. Check form config.");
+                };
             }
             
             
