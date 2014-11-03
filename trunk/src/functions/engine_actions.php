@@ -37,9 +37,13 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     if ($res){
-        redirect($redirect_on_success ? $redirect_on_success : $db_table);
+        if ( ! is_null($redirect_on_success) ){
+            redirect($redirect_on_success ? $redirect_on_success : $db_table);
+        };
     }else{
-        redirect($redirect_on_fail ? $redirect_on_fail : "form/add/".$_PARAMS["object"]);
+        if ( ! is_null($redirect_on_fail) ){
+            redirect($redirect_on_fail ? $redirect_on_fail : "form/add/".$_PARAMS["object"]);
+        };
     };
     
     return array($res, $added_id);
@@ -79,10 +83,58 @@ function approve_application_action(){
         $user_data["to"]["is_consultant"] = "yes";
         unset($user_data["to"]["status"]);
         
+        // убрать фото из добавляемых данных, т.е. файл реально не загружается
+        unset($user_data["to"]["photo"]);
         list($res, $added_id) = add_data("users", $user_data);
         $reason = ((int)$added_id) ? "success" : $added_id;
         set_session_msg("users_add_".$reason,$reason);
         if ($res){
+            $user_id = $added_id;
+            
+            // Переместить файл с фотографией в каталог пользователя
+            if ( ! empty($application_data["to"]["photo"]) ){
+                if ( file_exists($application_data["to"]["photo"]) ){
+                    
+                    $orig_filename  = pathinfo($application_data["to"]["photo"],PATHINFO_FILENAME);
+                    $orig_extension = pathinfo($application_data["to"]["photo"],PATHINFO_EXTENSION);
+                    if ( ! $orig_extension ) $orig_extension = "jpg";
+                    
+                    $user_dir = upload_get_dir("users", "", $user_id);
+                    if ( ! is_dir($user_dir) ) mkdir($user_dir, 0777, true);
+                    
+                    $dest_name = $user_dir . get_filename($orig_filename."__".date("YmdHis"), ".".$orig_extension);
+                    
+                    if ( copy($application_data["to"]["photo"], $dest_name) ){
+                    
+                        // Update user photo in DB
+                        $changes = array(
+                            "photo" => array(
+                                "from" => null,
+                                "to"   => $dest_name
+                            )
+                        );
+                        
+                        list($res, $reason) = db_edit("users", $user_id, $changes, "Фотография пользователя id:".$user_id." взята из заявки id:".$application_data["to"]["id"]);
+                        if ( ! $res ){
+                            set_session_msg("user_set_photo_".$reason, $reason);
+                            dosyslog(__FUNCTION__.": ERROR: Can not set user photo.");
+                        };
+                    
+                    }else{
+                        
+                        set_session_msg("user_set_photo_copy_fail","error");
+                        dosyslog(__FUNCTION__.": ERROR: Can not copy user id:".$user_id." photo from application id:".$application_data["to"]["id"].". Source file: '".$application_data["to"]["photo"]."', dest file: '".$dest_name."'.");
+                        
+                    }
+                    
+                }else{
+                    set_session_msg("user_set_photo_not_exist","error");
+                    dosyslog(__FUNCTION__.": ERROR: User id:".$user_id." photo from application id:".$application_data["to"]["id"]." is not exist. Source file: '".$application_data["to"]["photo"]."'.");
+                };
+            }else{
+                dosyslog(__FUNCTION__.": ERROR: User id:".$user_id." photo is not set in application id:".$application_data["to"]["id"].".");
+            };
+        
             
             // Записать пароль в сессию
             $_SESSION["application_key_".$application_data["id"]] = $user_data["to"]["pass"];
@@ -198,9 +250,6 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 
     if ($res){
         $redirect_uri = $redirect_on_success ? $redirect_on_success : $db_table;
-        if ( $object == "application" && ! userHasRight("manager") ){ // обработка заявки на регистрацию пользователя // TODO Убрать этот фрагмент в клиентский код
-            $redirect_uri = "process_application/".$_PARAMS["id"];
-        };
         redirect($redirect_uri);
     }else{
         redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
@@ -357,7 +406,7 @@ function process_application_action(){
     
     $id = $_PARAMS["id"];
     if(!$id){
-        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'objectId' is not set.");
+        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'id' is not set.");
         die("Code: ea-" . __LINE__);
     };
     
@@ -387,7 +436,7 @@ function process_application_action(){
                         // dump($application,"application");
                         // die();
                         $res = false; 
-                        $empty_fields[] = (string)$field["name"];
+                        $empty_fields[ $field["name"] ] = ! empty($field["label"]) ? $field["label"] : $field["name"];
                     };
                 };
                 if ($res) {
@@ -410,8 +459,14 @@ function process_application_action(){
                     dosyslog(__FUNCTION__.": NOTICE: Confirmation link was NOT sent to e-mail '".@$application["email"]."'.");
                     dosyslog(__FUNCTION__.": NOTICE: Mandatory fields are not filled: '".implode(", ",$empty_fields)."'. Status remains unchanged: '".@$status."'.");
                     
-                    set_session_msg("applications_edit_fail","error");
-                    redirect("form/edit/application/".$id);
+                    if ( ! empty($empty_fields) ){
+                        foreach($empty_fields as $field_name=>$field_label){
+                            set_session_msg("Не заполнено обязательное поле '".$field_label."'.", "error");
+                        };
+                    }else{
+                        set_session_msg("applications_edit_fail","error");
+                    };
+                    redirect("pub/form/edit/application/".$id);
                     
                 };
                 
@@ -431,24 +486,9 @@ function register_application_action(){ // регистрация в БД нов
     global $CFG;
     global $_PARAMS;
   
-	$S["object"] = "application"; // without 's' at the end.
-    $status = 0;     
-    
-    
-    $data = array("status"=>$status);
-    $comment = "Начата регистрация нового партнера.";
-        
-    $added_id = db_add("applications", $data, $comment);
-    
-    if ($added_id){
-        $_SESSION["application_id"] = $added_id;
-        redirect("form/edit/application/" . $added_id);
-        unset($_SESSION["to"]);
-    }else{
-        redirect("process_application");
-        unset($_SESSION["application_id"]);
-    };
-    
+    redirect("pub/form/add/application");
+    unset($_SESSION["to"]);
+    unset($_SESSION["application_id"]);
 
 };
 function send_registration_approval_action(){

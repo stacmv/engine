@@ -35,6 +35,9 @@ function add_data($db_table, $data){
                 $msg = "upload_file_".$dest_file;
                 $isDataValid = false;
             };
+            
+            set_session_msg($msg);
+            
         }else{
                     
             if ( ! isset($data[$name]) ) $data[$name] = null;
@@ -72,11 +75,11 @@ function add_data($db_table, $data){
             
             $added_id = db_add($db_table, $data,$comment);
             if ( ! $added_id ){
-                dosyslog(__FUNCTION__ . ": WARNING: Ошибка db_add().");
+                dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Ошибка db_add().");
             };
             
     }else{
-        dosyslog(__FUNCTION__ . ": WARNING: Данные не валидны.");
+        dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Данные не валидны.");
     };   
     
     if ( $added_id ) return array(true, $added_id);
@@ -221,8 +224,10 @@ function parse_post_data($data, $action){
     $files = array();
     if ( ! empty($_FILES["to"]["name"]) ){
         foreach($_FILES["to"]["name"] as $file_param_name=>$file_name){
-            $data["to"][$file_param_name] = $file_name;
-            $files[] = $file_param_name."=".$file_name;
+            if ( $file_name ){
+                $data["to"][$file_param_name] = $file_name;
+                $files[] = $file_param_name."=".$file_name;
+            };
         };
     };
     if ( $files ) dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".implode(", ",$files)."'.");
@@ -245,17 +250,6 @@ function parse_post_data($data, $action){
         if ( ! empty($diff1) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'to' are absent in 'from' data:" . implode(", ",$diff1).".");
         $diff2 = array_diff(array_keys($data["from"]), array_keys($data["to"]));
         if ( ! empty($diff2) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'from' are absent in 'to' data:" . implode(", ",$diff1).".");
-        
-        // Обработка загружаемых файлов
-        $files = array();
-        if ( ! empty($_FILES["to"]["name"]) ){
-            foreach($_FILES["to"]["name"] as $file_param_name=>$file_name){
-                $data["to"][$file_param_name] = $file_name;
-                $files[] = $file_param_name."=".$file_name;
-            };
-        };
-        if ( $files ) dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".implode(", ",$files)."'.");
-        
         
         // Убрать поля, значения которых не будут меняться (одинаковые)
         $deleted = array();
