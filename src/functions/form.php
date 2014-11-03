@@ -53,7 +53,9 @@ function form_prepare($db_table, $form_name, $object=""){
             break;
             
         case "select":
+        case "select_pub":
         case "radio":
+        case "radio_pub":
             $field["name"]      = $v["name"];
             $field["name_from"] = "from[".$v["name"]."]";
             $field["name_to"]   = "to[".$v["name"]."]";

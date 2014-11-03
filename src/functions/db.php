@@ -493,12 +493,14 @@ function db_get($db_table, $id, $flags=0){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = array();
     $dbh = db_set($db_table);
+    
+    $table_name = db_get_table($db_table);
 	
     if ( ! is_numeric($id)){
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Non-numeric id: '".serialize($id)."' while querying DB '" . $db_table . "'.");
     };
     
-    $query = "SELECT * FROM " . $db_table . " WHERE id='" . $id . "';";
+    $query = "SELECT * FROM " . $table_name . " WHERE id='" . $id . "';";
     
     if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
     $res = $dbh->query($query);
