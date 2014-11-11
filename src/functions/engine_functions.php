@@ -249,7 +249,7 @@ function parse_post_data($data, $action){
         $diff1 = array_diff(array_keys($data["to"]), array_keys($data["from"]));
         if ( ! empty($diff1) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'to' are absent in 'from' data:" . implode(", ",$diff1).".");
         $diff2 = array_diff(array_keys($data["from"]), array_keys($data["to"]));
-        if ( ! empty($diff2) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'from' are absent in 'to' data:" . implode(", ",$diff1).".");
+        if ( ! empty($diff2) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'from' are absent in 'to' data:" . implode(", ",$diff2).".");
         
         // Убрать поля, значения которых не будут меняться (одинаковые)
         $deleted = array();
@@ -270,6 +270,12 @@ function parse_post_data($data, $action){
         
         dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Оставлены поля [to] '".implode(", ",array_keys($data["to"]))."'.");
     }
+    
+    
+    // Для многострочных тектовых строк - заменить конец строки на \n;
+    foreach($data["from"] as $k=>$v) $data["from"][$k] = preg_replace('~\R~u', "\n", $v);
+    foreach($data["to"]   as $k=>$v) $data["to"][$k]   = preg_replace('~\R~u', "\n", $v);
+    
     
     return $data;
 }

@@ -11,7 +11,7 @@
 	{
 		"uri":"login",
 		"title":"Вход в систему",
-		"actions": ["redirect"],
+		"actions": ["login"],
 		"templates": {
 			"content":"login.htm",
 			"page":"page.htm",

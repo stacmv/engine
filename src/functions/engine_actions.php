@@ -383,6 +383,18 @@ function import_first_user_action(){
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
+function login_action(){
+    global $CFG;
+
+    if ( ! empty($CFG["URL"]["dashboard"]) ){
+        $redirect_uri = $CFG["URL"]["dashboard"];
+    }else{
+        $redirect_uri = "";
+    }
+
+    redirect($redirect_uri);
+
+}
 function logout_action(){
     logout();
 }

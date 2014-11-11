@@ -98,7 +98,7 @@ function db_check_schema($db_table){ // проверяет схему табли
     
 	$tables = db_get_tables_list_from_xml($db_name);
 	$columns = array(); // поля в текущей БД
-	$fields_to_be = array(); // поля, опсианные в XML
+	$fields_to_be = array(); // поля, описанные в XML
 	$fields_to_add = array(); // поля, которые есть в XML, но нет в текущей БД
 	$fields_to_del = array(); // поля, которые должны быть удалены (и за "бэкаплены" в поле extra)
 	
@@ -113,9 +113,10 @@ function db_check_schema($db_table){ // проверяет схему табли
         if (!empty($tmp[0])){
             $columns[$table] = array_keys($tmp[0]);
         }else{ // таблица не существует в БД
-            echo "Таблица ".$table." отсутсвует в БД ".$db_name.". Она будет создана движком при первом реальном использовании. <br>";
+            echo "Таблица ".$table." отсутствует в БД ".$db_name.". Она будет создана движком при первом реальном использовании. <br>";
             continue;                 // на надо создавать таблицу в ходе миграции, она будет создана движком при первом реальном использовании.
-        }
+        };
+        
 		// dump($columns,$table);
 	
 		$fields_to_add[$table] = array();
@@ -130,20 +131,33 @@ function db_check_schema($db_table){ // проверяет схему табли
 		foreach($columns[$table] as $k=>$v){
 			if (!in_array($v, $fields_to_be[$table])) $fields_to_del[$table][] = $v;
 		};
-		
-		if (!empty($fields_to_add[$table])){
-			dump($fields_to_add[$table],"to add into ".$db_name.".".$table);
-		};
-		if (!empty($fields_to_del[$table])){
-			dump($fields_to_del[$table],"to del from ".$db_name.".".$table);
-		};
 	};	
 	
-	echo "<pre><p>БД <b>$db_name</b></p>";
-	
+	echo "<h3>БД $db_name</h3>";
+    
 	if (!empty($fields_to_add)){
+   
 		foreach($fields_to_add as $table=>$fields){
+        
 			if (!empty($fields)){
+            
+                ?>
+                    <table class="table table-bordered">
+                        <caption><?=$table;?></caption>
+                        <tr><th>Текущие поля</th><td><?=implode(", ", $columns[$table]);?></td></tr>
+                        <tr><th>Поля</th><th>Операции</th></tr>
+                        <?foreach(array_merge($columns[$table], $fields_to_add[$table]) as $k=>$v):?>
+                            
+                            <?if (in_array($v, $fields_to_add[$table]) ):?>
+                                <tr><th><?=$v;?></th> <td><i class="icon icon-plus text-success"></i></td> </tr>
+                            <?elseif(in_array($v, $fields_to_del[$table]) ):?>
+                                <tr><th><?=$v;?></th> <td><i class="icon icon-remove text-danger"></i></td> </tr>
+                            <?endif;?>
+                        <?endforeach;?>
+                    </table>
+                <?php
+                
+            
 				$temp_table = $table."_".date("Y_m_d__H_i")."_bak";
 				$query = array();
 				if (!empty($fields)){
@@ -318,7 +332,7 @@ function db_edit($db_table, $id, $changes, $comment=""){
     };
     
     // Check if object is in state it supposed to be in.
-    $conflicted = array(); // список полей, у которых состояние from не совпадает с теекущим состоянием в БД.
+    $conflicted = array(); // список полей, у которых состояние from не совпадает с текущим состоянием в БД.
     $not_existed = array(); // поля, которые отсутствуют у объекта, взятого из БД.
     foreach ($changes as $what=>$v){
         if ( ! array_key_exists($what, $object) ){
@@ -335,7 +349,7 @@ function db_edit($db_table, $id, $changes, $comment=""){
         };
     };
     unset($what, $v);
-    
+   
     if ( ! empty($not_existed) ){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Theese fields are not exist in [".$db_table."]: ". implode(", ", $not_existed).".");
     };
