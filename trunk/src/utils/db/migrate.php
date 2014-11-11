@@ -15,6 +15,17 @@ require APP_DIR . "require.php";
 
 // ============================
 
+?>
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <base href="../../">
+    <link rel="stylesheet" href="assets/css/bootstrap-combined.min.css">
+</head>
+<body>
+<div class="container">
+<?php
+
 $dbs = glob(DATA_DIR . "*.db");
 
 foreach($dbs as $db_file){
@@ -25,3 +36,8 @@ foreach($dbs as $db_file){
     echo "<b>Done.<br>";
 };
 echo "Done all.";
+
+?>
+</div>
+</body>
+</html>
