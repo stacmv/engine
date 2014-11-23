@@ -256,6 +256,9 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     };
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    return array($res, $reason);
+    
 };
 function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_fail=""){
     global $_PARAMS;
@@ -322,6 +325,8 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
     };
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    return array($res, $reason);
 };
 function form_action(){
     global $_PARAMS;

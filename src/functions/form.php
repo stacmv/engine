@@ -170,7 +170,7 @@ function form_get_fields($db_table, $form_name){
         }
         $form_index = array_search($form_name, $forms);
         if ($form_index === false) continue; // поле БД не попадает в форму $form_name
-    
+            
         $v["form"] = $form_name;
     
         // Parse some data
@@ -178,7 +178,14 @@ function form_get_fields($db_table, $form_name){
             if (substr($prop_key, 0, 5) == "form_"){
                 if ( strpos($prop_value, "|") !== false ){
                     $tmp = explode("|", $prop_value);
-                    $v[$prop_key] = $tmp[$form_index];
+                    if ( isset($tmp[$form_index]) ){
+                        $v[$prop_key] = $tmp[$form_index];
+                    }else{
+                        
+                        dosyslog(__FUNCTION__.": FATAL ERROR: Template for field '".$prop_key."' in form '".$form_name."' is not set. Check db config file.");
+                        die("Code: efrm-".__LINE__);
+                        
+                    }
                     unset($tmp);
                 };
             }
