@@ -57,7 +57,7 @@ function upload_file($param_name, $storage_name, $isUrl = false){
         }else{
             return array(false, "no_file");
         };
-    }else{  // загрузка файла с удаленного сервера
+    }else{  // загрузка файла с локального или  удаленного сервера
         
         $orig_filename  = pathinfo($param_name,PATHINFO_FILENAME);
         $orig_extension = pathinfo($param_name,PATHINFO_EXTENSION);
