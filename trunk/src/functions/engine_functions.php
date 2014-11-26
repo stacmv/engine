@@ -31,7 +31,9 @@ function add_data($db_table, $data){
             $storage_name = $db_table;
             if ( filter_var($data[$name], FILTER_VALIDATE_URL) ){   // передан URL
                 list($res, $dest_file) = upload_file($data[$name], $storage_name, $isUrl = true);
-            }else{                                                  // загружен файл
+            }elseif( file_exists($data[$name]) && (strpos($data[$name], FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
+                list($res, $dest_file) = upload_file($data[$name], $storage_name, $isUrl = true);
+            }else{// загружен новый файл
                 list($res, $dest_file) = upload_file($name, $storage_name);
             };
             
