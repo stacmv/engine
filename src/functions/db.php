@@ -345,7 +345,12 @@ function db_edit($db_table, $id, $changes, $comment=""){
         }
         
         if ($changes[$what]["from"] != $object[$what]){ 
-            $conflicted[] = $what . "(from: '".$changes[$what]["from"]."', in db: '".$object[$what]."')";
+            // Проблема в переводах строки?  Хак. На случай когда в БД уеже есть данные с неверными переводами строки.
+            if (preg_replace('~\R~u', "\n", $changes[$what]["from"]) == preg_replace('~\R~u', "\n", $object[$what])){
+                // Это не конфликт.
+            }else{
+                $conflicted[] = $what . "(from: '".$changes[$what]["from"]."', in db: '".$object[$what]."')";
+            };
         };
     };
     unset($what, $v);
