@@ -125,9 +125,9 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
     foreach($data["to"] as $key=>$value){
         $type = "";
         foreach($table as $field){ // есть ли такое поле в таблице БД?
-            if ( (string) $field["name"] == $key) {
-                $type = (string) $field["type"];
-                $name = (string) $field["name"];
+            if ($field["name"] == $key) {
+                $type = $field["type"];
+                $name = $field["name"];
                 break;
             }
         };
@@ -174,38 +174,23 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
                    
                 }else{
                     
-                    if (isset($data["to"][$name])){
-                        $changes[$name]["from"] = $data["from"][$name];
-                        $changes[$name]["to"] = $data["to"][$name];
-                        switch($type){
-                            case "list":
-                                if (is_array($changes[$name]["from"])){
-                                    $changes[$name]["from"] = implode(DB_LIST_DELIMITER,(array) $data["from"][$name]);
-                                };
-                                if (is_array($changes[$name]["to"])){
-                                    $changes[$name]["to"] = implode(DB_LIST_DELIMITER,(array) $data["to"][$name]);
-                                };
-                                break;
-                            case "json":
-                                if (is_array($changes[$name]["from"])){
-                                    $changes[$name]["from"] = json_encode($data["rom"][$name]);
-                                };
-                                if (is_array($changes[$name]["to"])){
-                                    $changes[$name]["to"] = json_encode($data["to"][$name]);
-                                };
-                                break;
-                            default:
-                                $changes[$name]["to"] = $data["to"][$name];
-                        };
+                    if (array_key_exists($name, $data["to"])){
+                        $changes[$name]["from"] = db_prepare_value($data["from"][$name], $type);
+                        $changes[$name]["to"] = db_prepare_value($data["to"][$name], $type);
                     };
+                    dosyslog(__FUNCTION__.": DEBUG: changes[".$name."] = ".json_encode($changes[$name]).".");
                 };
             }else{
                 $isDataValid = false;
                 if (empty($msg)) $msg = "Ошибка в поле '". $field["name"]."'.";
+                dosyslog(__FUNCTION__.": WARNING: ".$msg);
                 set_session_msg($msg, "error");
 
             };
         };
+        
+        
+        
     };//foreach
     unset($key, $value, $res);
 
@@ -215,6 +200,11 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
         $comment_data = $changes;
         $comment_data["id"] = $id;
         $comment = get_db_comment($db_table,"edit",$comment_data);
+        
+        
+        // dump($data,"data");
+        // dump($changes,"changes");
+        // die(__FUNCTION__);
         
         list($res, $reason) = db_edit($db_table, $id, $changes, $comment);
         if (! $res) set_session_msg($db_table."_edit_".$reason, $reason);
