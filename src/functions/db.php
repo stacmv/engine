@@ -167,7 +167,7 @@ function db_check_schema($db_table){ // проверяет схему табли
 						$query[] = "backup";
 					};
 					$query[] = "DROP TABLE ".$table.";\n";
-					$query[] = db_create_table_query($db_name, $table)."\n";
+					$query[] = db_create_table_query($db_name.".".$table)."\n";
 					$query[] = "INSERT INTO ".$table." SELECT ".implode(", ",$fields_to_be[$table])." FROM ".$temp_table.";";
 					echo "<p>table <b>".$table."</b>:</p>";
 				};
@@ -316,7 +316,6 @@ function db_edit($db_table, $id, $changes, $comment=""){
         dosyslog(__FUNCTION__.": Attempt to edit object which is absent in DB '".$db_table."'. ID='".$id."'.");
         return array(false, "wrong_id");
     };
-    
     
     // Check that the changes are really change something.
     foreach ($changes as $what=>$v){
@@ -917,7 +916,49 @@ function db_parse_result($db_table, $result){
                 };
             };
         };
+        if ($field["type"] == "json"){
+            if (isset($result[$field["name"]]) ){
+                $stored = $result[$field["name"]];
+                $result[$field["name"]] = @json_decode( $result[$field["name"]], true );
+                if ($result[$field["name"]] == false){
+                    dosyslog(__FUNCTION__.": ERROR: JSON parse error on ".$db_table.".".$field["name"].": '".$stored."'.");
+                    $result[$field["name"]] = array();
+                };
+                unset($stored);
+            };
+        };
     };
 
     return $result;
+}
+function db_prepare_value($value, $field_type){
+
+    $res = $value;
+    
+    switch($field_type){
+        case "list":
+            if (is_array($value)){
+                $res = implode(DB_LIST_DELIMITER,(array) $value);
+            };
+            break;
+        case "json":
+            if (is_array($value)){
+                $res = json_encode($value);
+            };
+            break;
+        case "number":
+            if ( ! is_null($value) ){
+                $res = (int) $value;
+            };
+            break;
+        default:
+            $res = $value;
+    };
+    
+    if ( $res != $value){
+        dosyslog(__FUNCTION__.": DEBUG: value='".json_encode($value)."', result='".json_encode($res)."'.");
+    };
+    
+    
+    return $res;
 }

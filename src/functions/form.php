@@ -16,13 +16,23 @@ function form_prepare($db_table, $form_name, $object=""){
         
          // from значение поля 
         $field["value_from"] = "";
-        if ( isset($object[ $v["name"] ]))        $field["value_from"] = $object[ $v["name"] ];
+        if ( isset($object[ $v["name"] ])){
+            $field["value_from"] = $object[ $v["name"] ];
+            if (! in_array($v["type"], array("string", "number","list"))){
+                $field["value_from"] = db_prepare_value($object[ $v["name"] ], $v["type"]);
+            };
+        };
         if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
         
         // to значение поля 
         $field["value"] = "";
         if ( isset($v["form_value_default"]) )    $field["value"] = $v["form_value_default"];
-        if ( isset($object[ $v["name"] ]))        $field["value"] = $object[ $v["name"] ];
+        if ( isset($object[ $v["name"] ])){
+            $field["value"] = $object[ $v["name"] ];
+            if (! in_array($v["type"], array("string", "number","list"))){
+                $field["value"] = db_prepare_value($object[ $v["name"] ], $v["type"]);
+            };
+        };
         if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
         if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
         
