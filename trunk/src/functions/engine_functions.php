@@ -79,10 +79,8 @@ function add_data($db_table, $data){
 
     $added_id = false;
     if ($isDataValid){
-
-            $comment = get_db_comment($db_table,"add",$data);
             
-            $added_id = db_add($db_table, $data,$comment);
+            $added_id = db_add($db_table, $data);
             if ( ! $added_id ){
                 dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Ошибка db_add().");
             };
@@ -196,17 +194,8 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
 
 
     if ($isDataValid){
-
-        $comment_data = $changes;
-        $comment_data["id"] = $id;
-        $comment = get_db_comment($db_table,"edit",$comment_data);
-        
-        
-        // dump($data,"data");
-        // dump($changes,"changes");
-        // die(__FUNCTION__);
-        
-        list($res, $reason) = db_edit($db_table, $id, $changes, $comment);
+               
+        list($res, $reason) = db_edit($db_table, $id, $changes);
         if (! $res) set_session_msg($db_table."_edit_".$reason, $reason);
                       
     }else{

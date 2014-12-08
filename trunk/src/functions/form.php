@@ -241,7 +241,8 @@ function form_get_field_values($field){
             die("Code: efrm-".__LINE__);
         }
         
-        if ( is_array($values) ){
+        if ( is_array($values) && ! empty($values) ){
+        
             $keys = array_keys($values);
             if ( ! is_array($values[ $keys[0] ]) ){ // одномерный список значений
                 $values = array_map("trim", $values);
