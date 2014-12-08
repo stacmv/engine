@@ -286,13 +286,14 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
     $result = "fail";
     
     $confirm = ! empty($_PARAMS["confirm"]) ? $_PARAMS["confirm"] : null;
+    $comment = ! empty($_PARAMS["comment"]) ? $_PARAMS["comment"] : null;
     
     if ($confirm){
         
 		$item = db_get($db_table, $id);
 		if ($item){
 			
-            list($res, $reason) = db_delete($db_table, $id, get_db_comment($db_table, "delete", $item) );
+            list($res, $reason) = db_delete($db_table, $id, $comment );
             set_session_msg($db_table."_delete_".$reason, $reason);
             
             if ($res){
@@ -346,6 +347,7 @@ function form_action(){
         $_DATA["fields_form"] = form_prepare($db_name, $form_name);
     }else{
         if ( ! isset($_DATA[$object]) ){
+            dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
             die("Code: ea-".__LINE__);
         };
         $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);

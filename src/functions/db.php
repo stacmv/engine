@@ -50,9 +50,7 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $ch
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $res = true;
-    
-    $comment .= " IP:" . @$_SERVER["REMOTE_ADDR"];
-    
+     
     $db_name =  db_get_name($db_table);
     $table_name = db_get_table($db_table);
 
@@ -67,24 +65,33 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $ch
     
     $record = array(
         "db"            =>  $db,
+        "action"        =>  $action,
         "objectId"      =>  (int) $objectId,
         "subjectId"     =>  (int) $subjectId,
-        "action"        =>  $action,
-        "action_uid"    =>  md5(time()),
-        "timestamp"     =>  time()
+        "subjectIP"     =>  @$_SERVER["REMOTE_ADDR"],
+        "timestamp"     =>  time(),
     );
     
-    $changes["_comment"] = array("to"=>$comment);
+    if ($comment) $record["comment"] = $comment;
+       
+    $changes = db_translate_changes($changes, 0);
     
-    foreach($changes as $k=>$v){
-        $record["changes_what"] = $k;
-        $record["changes_from"] = isset($v["from"]) ? (string) $v["from"] : "";
-        $record["changes_to"] = isset($v["to"]) ? (string) $v["to"] : "";
-        if (!db_add($db_name . ".history", $record)){
-            dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add history record into '".$db_name."' db.");
-            $res = false;
+    $changes_from = $changes_to = array();
+    foreach($changes["to"] as $k=>$v){
+        if ($changes["from"][$k] != $v){
+            $changes_from[] = $k." = ".$changes["from"][$k];
+            $changes_to[]   = $k." = ".$v;
         };
     };
+    $record["changes_from"] = implode("\n",$changes_from);
+    $record["changes_to"]   = implode("\n",$changes_to);
+        
+        
+    if (!db_add($db_name . ".history", $record)){
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add history record into '".$db_name."' db.");
+        $res = false;
+    };
+
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $res;
@@ -961,4 +968,29 @@ function db_prepare_value($value, $field_type){
     
     
     return $res;
+}
+function db_translate_changes($changes, $mode=0){
+
+    // переводит массив элементов формата $changes[$what] = array("from"=>.., "to"=>..)
+    //  в массив элементов формата $changes =array("from" => array($what=>...), "to"=> array($what=>...) ) и наоборот
+    
+    
+    if ($mode == 1){
+        $res = array();
+        foreach($changes["to"] as $what=>$v){
+            $res[$what] = array(
+                "from" => $changes["from"][$what],
+                "to"   => $changes["to"][$what]
+            );
+        };
+    }else{
+        $res = array("from"=>array(), "to"=>array());
+        foreach($changes as $what => $v){
+            $res["from"][$what] = $v["from"];
+            $res["to"][$what] = $v["to"];
+        };
+    }
+   
+    return $res;
+
 }
