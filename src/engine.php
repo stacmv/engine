@@ -10,7 +10,7 @@ function APPLYPAGETEMPLATE(){
 
     if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
     
-    if ( ! empty($_PAGE["templates"]["page"]) ){
+    if (! empty($_PAGE["templates"]["page"]) ){
         if (empty($_PAGE["templates"]["content"]) ) set_template_for_user();
         $_RESPONSE["body"] = get_content("page");
     }else{
@@ -32,7 +32,7 @@ function AUTENTICATE(){
 	if (isset($_SERVER["PHP_AUTH_PW"])){
 		if ($_USER["isUser"]){
 			
-			if($_USER["profile"]){
+			if(isset($_USER["profile"])){
                
 				if (password_verify($_SERVER["PHP_AUTH_PW"], $_USER["profile"]["pass"])) {
 					$_USER["autentication_type"] = "loose";
@@ -164,8 +164,9 @@ function IDENTICATE(){
     
 	if (!isset($_SERVER["PHP_AUTH_USER"]) || isset($_SESSION["NOTLOGGED"]) ){
         $_USER["isGuest"] = true;
+        dosyslog(__FUNCTION__ . ": NOTICE: User is a guest.");
     }else{
-		dosyslog(__FUNCTION__ . ": User login:".$_SERVER["PHP_AUTH_USER"]);
+		dosyslog(__FUNCTION__ . ": NOTICE: User login:".$_SERVER["PHP_AUTH_USER"]);
 		$supposedUsers = db_find("users", "login",$_SERVER["PHP_AUTH_USER"]);
         
 	
@@ -596,7 +597,7 @@ session_start();
 
 $DONTSHOWERRORS = false; // когда вывод ошибок недопустим (при вызове методов API, например, надо устанавливать эту переменную в true.
 $ISERRORSREGISTERED = false; // зарегистрированы ли ошибки? Функция REGISTERERRORS() устанавливает переменную в true. Иначе, регистрация ошибок будет в shutdown().
-$ISREDIRECT  = false;
+$ISREDIRECT = false;
 $IS_API_CALL = false;
 
 
