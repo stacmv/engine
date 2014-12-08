@@ -143,7 +143,7 @@ function IDENTICATE(){
     global $_RESPONSE;
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-	$_USER = array("isUser"=>false, "isGuest"=>false, "isPartner"=>false, "isBot"=>false, "autentication_type"=>false);
+	$_USER = array("isUser"=>false, "isGuest"=>false, "isBot"=>false, "autentication_type"=>false);
 
     if (  ! empty($_PAGE["acl"]) &&
           ( !isset($_SERVER["PHP_AUTH_USER"]) || 
@@ -151,10 +151,16 @@ function IDENTICATE(){
             isset($_SESSION["NOTLOGGED"])
           )
        ){ 
+        $guessed_user = ! empty($_SERVER["PHP_AUTH_USER"]) ? $_SERVER["PHP_AUTH_USER"] : "";
+        if ( ! $guessed_user) $guessed_user = "guest";
+        $guessed_user .= ! empty($_SESSION["LOGGEDAS"]) ? ", _SESSION[LOGGEDAS] = " . $_SESSION["LOGGEDAS"] : "";
+        dosyslog(__FUNCTION__.": NOTICE: Send authrization request to ". $guessed_user );
+        
         $headers["WWW-Authenticate"] = 'Basic realm="' . ucfirst($CFG["GENERAL"]["codename"]) . ' - ' . date("M Y") . '"';
         $headers["HTTP"] = "HTTP/1.0 401 Unauthorized";
         $_RESPONSE["headers"] = $headers;
         unset($_SESSION["NOTLOGGED"]);
+        unset($_SESSION["LOGGEDAS"]);
         SENDHEADERS();
         if ( file_exists(ENGINE_DIR . "settings/not_logged.htm") ){
             include(ENGINE_DIR . "settings/not_logged.htm");
