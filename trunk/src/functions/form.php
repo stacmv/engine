@@ -108,6 +108,9 @@ function form_prepare($db_table, $form_name, $object=""){
             if ( strpos($v["name"], "date")  !== false ) $field["class"] = "date";
             if ( strpos($v["name"], "time")  !== false ) $field["class"] = "time";
             
+            if (!empty($v["form_values"])){
+                $field["value"] = form_get_field_values($v);
+            };
             
             $field["label"] = "";
             break;
