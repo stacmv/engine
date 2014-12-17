@@ -1,5 +1,5 @@
 <?php
-define("ENGINE_VERSION", "0.1.0");
+define("ENGINE_VERSION", "0.1.1");
 // controller
 function APPLYPAGETEMPLATE(){
     global $_RESPONSE;
