@@ -869,7 +869,7 @@ function db_get_tables_list_from_xml($db_name=""){
 	if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");   
 	
     
-    $db = false;
+    $dbs = array();
     $table = false;
     $tables_list = array();
     
@@ -883,31 +883,41 @@ function db_get_tables_list_from_xml($db_name=""){
         if ($xml){
             
             foreach($xml->db as $xmldb){
-                if ($db_name == (string) $xmldb["name"]){
-                    $db = $xmldb;
-                    $isFound = true;
-                    break;
-                };
+                if ($db_name){
+                    if ($db_name == (string) $xmldb["name"]){
+                        $dbs[] = $xmldb;
+                        $isFound = true;
+                        break;
+                    };
+                }else{  // вернуть все таблицы
+                    $dbs[] = $xmldb;
+                }
             }; //foreach xml
             
         };
         if (!empty($db)) break;
     };
-    if (!$isFound){
+    if ($db_name && !$isFound){
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
         die("Code: db-".__LINE__);
     };
         
-        
-        
-    if (!empty($db->table)){
-        foreach($db->table as $xmltable){
-            $tables_list[] = (string) $xmltable["name"];
+    foreach($dbs as $db){
+        if (!empty($db->table)){
+            foreach($db->table as $xmltable){
+                
+                $cur_db_name = (string)$db["name"];
+            
+                if (empty($tables_list[ $cur_db_name ])) $tables_list[ $cur_db_name ] = array();
+                $tables_list[ $cur_db_name ][] = (string) $xmltable["name"];
+            };
         };
     };
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    return $tables_list;
+    
+    if ($db_name) return $tables_list[$db_name];
+    else return $tables_list;
 };
 function db_parse_result($db_table, $result){
 
