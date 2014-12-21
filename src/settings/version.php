@@ -1,2 +1,2 @@
 <?php
-define("ENGINE_VERSION", "0.2.0");
+define("ENGINE_VERSION", "0.3.0");

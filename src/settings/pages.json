@@ -34,6 +34,14 @@
 		}
 	},
 	{
+		"uri": "reg_msg_opened",
+		"title": "Трекинг открытия письма получателем",
+		"params":{
+			"message_id": { "type": "string", "source": "get", "regexp": "/reg_msg_opened\\/(.+)/", "pos": 1 }
+		},
+		"actions": ["register_message_opened"]
+	},
+	{
 		"uri":"dbmigrate",
 		"title": "Проверка схем БД и миграция",
 		"actions": ["dbmigrate"],
