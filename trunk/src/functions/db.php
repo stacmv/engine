@@ -195,7 +195,7 @@ function db_check_schema($db_table){ // проверяет схему табли
 								echo "<ol>";
 								while ( ($row = $res_b->fetch(PDO::FETCH_ASSOC)) !== false){
 									if (!empty($row["extra"])){
-										$extra_decoded = json_decode($row["extra"],true);
+										$extra_decoded = json_decode_array($row["extra"],true);
 										if ($extra_decoded && is_array($extra_decoded)){
 											$extra = $extra_decoded;
 										}else{
@@ -210,7 +210,7 @@ function db_check_schema($db_table){ // проверяет схему табли
 											$extra[$ftd."__".date("Y-m-d")] = $row[$ftd];
 										};
 									};
-									$extra_encoded = json_encode($extra);
+									$extra_encoded = json_encode_array($extra);
 									
 									if (!empty($extra) && ($extra_encoded != $row["extra"]) ){
 										$qu = "UPDATE ".$temp_table." SET extra = ".$dbh->quote($extra_encoded)." WHERE id=".(int) $row["id"].";";
@@ -936,7 +936,7 @@ function db_parse_result($db_table, $result){
         if ($field["type"] == "json"){
             if (isset($result[$field["name"]]) ){
                 $stored = $result[$field["name"]];
-                $result[$field["name"]] = @json_decode( $result[$field["name"]], true );
+                $result[$field["name"]] = json_decode_array( $result[$field["name"]]);
                 if ($result[$field["name"]] == false){
                     dosyslog(__FUNCTION__.": ERROR: JSON parse error on ".$db_table.".".$field["name"].": '".$stored."'.");
                     $result[$field["name"]] = array();
@@ -960,7 +960,7 @@ function db_prepare_value($value, $field_type){
             break;
         case "json":
             if (is_array($value)){
-                $res = json_encode($value);
+                $res = json_encode_array($value);
             };
             break;
         case "number":
@@ -973,7 +973,7 @@ function db_prepare_value($value, $field_type){
     };
     
     if ( $res != $value){
-        dosyslog(__FUNCTION__.": DEBUG: value='".json_encode($value)."', result='".json_encode($res)."'.");
+        dosyslog(__FUNCTION__.": DEBUG: value='".json_encode_array($value)."', result='".json_encode_array($res)."'.");
     };
     
     

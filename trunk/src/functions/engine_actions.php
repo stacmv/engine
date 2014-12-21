@@ -344,7 +344,11 @@ function form_action(){
     set_objects_action($form_name);
         
     if ( $action == "add" ){
-        $_DATA["fields_form"] = form_prepare($db_name, $form_name);
+        if ( ! isset($_DATA[$object]) ){
+            $_DATA["fields_form"] = form_prepare($db_name, $form_name);
+        }else{
+            $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);
+        }
     }else{
         if ( ! isset($_DATA[$object]) ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
