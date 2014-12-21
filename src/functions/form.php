@@ -35,7 +35,7 @@ function form_prepare($db_table, $form_name, $object=""){
         };
         if ( isset($_SESSION["to"][$v["name"]]) ) $field["value"] = $_SESSION["to"][$v["name"]];
         if ($v["name"] == "pass") $field["value"] = ""; // не показывать хэш пароля
-        
+
         
         switch ($template){
         case "checkboxes": 
@@ -108,7 +108,7 @@ function form_prepare($db_table, $form_name, $object=""){
             if ( strpos($v["name"], "date")  !== false ) $field["class"] = "date";
             if ( strpos($v["name"], "time")  !== false ) $field["class"] = "time";
             
-            if (!empty($v["form_values"])){
+            if (empty($field["value"]) && !empty($v["form_values"])){
                 $field["value"] = form_get_field_values($v);
             };
             
@@ -152,10 +152,12 @@ function form_prepare($db_table, $form_name, $object=""){
             
             $fields[] = $field;
             
-        };        
+        }else{
+            if (! $template ) dosyslog(__FUNCTION__.": ERROR: Template is not set for field ".$v["name"]." of form '" . $form_name . "'.");
+        }
     }
     unset($v);
-    
+        
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){ return $i["name"];}, $fields)) );
     
     return $fields;
@@ -165,7 +167,7 @@ function form_get_fields($db_table, $form_name){
     $schema = db_get_table_schema($db_table);
     
     if ( ! $schema ){
-        dosyslog(__FUNCTION__.": FATAL ERROR: '".$db_table."' is not found in DB config.");
+        dosyslog(__FUNCTION__.": " . get_callee() .": FATAL ERROR:  '".$db_table."' is not found in DB config.");
         die("Code: efrm-".__LINE__);
     };
     

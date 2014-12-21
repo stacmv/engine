@@ -176,7 +176,7 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
                         $changes[$name]["from"] = db_prepare_value($data["from"][$name], $type);
                         $changes[$name]["to"] = db_prepare_value($data["to"][$name], $type);
                     };
-                    dosyslog(__FUNCTION__.": DEBUG: changes[".$name."] = ".json_encode($changes[$name]).".");
+                    dosyslog(__FUNCTION__.": DEBUG: changes[".$name."] = ".json_encode_array($changes[$name]).".");
                 };
             }else{
                 $isDataValid = false;
@@ -237,7 +237,10 @@ function parse_post_data($data, $action){
         $diff1 = array_diff(array_keys($data["to"]), array_keys($data["from"]));
         if ( ! empty($diff1) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'to' are absent in 'from' data:" . implode(", ",$diff1).".");
         $diff2 = array_diff(array_keys($data["from"]), array_keys($data["to"]));
-        if ( ! empty($diff2) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'from' are absent in 'to' data:" . implode(", ",$diff2).".");
+        if ( ! empty($diff2) ){
+            foreach($diff2 as $v) $data["to"][$v] = "";
+            dosyslog(__FUNCTION__.": WARNING: Theese fields of 'from' are absent in 'to' data:" . implode(", ",$diff2).". Added to 'to' with empty values.");
+        };
         
         // Убрать поля, значения которых не будут меняться (одинаковые)
         $deleted = array();
