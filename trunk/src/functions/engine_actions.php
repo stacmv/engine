@@ -514,6 +514,28 @@ function register_application_action(){ // регистрация в БД нов
     unset($_SESSION["application_id"]);
 
 };
+function register_message_opened_action(){  // трекинг открытия отправленного ранее письма
+    global $_PARAMS;
+    global $_RESPONSE;
+    global $IS_API_CALL;
+    
+    $message_id = ! empty($_PARAMS["message_id"]) ? $_PARAMS["message_id"] : null;
+    
+    if ($message_id){
+        register_message_opened($message_id);
+    }else{
+    
+        dosyslog(__FUNCTION__.": ERROR: Message_id is not set. Check pages config and email templates.");
+    };
+    
+    $_RESPONSE["headers"]["HTTP"] = "HTTP/1.0 204 Tracked. " . (isset($message_id) ? $message_id : "" );
+    $_RESPONSE["headers"]["Cache-Control"] = "no-cache, must-revalidate"; 
+    $_RESPONSE["headers"]["Pragma"] = "no-cache"; 
+    $_RESPONSE["headers"]["Content-type"] = "image/gif";
+    
+    $IS_API_CALL = true;
+
+}
 function send_registration_approval_action(){
 	global $_PARAMS;
     global $CFG;

@@ -201,6 +201,7 @@ function GETPAGE(){  // поиск страницы, соответствующ�
     global $_PAGE;
     global $_URI;
     global $CFG;
+    global $_RESPONSE;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $uri = $_URI;
     
@@ -250,7 +251,13 @@ function GETPAGE(){  // поиск страницы, соответствующ�
             
             if(!$page){
                 dosyslog(__FUNCTION__.": WARNING: Page '".$_URI."' not found.");
-                $page = get_page_by_uri($xml,"/");
+                $_RESPONSE["headers"]["HTTP"] = "HTTP/1.0 404 Not Found";
+                
+                $page = get_page_by_uri($xml,"error_404");
+                if (!$page){
+                    dosyslog(__FUNCTION__.": WARNING: Page '".$_URI."' not found.");
+                    $page = get_page_by_uri($xml,"/");
+                };
             };
             
         };

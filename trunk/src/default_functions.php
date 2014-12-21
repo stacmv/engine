@@ -200,30 +200,6 @@ if (!function_exists("get_pages")){
         return $pages;
     };
 };
-if (!function_exists("get_template_file")){
-    // function get_template_file($template_name){
-        
-        // global $_PAGE;
-        // global $S;
-        // if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");    
-        
-        // $template_file = "";
-    
-        // if ( ! empty($_PAGE["templates"][$template_name]) ){
-            // $template_file = $_PAGE["templates"][$template_name];
-        // };
-        
-        // if( ! $template_file) {
-            // dosyslog(__FUNCTION__.": WARNING: ".get_callee().": Template '".$template_name."' for page '".$_PAGE["uri"]."' is not found. Check pages file.");
-        // };
-        
-        // dosyslog(__FUNCTION__.": NOTICE: Getting template '".$template_name."'... got '".$template_file."'.");
-        // if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        
-        // return $template_file;
-        
-    // }; // function
-};
 if (!function_exists("get_user_registered_ip")){
     function get_user_registered_ip($user_id="", $login="", $ip="", $register_new_ip = false){
         // $register_new_ip    Регистрировать новые IP, если БД нет записей по (user_id, login, ip)
@@ -337,6 +313,11 @@ if (!function_exists("register_user_ip")) {
     }
 
 }
+if (!function_exists("register_message_opened")){
+    function register_message_opened($message_id){
+        dosyslog(__FUNCTION__."\t".$message_id."\t".@$template."\t".@$emailOrUserId."\t".@$email."\t"."opened"."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
+    };
+};
 if (!function_exists("send_message")){
     function send_message($emailOrUserId, $template, $data, $options=""){
         global $CFG;
@@ -365,6 +346,9 @@ if (!function_exists("send_message")){
             return false;
         };
         
+        $message_id = md5($email, $template, serialize($data));
+        $data["tracking_pixel_url"] = $CFG["URL"]["base"] . "/reg_msg_opened/" . $message_id . $CFG["URL"]["ext"];
+        
         // parse template.
         
         $t = str_replace("\r\n", "\n", $t);
@@ -380,6 +364,8 @@ if (!function_exists("send_message")){
         $subject = @$tmp[0];
         $message = @$tmp[1];
         
+        
+        
         if (!$subject){
             dosyslog(__FUNCTION__.": WARNING: Subject is not set in email template '".$template."'.");
             $subject = "Email from ".@$_SERVER["HTTP_HOST"];
@@ -388,9 +374,12 @@ if (!function_exists("send_message")){
         
         $res = @mail($email, $subject, $message, "FROM:".$CFG["GENERAL"]["system_email"]."\nREPLY-TO:".$CFG["GENERAL"]["admin_email"]."\ncontent-type: text/html; charset=UTF-8");
         
-        dosyslog(__FUNCTION__."\t".@$template."\t".@$emailOrUserId."\t".$email."\t".($res? "success" : "fail")."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
         
-        return $res;    
+        
+        dosyslog(__FUNCTION__."\t".$message_id."\t".@$template."\t".@$emailOrUserId."\t".$email."\t".($res? "success" : "fail")."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
+               
+        
+        return $res;
     };
 };
 if (!function_exists("set_template_for_user")){
