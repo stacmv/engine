@@ -209,7 +209,13 @@ function confirm_email_action(){
     
 };
 function do_nothing_action(){
-    // do nothing
+    // do nothing special except ...
+    
+    global $_PARAMS;
+    global $_DATA;
+    
+    $_DATA = $_PARAMS;
+    
 }
 function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fail=""){
     global $_PARAMS;
