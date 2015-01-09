@@ -634,7 +634,7 @@ if (!function_exists("userHasRight")){
                 $user_rights = $user["acl"];
             };
         };
-        $res = in_array($right, $user_rights);
+        $res = !empty($user_rights) && in_array($right, $user_rights);
         
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         

@@ -129,7 +129,7 @@ function DOACTION(){
         $tmp = call_user_func($function);
     }else{  
         dosyslog(__FUNCTION__.": FATAL ERROR: Function '".$function."' is not defined.  URI: '".$_PAGE["uri"]."'.");
-        die("Code: e-".__LINE__);
+        die("Code: e-".__LINE__."-".$function);
     };
         
     array_shift($_ACTIONS);
@@ -280,10 +280,7 @@ function GETURI(){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $uri = @$_GET["uri"];
     
-    if ( strpos($uri,$CFG["GENERAL"]["codename"]) === 0 ){  // убираем имя каталога из URI
-        $uri = substr($uri, strlen($CFG["GENERAL"]["codename"]));
-    }
-
+    
     if (!$uri) $uri = "/";
     if ("index"==$uri) $uri = "/";
     if ( ("/"!=$uri) && ("/" == $uri{0}) ) $uri = substr($uri,1);
@@ -463,6 +460,7 @@ function SETPARAMS(){
                             if ( ! $tmp ) $tmp = null;
                         };
                     };
+                    // dump($tmp,$fparam_name);
                     break;
                 case "request":
                     $tmp = isset($_REQUEST[$fparam_name]) ? $_REQUEST[$fparam_name] : null;

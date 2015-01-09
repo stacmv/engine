@@ -11,7 +11,7 @@ $_DB = array();
 **  DATABASE FUNCTIONS
 **
 ** ******************************************************** */
-function db_add($db_table, $data, $comment=""){
+function db_add($db_table, array $data, $comment=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     global $_USER;
     
@@ -319,7 +319,7 @@ function db_delete($db_table, $id, $comment=""){
         
     };
 }
-function db_edit($db_table, $id, $changes, $comment=""){
+function db_edit($db_table, $id, array $changes, $comment=""){
     
     global $_USER;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -616,7 +616,7 @@ function db_get_table($db_table){
     
     return $table;
 }
-function db_insert($db_table, $data){
+function db_insert($db_table, array $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = false;
     
@@ -748,7 +748,7 @@ function db_select($db_table, $select_query, $flags=0){
     
     return $result;
 };
-function db_create_insert_query($db_table, $data){
+function db_create_insert_query($db_table, array $data){
 	
     $dbh = db_set($db_table);
     $table_name = db_get_table($db_table);
