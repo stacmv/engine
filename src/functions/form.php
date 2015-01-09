@@ -166,6 +166,9 @@ function form_get_fields($db_table, $form_name){
     
     $schema = db_get_table_schema($db_table);
     
+    if ($form_name == "all") return $schema;
+    
+    
     if ( ! $schema ){
         dosyslog(__FUNCTION__.": " . get_callee() .": FATAL ERROR:  '".$db_table."' is not found in DB config.");
         die("Code: efrm-".__LINE__);

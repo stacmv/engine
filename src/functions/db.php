@@ -17,25 +17,34 @@ function db_add($db_table, $data, $comment=""){
     
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
     
-    $data["created"] = time();
-    
     $added_id = db_insert($db_table, $data);
        
     if ( $added_id ){
        
         if (db_get_table($db_table) !== "history") {
-            $changes=array();
-            foreach($data as $k=>$v){
-                $changes[$k]["from"] = "";
-                $changes[$k]["to"] = $v;
-            };
             
-            if ( ! db_add_history($db_table, $added_id, $_USER["profile"]["id"], "db_add", $comment, $changes)){
-                // ДОРАБОТАТЬ: реализовать откат операции INSERT
+            if ( ! isset($data[0]) && is_array($data[0]) ){  // добавлены несколько записей
+                if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, array())){
+                    
+                    dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
+                    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+                    return false;
+                };
                 
-                dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
-                if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-                return false;
+            }else{   // добавлена 1 запись
+                $changes=array();
+                foreach($data as $k=>$v){
+                    $changes[$k]["from"] = "";
+                    $changes[$k]["to"] = $v;
+                };
+                
+                if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, $changes)){
+                    // ДОРАБОТАТЬ: реализовать откат операции INSERT
+                    
+                    dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
+                    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+                    return false;
+                };
             };
             
         };
@@ -64,12 +73,12 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $ch
     };
     
     $record = array(
-        "db"            =>  $db,
-        "action"        =>  $action,
-        "objectId"      =>  (int) $objectId,
-        "subjectId"     =>  (int) $subjectId,
-        "subjectIP"     =>  @$_SERVER["REMOTE_ADDR"],
-        "timestamp"     =>  time(),
+        "db"        => $db,
+        "action"    => $action,
+        "objectId"  => (int) $objectId,
+        "subjectId" => (int) $subjectId,
+        "subjectIP" => @$_SERVER["REMOTE_ADDR"],
+        "timestamp" => time(),
     );
     
     if ($comment) $record["comment"] = $comment;
@@ -615,9 +624,12 @@ function db_insert($db_table, $data){
     
     $query = db_create_insert_query($db_table, $data);
     
-    
-    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
-    $res = $dbh->exec($query);
+    if ($query){
+        $res = $dbh->exec($query);
+    }else{
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Empty query.");
+        $res = false;
+    };
     
     if ($res){
         
@@ -741,31 +753,51 @@ function db_create_insert_query($db_table, $data){
     $dbh = db_set($db_table);
     $table_name = db_get_table($db_table);
     
-    $query = "INSERT INTO ".$table_name." (";
-    $tmp = array();
-    foreach($data as $k=>$v){
-        if ( ($v!==NULL) || ($v!==false) ){
-            $tmp[] = $k;
+    $schema = db_get_table_schema($db_table);
+    $fields = array();
+    foreach($schema as $f){
+        $fields[$f["name"]] = $f;
+    };
+    unset($schema, $f);
+    
+    if (empty($data[0]) || ! is_array($data[0])){
+       $data = array($data); // добавляется одна запись
+    };
+    
+    $keys = array_keys($data[0]);
+    $keys = array_filter($keys, function($k) use ($fields){
+        return ( ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
+    });
+    
+    $query_base = "INSERT INTO ".$table_name." (" . implode(", ", $keys) . ") VALUES ";
+    $query = "";
+    
+        
+    $timestamp = time();
+    
+    while(count($data) > 0){
+        $record = array_shift($data);
+        $tmp = array();
+
+        foreach($keys as $key){
+            $v = $record[$key];
+            if ($key == "created"){
+                $tmp[] = $timestamp;
+            }elseif (in_array($fields[$key]["type"], array("list", "json", "number"))){
+                $tmp[] = $dbh->quote( db_prepare_value($v, $fields[$key]["type"]) );
+            }elseif ( ($v!==NULL) && ($v!==false) ){
+                $tmp[] = $dbh->quote($v);
+            }elseif($v === NULL){
+                $tmp[] = "NULL";
+            };
+
         };
+        unset($key);
+        $query .= $query_base . " (" . implode(", ", $tmp) . ");\n";
     };
-
-    $query .= implode(", ",$tmp);
     
-    $query .= ") VALUES (";
     
-    $tmp = array();
-    foreach($data as $k=>$v){
-       if (is_array($v)){
-            $tmp[] = $dbh->quote( implode(DB_LIST_DELIMITER, $v) );
-       }elseif ( ($v!==NULL) && ($v!==false) ){
-			$tmp[] = $dbh->quote($v);
-        }elseif($v === NULL){
-			$tmp[] = "NULL";
-		};
-    };
-
-    $query .= implode(", ",$tmp);    
-    $query .= ");";
+    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");    
     
     return $query;
 
