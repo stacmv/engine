@@ -1,0 +1,54 @@
+{"pages":[
+	{
+		"uri": "logout",
+		"title":"Выход из системы",
+		"actions": ["logout"],
+		"templates":{
+			"content": "logout.htm",
+			"page":"page.htm"
+		}
+	},
+	{
+		"uri":"login",
+		"title":"Вход в систему",
+		"actions": ["login"],
+		"templates": {
+			"content":"login.htm",
+			"page":"page.htm",
+			"login_form":"login_form.block.htm"
+		},
+		"acl":["access"]
+	},
+	{
+		"uri": "adm_import_first_user",
+		"title": "Добавление первого пользователя",
+		"params":{
+			"login": { "type": "string", "source": "get", "regexp": "/adm_import_first_user\\/(\\w+):([\\w\\d]+):(.+)/", "pos": 1 },
+			"pass": { "type": "string", "source": "get", "regexp": "/adm_import_first_user\\/(\\w+):([\\w\\d]+):(.+)/", "pos": 2 },
+			"rights": { "type": "string", "source": "get", "regexp": "/adm_import_first_user\\/(\\w+):([\\w\\d]+):(.+)/", "pos": 3 }
+		},
+		"actions": ["import_first_user"],
+		"templates": {
+			"content":"html.htm",
+			"page":"page.htm"
+		}
+	},
+	{
+		"uri": "reg_msg_opened",
+		"title": "Трекинг открытия письма получателем",
+		"params":{
+			"message_id": { "type": "string", "source": "get", "regexp": "/reg_msg_opened\\/(.+)/", "pos": 1 }
+		},
+		"actions": ["register_message_opened"]
+	},
+	{
+		"uri":"dbmigrate",
+		"title": "Проверка схем БД и миграция",
+		"actions": ["dbmigrate"],
+		"templates": {
+			"content":"empty.htm",
+			"page":"page.htm"
+		},
+		"acl": ["manager"]
+	}
+]}
