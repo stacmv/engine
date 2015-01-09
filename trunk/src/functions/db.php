@@ -88,8 +88,8 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $ch
     $changes_from = $changes_to = array();
     foreach($changes["to"] as $k=>$v){
         if ($changes["from"][$k] != $v){
-            $changes_from[] = $k." = ".$changes["from"][$k];
-            $changes_to[]   = $k." = ".$v;
+            $changes_from[] = $k." = ".json_encode_array($changes["from"][$k]);
+            $changes_to[]   = $k." = ".json_encode_array($v);
         };
     };
     $record["changes_from"] = implode("\n",$changes_from);
@@ -996,7 +996,8 @@ function db_prepare_value($value, $field_type){
             };
             break;
         case "number":
-            if ( ! is_null($value) ){
+            if ($value === "") $res = null;
+            elseif ( ! is_null($value) ){
                 $res = (int) $value;
             };
             break;
