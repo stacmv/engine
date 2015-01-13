@@ -200,6 +200,19 @@ if (!function_exists("get_pages")){
         return $pages;
     };
 };
+if (!function_exists("get_rights_all")){
+    function get_rights_all(){
+        
+        $tsv = import_tsv(APP_DIR."settings/acl.tsv");
+        
+        $rights = array();
+        foreach($tsv as $v){
+            $rights[ $v["acl"] ] = $v;
+        };
+        
+        return $rights;
+    };
+}
 if (!function_exists("get_user_registered_ip")){
     function get_user_registered_ip($user_id="", $login="", $ip="", $register_new_ip = false){
         // $register_new_ip    Регистрировать новые IP, если БД нет записей по (user_id, login, ip)
