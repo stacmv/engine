@@ -168,25 +168,27 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
                    set_session_msg($msg, "info");
                 };
                 
-                
                 if (!empty($proposed_value)){
-                    $changes[$name]["to"] = $proposed_value;
-                    $changes[$name]["from"] = $data["from"][$name];
-                   
-                }else{
-                    
-                    if (array_key_exists($name, $data["to"])){
-                        $changes[$name]["from"] = db_prepare_value($data["from"][$name], $type);
-                        $changes[$name]["to"] = db_prepare_value($data["to"][$name], $type);
-                    };
-                    dosyslog(__FUNCTION__.": DEBUG: changes[".$name."] = ".json_encode_array($changes[$name]).".");
+                    $data["to"][$name] = $proposed_value;
                 };
+  
+                if (
+                    ($type !== "password") ||
+                    ( ($type == "password") && ! empty($data["to"][$name]) ) 
+                   ){
+                    $changes[$name]["from"] = $type !== "password" ? db_prepare_value($data["from"][$name], $type) : "";
+                    $changes[$name]["to"] = db_prepare_value($data["to"][$name], $type);
+                    
+                    $log_data = $changes[$name];
+                    if ($type == "password") $log_data["to"] = ! empty($log_data["to"]) ? substr($log_data["to"],0,10)."...cut" : "";
+                    dosyslog(__FUNCTION__.": DEBUG: changes[".$name."] = ".json_encode_array($log_data).".");
+               };
+
             }else{
                 $isDataValid = false;
                 if (empty($msg)) $msg = "Ошибка в поле '". $field["name"]."'.";
                 dosyslog(__FUNCTION__.": WARNING: ".$msg);
                 set_session_msg($msg, "error");
-
             };
         };
         

@@ -3,7 +3,7 @@
 if (!defined("TEST_MODE")) define ("TEST_MODE", false);
 define("DB_NOTICE_QUERY",true); // писать запросы в лог
 define("DB_LIST_DELIMITER", "||"); // разделитель элементов в полях типа list
-define("DB_DONT_EXPLODE_LISTS", 1); // флаг для db_get(), что не надо десериализовать поля типа list, т.е. вернуть строку, а не массив.
+define("DB_PREPARE_VALUE", 1); // флаг для db_get(), что надо вернуть поля типа list, json и др. в виде готовом для записи в БД, т.е. в виде строки, возвращаемой db_prepare_value()
 
 $_DB = array();
 
@@ -327,12 +327,13 @@ function db_edit($db_table, $id, array $changes, $comment=""){
     
     //dump($comment,"comment");
     $dbh = db_set($db_table);
-    $object = db_get($db_table, $id, DB_DONT_EXPLODE_LISTS);
+    $object = db_get($db_table, $id, DB_PREPARE_VALUE);
+    
     if (empty($object)) {
         dosyslog(__FUNCTION__.": Attempt to edit object which is absent in DB '".$db_table."'. ID='".$id."'.");
         return array(false, "wrong_id");
     };
-    
+  
     // Check that the changes are really change something.
     foreach ($changes as $what=>$v){
         if ($changes[$what]["from"] == $changes[$what]["to"]){
@@ -360,7 +361,7 @@ function db_edit($db_table, $id, array $changes, $comment=""){
         }
         
         if ($changes[$what]["from"] != $object[$what]){ 
-            // Проблема в переводах строки?  Хак. На случай когда в БД уеже есть данные с неверными переводами строки.
+            // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
             if (preg_replace('~\R~u', "\n", $changes[$what]["from"]) == preg_replace('~\R~u', "\n", $object[$what])){
                 // Это не конфликт.
             }else{
@@ -540,12 +541,12 @@ function db_get($db_table, $id, $flags=0){
     $res = $dbh->query($query);
     
     if ($res){
-        $result = $res->fetchAll(PDO::FETCH_ASSOC); //  ДОРАБОТАТЬ: добавить обработку ситуации, когда найдено более одной запсии.
+        $result = $res->fetchAll(PDO::FETCH_ASSOC); //  ДОРАБОТАТЬ: добавить обработку ситуации, когда найдено более одной записи.
         if (!empty($result)){
             $result = $result[0]; 
-           
-            if ( ! ($flags & DB_DONT_EXPLODE_LISTS) ){
-                $result = db_parse_result($db_table, $result);
+            $result = db_parse_result($db_table, $result);
+            if ( $flags & DB_PREPARE_VALUE ){
+                $result = db_prepare_record($db_table,$result);
             };
         };
     }else{
@@ -735,10 +736,11 @@ function db_select($db_table, $select_query, $flags=0){
     
     if ($res){
         while ( ($row = $res->fetch(PDO::FETCH_ASSOC) ) !== false) {
-            if ( ! ($flags & DB_DONT_EXPLODE_LISTS) ){
-                $result[] = db_parse_result($db_table, $row);
+            
+            if ( $flags & DB_PREPARE_VALUE ){
+                $result[] = db_prepare_record(db_parse_result($db_table, $row));
             }else{
-                $result[] = $row;
+                $result[] = db_parse_result($db_table, $row);
             };
         };
     }else{
@@ -953,29 +955,55 @@ function db_get_tables_list_from_xml($db_name=""){
 };
 function db_parse_result($db_table, $result){
 
-    // Поля типа list преобразовать в массив
+    // Десереализация данных, полученных из БД
     $schema = db_get_table_schema($db_table);
     foreach($schema as $field){
-        if ($field["type"] == "list"){
-            if (isset($result[$field["name"]]) ){
-                if (strpos($result[$field["name"]], DB_LIST_DELIMITER) !== false){
-                    $result[$field["name"]] = explode(DB_LIST_DELIMITER, trim($result[$field["name"]], DB_LIST_DELIMITER));
-                }else{
-                    $result[$field["name"]] = array($result[$field["name"]]);
+        $result[ $field["name"] ] = db_parse_value($result[ $field["name"] ], $field["type"]);
+    };
+
+    return $result;
+}
+function db_parse_value($value, $field_type){
+    
+    if ($field_type == "list"){
+        if (isset($value) ){
+            if (strpos($value, DB_LIST_DELIMITER) !== false){
+                $value = explode(DB_LIST_DELIMITER, trim($value, DB_LIST_DELIMITER));
+                
+                if (
+                        ! empty($value) &&
+                        ($value[0] === "") &&
+                        ($value[ count($value)-1 ] === "")
+                   ){  // убираем первый и последний пустые элементы, если есть (они добавляются с версии 1.1.0 для удобства поиска, см. db_prepare_value())
+                    $value = array_slice($value, 1,-1);
                 };
+                
+            }else{
+                $value = array($value);
             };
         };
-        if ($field["type"] == "json"){
-            if (isset($result[$field["name"]]) ){
-                $stored = $result[$field["name"]];
-                $result[$field["name"]] = json_decode_array( $result[$field["name"]]);
-                if ($result[$field["name"]] == false){
-                    dosyslog(__FUNCTION__.": ERROR: JSON parse error on ".$db_table.".".$field["name"].": '".$stored."'.");
-                    $result[$field["name"]] = array();
-                };
-                unset($stored);
+    };
+    if ($field_type == "json"){
+        if (isset($value) ){
+            $stored = $value;
+            $value = json_decode_array( $value);
+            if ($value == false){
+                dosyslog(__FUNCTION__.": ERROR: JSON parse error: '".$stored."'.");
+                $value = array();
             };
+            unset($stored);
         };
+    };
+    
+    return $value;
+    
+}
+function db_prepare_record($db_table, $result){
+
+    // Сериализовать поля, требующие этого перед записью в БД
+    $schema = db_get_table_schema($db_table);
+    foreach($schema as $field){
+        $result[ $field["name"] ] = db_prepare_value($result[ $field["name"] ], $field["type"]);
     };
 
     return $result;
@@ -986,9 +1014,21 @@ function db_prepare_value($value, $field_type){
     
     switch($field_type){
         case "list":
-            if (is_array($value)){
-                $res = implode(DB_LIST_DELIMITER,(array) $value);
+            // dump($value,"value");
+            if ( ! is_array($value)){
+                $res = db_parse_value($value, $field_type);
+                // dump($res,"res_parsed");
+                if ( ! is_array($res)){
+                    $res = (array) $value;
+                    // dump($res,"res_reseted");
+                };
             };
+            array_unshift($res,"");// добавим в начало и конец масива пустые строки, чтобы можно было искать отдельные значения массива с помощью SQL выражения LIKE "%||value||%"
+            array_push($res,"");
+            // dump($res,"res_unshfted_pushed");
+            $res = implode(DB_LIST_DELIMITER, $res); 
+            // dump($res,"res_imploded");
+            // die(__FUNCTION__);
             break;
         case "json":
             if (is_array($value)){
@@ -1001,12 +1041,22 @@ function db_prepare_value($value, $field_type){
                 $res = (int) $value;
             };
             break;
+        case "password":
+            $res = passwords_hash($value);
+            if ( ! empty($value) && empty($res) ){
+                dosyslog(__FUNCTION__.": ".get_callee().": ERROR: Empty hash for no-empty password");
+            };
+            break;
         default:
             $res = $value;
     };
     
     if ( $res != $value){
-        dosyslog(__FUNCTION__.": DEBUG: value='".json_encode_array($value)."', result='".json_encode_array($res)."'.");
+        if ($field_type == "password"){
+            dosyslog(__FUNCTION__.": ".get_callee().": DEBUG: value='".substr($value,0,2)."...cut', result='".substr($res,0,5)."...cut'.");
+        }else{
+            dosyslog(__FUNCTION__.": ".get_callee().": DEBUG: value='".json_encode_array($value)."', result='".json_encode_array($res)."'.");
+        };
     };
     
     
