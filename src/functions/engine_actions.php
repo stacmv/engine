@@ -380,7 +380,7 @@ function import_first_user_action(){
     if ( ! $login )  die("Code: ea-" . __LINE__);
     if ( ! $rights ) die("Code: ea-" . __LINE__);
     if ( ! $pass )   die("Code: ea-" . __LINE__);
-    $pass = password_hash($pass);
+    $pass = passwords_hash($pass);
     if ( ! $pass )   die("Code: ea-" . __LINE__);
     
 
