@@ -1,5 +1,5 @@
 <?php
-function password_hash($pass){
+function passwords_hash($pass){
 
     $salt = substr(time(),-2) . substr(uniqid(),-2);
     
@@ -7,23 +7,23 @@ function password_hash($pass){
 
     return $hash;
 };
-function password_verify($pass, $hash){
+function passwords_verify($pass, $hash){
     
     $salt = substr($hash,0,4);
     
     return $hash === $salt . md5($salt.md5($pass));
 }
 
-function password_test(){
+function passwords_test(){
 
     $pass = time();
     
-    $hash = password_hash($pass);
+    $hash = passwords_hash($pass);
     
     
     
-    $valid = password_verify($pass, $hash);
-    $invalid = password_verify("wq4344", $hash);
+    $valid = passwords_verify($pass, $hash);
+    $invalid = passwords_verify("wq4344", $hash);
     
     dump($valid,"should be TRUE");
     dump($invalid,"should be FALSE");

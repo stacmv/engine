@@ -35,7 +35,7 @@ function AUTENTICATE(){
 			
 			if(isset($_USER["profile"])){
                
-				if (password_verify($_SERVER["PHP_AUTH_PW"], $_USER["profile"]["pass"])) {
+				if (passwords_verify($_SERVER["PHP_AUTH_PW"], $_USER["profile"]["pass"])) {
 					$_USER["autentication_type"] = "loose";
                     unset($_SESSION["NOTLOGGED"]);
                     $_SESSION["LOGGEDAS"] = $_SERVER["PHP_AUTH_USER"];
