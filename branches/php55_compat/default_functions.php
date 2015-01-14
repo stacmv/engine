@@ -217,7 +217,7 @@ if (!function_exists("get_user_registered_ip")){
     function get_user_registered_ip($user_id="", $login="", $ip="", $register_new_ip = false){
         // $register_new_ip    Регистрировать новые IP, если БД нет записей по (user_id, login, ip)
         
-        
+        // TODO: Переписать устаревший код
         global $S;
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
                 
