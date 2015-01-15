@@ -24,103 +24,97 @@ function APPLYPAGETEMPLATE(){
 function AUTENTICATE(){
     global $_USER;
     
-	if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
-	if ( ! isset($_USER["isUser"])) {
-		dosyslog(__FUNCTION__.": FATAL ERROR: User is not IDENTICATEd. Function IDENTICATE() have to be called before AUTENTICATE(). User: '".serialize($user)."'.");
+	if ( ! isset($_USER["identicated"]) ) {
+		dosyslog(__FUNCTION__.": FATAL ERROR: User is not IDENTICATEd. Function IDENTICATE() have to be called before AUTENTICATE(). User: '".json_encode_array($_USER)."'.");
 		die("Code: e-".__LINE__);
 	};
-	
-	if (isset($_SERVER["PHP_AUTH_PW"])){
-		if ($_USER["isUser"]){
-			
-			if(isset($_USER["profile"])){
-               
-				if (passwords_verify($_SERVER["PHP_AUTH_PW"], $_USER["profile"]["pass"])) {
-					$_USER["autentication_type"] = "loose";
-                    unset($_SESSION["NOTLOGGED"]);
-                    $_SESSION["LOGGEDAS"] = $_SERVER["PHP_AUTH_USER"];
-                    dosyslog(__FUNCTION__.": NOTICE: User '".$_USER["profile"]["login"]."' authenticated.");
-				}else{
-					dosyslog(__FUNCTION__.": NOTICE: Wrong password for login '".@$_USER["profile"]["login"]."' entered. User id: ".$_USER["profile"]["id"]);
-					$autentication_type = "none";
-                    $_SESSION["NOTLOGGED"] = true;
-                    unset($_SESSION["LOGGEDAS"]);
-				};
-			}else{
-				dosyslog(__FUNCTION__.": ERROR: Can not get user profile for id '".$_USER["profile"]["id"]."'. User fallback to guest.");
-				$_USER["isGuest"] = true;
-				$_USER["autentication_type"] = "none";
-                $_SESSION["NOTLOGGED"] = true;
-                unset($_SESSION["LOGGEDAS"]);
-			};		
-		}else{
-            dosyslog(__FUNCTION__.": NOTICE: Visitor is guest.");
-			$_USER["autentication_type"] = "none";
-		};
-	}else{
-        dosyslog(__FUNCTION__.": NOTICE: Visitor does not enter pass.");
-		$_USER["autentication_type"] = "none";
-	};
     
+    $_USER["authenticated"]  = false;
+    
+    if ( ! $_USER["identicated"]) return false;
+    
+    
+    if ( ! empty($_SESSION["auth"]) ){
+        if ( ! empty($_SESSION["auth"]["auth_type"])){
+            $authenticate_function = "auth_" . $_SESSION["auth"]["auth_type"] . "_authenticate";
+            if ( function_exists($authenticate_function) ){
+                $_USER["authenticated"] = call_user_func($authenticate_function);
+            }else{
+                dosyslog(__FUNCTION__.": FATAL ERROR: Function '".$authenticate_function." is not defined.");
+                die("Code: e-".__LINE__."-authenticate");
+            };
+        }else{
+            dosyslog(__FUNCTION__.": FATAL ERROR: Auth_type  is not set in session. Check identicate function.");
+            die("Code: e-".__LINE__."-authenticate");
+        };
+    }else{
+        dosyslog(__FUNCTION__.": FATAL ERROR: Auth data is not set in session. Check identicate function.");
+        die("Code: e-".__LINE__."-authenticate");
+    }
+        
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-   //dump($user,"user");
+    
+    if ( ! $_USER["authenticated"] ){
+        dosyslog(__FUNCTION__.": WARNING: User '".$_USER["profile"]["login"]."' (user_id:".$_USER["profile"]["id"].") not authenticated.");
+        if (isset($_SESSION["auth"])) unset($_SESSION["auth"]);
+        $_USER["profile"] = null;
+    }else{
+        dosyslog(__FUNCTION__.": NOTICE: User '".$_USER["profile"]["login"]."' (user_id:".$_USER["profile"]["id"].") authenticated.");
+    };
+    	
+	return $_USER["authenticated"];
     
 };
 function AUTHORIZE(){
     global $_PAGE;
-	global $_USER;
-	
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
-    
-	if ( ! isset($_USER["isUser"]) || ! isset($_USER["autentication_type"]) ) {
-		dosyslog(__FUNCTION__.": FATAL ERROR: User is not IDENTICATEd and/or authenticated. Functions IDENTICATE() and AUTENTICATE() have to be called before AUTHORIZE(). User: '".serialize($_USER)."'.");
-        dump($_USER);
-		die("Code: e-".__LINE__);
-	};
-	
+    global $_USER;
+	  
+    if ( empty($_PAGE["acl"]) ){
+        $authorized = true;
+    }else{
         
-    // Проверка доступа к текущей странице
-    
-    $access = true;
-       
-    if ( ! empty($_PAGE["acl"]) ){
-        if ( $_USER["autentication_type"] !== "none" ){
+        if ( ! $_USER["identicated"] || ! $_USER["authenticated"]){
+            $authorized = false;
+        }else{
+            $authorized = true;
             foreach($_PAGE["acl"] as $right){
-                $right = (string) $right;
                 if ( ! userHasRight( $right ) ){
-                    dosyslog(__FUNCTION__.": User '".$_USER["profile"]["login"]."' has not right '" . $right. "' for page '" . (string)$_PAGE["uri"]."'.");
-                    $access = false;
+                    dosyslog(__FUNCTION__.": User '".$_SESSION["auth"]["ident"]."' has not right '" . $right. "' for page '" . $_PAGE["uri"]."'.");
+                    $authorized = false;
+                    break;
                 };
             };
-        }
+        };
+    };
+    
+    if ( ! $authorized) {
+        if (!empty($_SESSION["auth"]["ident"])){
+            dosyslog(__FUNCTION__.": WARNING: User '".$_SESSION["auth"]["ident"]."' (user_id:".$_SESSION["auth"]["user_id"].") not authorized for page '" . $_PAGE["uri"]."'.");
+        }else{
+            dosyslog(__FUNCTION__.": WARNING: User not authorized for page '" . $_PAGE["uri"]."'.");
+        };
+        
+        if ($_USER["authenticated"]) $_PAGE["actions"] = array("NOT_AUTH");
+        else $_PAGE["actions"] = array("NOT_LOGGED");
+        
     }else{
-        $_USER["autentication_type"] = "loose";
-    };
+        if (!empty($_SESSION["auth"]["ident"])){
+            dosyslog(__FUNCTION__.": NOTICE: User '".$_SESSION["auth"]["ident"]."' (user_id:".$_SESSION["auth"]["user_id"].") authorized for page '" . $_PAGE["uri"]."'.");
+        }else{
+            dosyslog(__FUNCTION__.": NOTICE: User authorized for page '" . $_PAGE["uri"]."'.");
+        };
+    }
     
-    if (!$access) {
-        $_USER["autentication_type"] = "none";
-        $_USER["isGuest"] = true;
-    };
-    if ($_USER["isGuest"]) $_USER["isUser"] = false;
-    
+   return $authorized;  
    
-   if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-   //dump($_USER,"user");
 };
 function DOACTION(){
-    global $_CURRENTACTION;
     global $_ACTIONS;
     global $_PAGE;
-       
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    //if (TEST_MODE) echo "<br>\n SETACTION begin...";
-    SETACTION();
+
     //if (TEST_MODE) echo "<br>\n SETACTION done.";
     
-    $action = $_CURRENTACTION; // нужно для сообщение об ошибках.
+    $action = array_shift($_ACTIONS);
 
     dosyslog(__FUNCTION__.": NOTICE: Action: ".$action);
   
@@ -132,9 +126,6 @@ function DOACTION(){
         dosyslog(__FUNCTION__.": FATAL ERROR: Function '".$function."' is not defined.  URI: '".$_PAGE["uri"]."'.");
         die("Code: e-".__LINE__."-".$function);
     };
-        
-    array_shift($_ACTIONS);
-
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
@@ -144,59 +135,81 @@ function IDENTICATE(){
     global $CFG;
     global $_RESPONSE;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-	$_USER = array("isUser"=>false, "isGuest"=>false, "isBot"=>false, "autentication_type"=>false);
-
-    if (  ! empty($_PAGE["acl"]) &&
-          ( !isset($_SERVER["PHP_AUTH_USER"]) || 
-            ( ($_SERVER["PHP_AUTH_USER"] != @$_SESSION["LOGGEDAS"]) && ! empty($_SESSION["LOGGEDAS"]) )  ||
-            isset($_SESSION["NOTLOGGED"])
-          )
-       ){ 
-        $guessed_user = ! empty($_SERVER["PHP_AUTH_USER"]) ? $_SERVER["PHP_AUTH_USER"] : "";
-        if ( ! $guessed_user) $guessed_user = "guest";
-        $guessed_user .= ! empty($_SESSION["LOGGEDAS"]) ? ", _SESSION[LOGGEDAS] = " . $_SESSION["LOGGEDAS"] : "";
-        dosyslog(__FUNCTION__.": NOTICE: Send authrization request to ". $guessed_user );
-        
-        $headers["WWW-Authenticate"] = 'Basic realm="' . ucfirst($CFG["GENERAL"]["codename"]) . ' - ' . date("M Y") . '"';
-        $headers["HTTP"] = "HTTP/1.0 401 Unauthorized";
-        $_RESPONSE["headers"] = $headers;
-        unset($_SESSION["NOTLOGGED"]);
-        unset($_SESSION["LOGGEDAS"]);
-        SENDHEADERS();
-        if ( file_exists(ENGINE_DIR . "settings/not_logged.htm") ){
-            include(ENGINE_DIR . "settings/not_logged.htm");
-        };
-        exit;
-    };    
+    $_USER = array();
     
-	if (!isset($_SERVER["PHP_AUTH_USER"]) || isset($_SESSION["NOTLOGGED"]) ){
-        $_USER["isGuest"] = true;
-        dosyslog(__FUNCTION__ . ": NOTICE: User is a guest.");
+    $preffered_auth_type_cookie_name   = "pat";
+    $preffered_auth_type_cookie_period = 7*24*60*60; // in seconds
+    
+    $auth_types = array();
+    $tmp = explode(" ", @$CFG["AUTH"]["types"]); 
+    if (! empty($tmp)) foreach($tmp as $k=>$v) $auth_types[] = trim($v);
+  
+    
+    $preffered_auth_type = "http_basic";
+    if ( ! empty($auth_types) && ! empty($auth_types[0]) ){
+        $preffered_auth_type = $auth_types[0];
     }else{
-		dosyslog(__FUNCTION__ . ": NOTICE: User login:".$_SERVER["PHP_AUTH_USER"]);
-		$supposedUsers = db_find("users", "login",$_SERVER["PHP_AUTH_USER"]);
+        $auth_types = array($preffered_auth_type);
+    }
+    if ( ! empty($_COOKIE[ $preffered_auth_type_cookie_name ]) && in_array($_COOKIE[ $preffered_auth_type_cookie_name ], $auth_types) ){
+        $preffered_auth_type = $_COOKIE[ $preffered_auth_type_cookie_name ];
+    };
+    
+    
+    
+    $identicated = false;
+    
+    if ( ! empty($_PAGE["acl"]) ){
+        $identicate_function = "auth_".$preffered_auth_type."_identicate";
+        if (function_exists($identicate_function)){
+            $_SESSION["auth"]["user_id"] = call_user_func($identicate_function);
+            dosyslog(__FUNCTION__.": NOTICE: Identicated user_id:".$_SESSION["auth"]["user_id"]);
+        }else{
+            dosyslog(__FUNCTION__.": FATAL ERROR: Function '".$identicate_function."' is not defined. Could not identicate user for page '".$_PAGE["uri"]."'.");
+            die("Code: e-".__LINE__."-identicate");
+        }
+    }
+    
+
+    if ( ! empty($_SESSION["auth"]) ){
+        if ( ! empty($_SESSION["auth"]["auth_type"]) && in_array($_SESSION["auth"]["auth_type"], $auth_types) ){
+            $preffered_auth_type = $_SESSION["auth"]["auth_type"];
+            
+            if ( ! empty($_SESSION["auth"]["user_id"]) ){
+                $user = db_get("users", $_SESSION["auth"]["user_id"]);
+                if ( ! empty($user) ){
         
-	
-		if (!empty($supposedUsers)){
-			if (count($supposedUsers)>1) dosyslog(__FUNCTION__.": ERROR: User login '".$_SERVER["PHP_AUTH_USER"]."'.is not unique. Found ".count($supposedUsers)." users (should be 1). Ids: '".implode(", ",$supposedUsers)."'. Used first one - '".$supposedUsers[0]."'.");
-			$user_profile = db_get("users", $supposedUsers[0]);
-			if($user_profile){
-				$_USER["isUser"] = true;
-				$_USER["isGuest"] = false;
-				$_USER["isBot"] = @$user_profile["isBot"];
-				$_USER["profile"] = $user_profile;
-			}else{
-				dosyslog(__FUNCTION__.": ERROR: Can not get user profile for id '".$supposedUsers[0]."'. User fallback to guest.");
-				$_USER["isGuest"] = true;
-			};
-		}else{
-			$_USER["isGuest"] = true;
-		};
-	};
+                    $identicated = true;
+                }else{
+                    dosyslog(__FUNCTION__.": ERROR: User with id:'".$_SESSION["auth"]["user_id"]."' not found.");
+                }
+            }else{
+                dosyslog(__FUNCTION__.": ERROR: User id is not set in session.");
+            };
+        }else{
+            dosyslog(__FUNCTION__.": ERROR: Auth type is no set in session or not allowed.");
+        }
+    }
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    if ( ! $identicated ){
+        if (isset($_SESSION["auth"])) unset($_SESSION["auth"]);
+        $_USER["identicated"] = false;
+        $_USER["profile"]     = null;
+        $_USER["auth_type"]   = $preffered_auth_type;
+    }else{
+        $_USER["identicated"] = true;
+        $_USER["profile"]     = $user;
+        $_USER["auth_type"]   = $preffered_auth_type;
+        
+        $_RESPONSE["cookies"]["pat"] = array(
+            "value"  => $preffered_auth_type,
+            "expire" => time() + $preffered_auth_type_cookie_period,
+            "path"   => "/",
+            "domain" => $_SERVER["HTTP_HOST"],
+        );
+    };
     
+    return $identicated;
 };
 function GETPAGE(){  // поиск страницы, соответствующей текущему URI
     global $_PAGE;
@@ -348,35 +361,10 @@ function SENDHTML(){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
-function SETACTION(){
-    global $_PAGE;
-    global $_ACTIONS;
-    global $_CURRENTACTION;
-    global $CFG;
-    static $loadedActions = array();
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    $_CURRENTACTION = false;
-    $action = @$_ACTIONS[0];
-    
-    if ($action){
-        if ( in_array($action, $_PAGE["actions"]) || in_array($action, array("NOT_AUTH") ) ) {
-            $_CURRENTACTION = $action;
-        }else{
-            dosyslog(__FUNCTION__.": FATAL ERROR: Action '".$action."' is not found in page '".$_PAGE["uri"]."' actions. Check actions file.");
-            die("Code: e-".__LINE__);
-        };
-    }else{
-        dosyslog(__FUNCTION__.": FATAL ERROR:Actions list is empty!");
-        die("Code: e-".__LINE__);
-    };
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-};
 function SETACTIONLIST(){
-    global $_USER;
     global $_PAGE;
     global $_ACTIONS;
-    global $CFG;
-    global $_REDIRECT_URI;
+    
      
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb."); 
     $_ACTIONS = array();
@@ -387,27 +375,18 @@ function SETACTIONLIST(){
         return;
     };
     
-    
-     
-    if($_USER["autentication_type"] == "none"){
-        $_ACTIONS[0] = "NOT_AUTH";
-   }else{
-    
-       
-        foreach($_PAGE["actions"] as $action){
-            if ($action) {
-                if (!in_array($action, $_ACTIONS)) {
-                    $_ACTIONS[] = $action;
-                }else{
-                    dosyslog(__FUNCTION__.": ERROR: Dublicate action. Action '".$action."' of page '".$_PAGE["uri"]."' is not unique. Only first instance was added to action list.");
-                };
-            }else{  
-                dosyslog(__FUNCTION__.": ERROR: Action '". $action_name."' of page '".$_PAGE["uri"]."' has no name. 'Name' attribute has to be set in XML file.");
+    foreach($_PAGE["actions"] as $action){
+        if ($action) {
+            if (!in_array($action, $_ACTIONS)) {
+                $_ACTIONS[] = $action;
+            }else{
+                dosyslog(__FUNCTION__.": ERROR: Dublicate action. Action '".$action."' of page '".$_PAGE["uri"]."' is not unique. Only first instance was added to action list.");
             };
-        };        
-        
-    };
-    // dump($_ACTIONS,"_ACTIONS");  
+        }else{  
+            dosyslog(__FUNCTION__.": ERROR: Action '". $action_name."' of page '".$_PAGE["uri"]."' has no name. Check pages file.");
+        };
+    };        
+
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
 function SETPARAMS(){
