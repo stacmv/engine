@@ -1,4 +1,4 @@
-<?
+<?php
 function form_prepare($db_table, $form_name, $object=""){
 
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . ").");
@@ -18,7 +18,9 @@ function form_prepare($db_table, $form_name, $object=""){
         $field["value_from"] = "";
         if ( isset($object[ $v["name"] ])){
             $field["value_from"] = $object[ $v["name"] ];
-            if (! in_array($v["type"], array("string", "number","list"))){
+            if ($v["type"] == "password") {
+                $field["value_from"] = "--cut--";
+            }else{
                 $field["value_from"] = db_prepare_value($object[ $v["name"] ], $v["type"]);
             };
         };
@@ -42,7 +44,7 @@ function form_prepare($db_table, $form_name, $object=""){
         case "checkboxes_pub":
         case "multiselect":
             $field["name"]      = $v["name"];
-            $field["name_from"] = "from[".$v["name"]."][]";
+            $field["name_from"] = "from[".$v["name"]."]";
             $field["name_to"]   = "to[".$v["name"]."][]";
             $field["id"] = $v["name"];
             
@@ -268,7 +270,6 @@ function form_get_field_values($field){
     
     return $values;
 }
-
 function form_get_template_file($template){
     return TEMPLATES_DIR . "form/" . $template . ".form.htm";
 }

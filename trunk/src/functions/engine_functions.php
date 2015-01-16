@@ -93,6 +93,9 @@ function add_data($db_table, $data){
     else return array(false, "fail");
 
 }
+function dosyslog($message, $file="") {								// Пишет сообщение в системный лог при включенной опции DO_SYSLOG.
+    glog_dosyslog($message, $file);
+};
 function dosyslog_data_changes($data_before){
     global $_DATA;
     
@@ -165,25 +168,27 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
                    set_session_msg($msg, "info");
                 };
                 
-                
                 if (!empty($proposed_value)){
-                    $changes[$name]["to"] = $proposed_value;
-                    $changes[$name]["from"] = $data["from"][$name];
-                   
-                }else{
-                    
-                    if (array_key_exists($name, $data["to"])){
-                        $changes[$name]["from"] = db_prepare_value($data["from"][$name], $type);
-                        $changes[$name]["to"] = db_prepare_value($data["to"][$name], $type);
-                    };
-                    dosyslog(__FUNCTION__.": DEBUG: changes[".$name."] = ".json_encode_array($changes[$name]).".");
+                    $data["to"][$name] = $proposed_value;
                 };
+  
+                if (
+                    ($type !== "password") ||
+                    ( ($type == "password") && ! empty($data["to"][$name]) ) 
+                   ){
+                    $changes[$name]["from"] = $type !== "password" ? db_prepare_value($data["from"][$name], $type) : "";
+                    $changes[$name]["to"] = db_prepare_value($data["to"][$name], $type);
+                    
+                    $log_data = $changes[$name];
+                    if ($type == "password") $log_data["to"] = ! empty($log_data["to"]) ? substr($log_data["to"],0,10)."...cut" : "";
+                    dosyslog(__FUNCTION__.": DEBUG: changes[".$name."] = ".json_encode_array($log_data).".");
+               };
+
             }else{
                 $isDataValid = false;
                 if (empty($msg)) $msg = "Ошибка в поле '". $field["name"]."'.";
                 dosyslog(__FUNCTION__.": WARNING: ".$msg);
                 set_session_msg($msg, "error");
-
             };
         };
         
@@ -206,6 +211,38 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
     return array($res, $reason);
     
 };
+function get_filename($name, $ext = "") {//
+	$result = glog_translit($name);
+    
+	$result = str_replace(array("+","&"," ",",",":",";",".",",","/","\\","(",")","'","\""),array("_plus_","_and_","-","-","-","-"),$result); 
+    
+	$result = strtolower($result);
+    
+	$result = urlencode($result);
+    
+	$result .= $ext ;
+
+	return $result;
+};
+function month_name($month_num){
+    $month_name = "";
+    switch( (int) $month_num){
+        case "1": $month_name = "январь"; break;
+        case "2": $month_name = "февраль"; break;
+        case "3": $month_name = "март"; break;
+        case "4": $month_name = "апрель"; break;
+        case "5": $month_name = "май"; break;
+        case "6": $month_name = "июнь"; break;
+        case "7": $month_name = "июль"; break;
+        case "8": $month_name = "август"; break;
+        case "9": $month_name = "сентябрь"; break;
+        case "10": $month_name = "октябрь"; break;
+        case "11": $month_name = "ноябрь"; break;
+        case "12": $month_name = "декабрь"; break;
+    }
+    
+    return $month_name;    
+}
 function parse_post_data($data, $action){
 
     // Обработка загружаемых файлов
@@ -367,3 +404,4 @@ function time_diff($from, $to){
     
     return $diff_msg;
 }
+

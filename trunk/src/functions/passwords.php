@@ -1,20 +1,32 @@
 <?php
 function passwords_hash($pass){
 
-    $salt = substr(time(),-2) . substr(uniqid(),-2);
-    
-    $hash = $salt . md5($salt.md5($pass));
+    if ( (PHP_VERSION_ID >= 50500) && (function_exists("password_hash") ) ) {
+        $hash = password_hash($pass, PASSWORD_DEFAULT);
+    }else{
+        $salt = substr(time(),-2) . substr(uniqid(),-2);
+        $hash = $salt . md5($salt.md5($pass));
+    };
 
     return $hash;
 };
 function passwords_verify($pass, $hash){
-    
-    $salt = substr($hash,0,4);
-    
-    return $hash === $salt . md5($salt.md5($pass));
-}
 
-function passwords_test(){
+    
+    if ( (PHP_VERSION_ID >= 50500) && (function_exists("password_hash") ) ) {
+        if (substr($hash, 0, 7) == "$2y$10$"){
+            return password_verify($pass, $hash);
+        }else{
+            $salt = substr($hash,0,4);
+            return $hash === $salt . md5($salt.md5($pass));
+        };
+    }else{
+        $salt = substr($hash,0,4);
+        return $hash === $salt . md5($salt.md5($pass));
+    }; 
+    
+}
+function password_test(){
 
     $pass = time();
     

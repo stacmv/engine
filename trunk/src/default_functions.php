@@ -200,11 +200,24 @@ if (!function_exists("get_pages")){
         return $pages;
     };
 };
+if (!function_exists("get_rights_all")){
+    function get_rights_all(){
+        
+        $tsv = import_tsv(APP_DIR."settings/acl.tsv");
+        
+        $rights = array();
+        foreach($tsv as $v){
+            $rights[ $v["acl"] ] = $v;
+        };
+        
+        return $rights;
+    };
+}
 if (!function_exists("get_user_registered_ip")){
     function get_user_registered_ip($user_id="", $login="", $ip="", $register_new_ip = false){
         // $register_new_ip    Регистрировать новые IP, если БД нет записей по (user_id, login, ip)
         
-        
+        // TODO: Переписать устаревший код
         global $S;
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
                 
@@ -233,7 +246,7 @@ if (!function_exists("get_user_registered_ip")){
         }else{
             
             $user_id = $_USER["profile"]["id"];
-            if ($_USER["isUser"]){
+            if ($_USER["authenticated"]){
                 $login   = $_USER["profile"]["login"];
             }
             
@@ -279,15 +292,20 @@ if (!function_exists("get_user_registered_ip")){
 }
 if (!function_exists("logout")){
     function logout(){
-        
-        global $S;
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        
+        global $_USER;
         unset($_SESSION["msg"]);
-        unset($_SESSION["to"]);        
-        $_SESSION["NOTLOGGED"] = true;
-        unset($_SESSION["LOGGEDAS"]);
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        unset($_SESSION["to"]);
+        
+        if (!empty($_USER["auth_type"])){
+            $auth_type = $_USER["auth_type"];
+            $logout_function = "auth_".$auth_type."_logout";
+            if (function_exists($logout_function)){
+                call_user_func($logout_function);
+            };
+        };
+        unset($_SESSION["auth"]);
+        dosyslog(__FUNCTION__.": NOTICE: User logged out.");
+        
     };
 };
 if (!function_exists("register_user_ip")) {
@@ -388,7 +406,7 @@ if (!function_exists("set_template_for_user")){
         global $_PAGE;
         
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        if ($_USER["isUser"] && !$_USER["isGuest"]){
+        if ($_USER["authenticated"]){
             if ( ! empty($_PAGE["templates"]["user"])){
                 set_template_file("content", $_PAGE["templates"]["user"]);
             }else{
@@ -402,8 +420,8 @@ if (!function_exists("set_template_for_user")){
                     set_template_file("page", $_PAGE["templates"]["page_guest"]);
                 };
             }else{
-                dosyslog(__FUNCTION__.": FATAL ERROR: template 'guest' is not set for page '".$_PAGE["uri"]."'");
-                die("Code: ea-".__LINE__);
+                dosyslog(__FUNCTION__. get_callee() . " : FATAL ERROR: template 'guest' is not set for page '".$_PAGE["uri"]."'");
+                die("Code: df-".__LINE__);
             }
         };
 
@@ -611,14 +629,14 @@ if (!function_exists("userHasRight")){
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
         
-        
         if ( ! $login ){
             if ( empty($_USER["profile"]["acl"]) ){
-                if ( ! $_USER["isGuest"] ){
+                if ( $_USER["authenticated"] ){
                     dosyslog(__FUNCTION__.": ERROR: ".$login.": права не заданы.");
                 };
                 return false;
             };
+            
             $login = $_USER["profile"]["login"];
             $user_rights = $_USER["profile"]["acl"];
         }else {
@@ -657,7 +675,7 @@ if (!function_exists("user_has_access_by_ip")){
         
         if ( ! $user_id && ! $login ){
             $user_id = $_USER["profile"]["id"];
-            if ($_USER["isUser"]){
+            if ($_USER["authenticated"]){
                 $login   = $_USER["profile"]["login"];
             }
         }elseif( ! $user_id && $login ){
