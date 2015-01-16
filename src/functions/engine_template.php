@@ -62,7 +62,6 @@ function unescape_template_data($data_item, $mode="html"){
     };
 }
 function get_content($block_name){
-    global $S;
     global $CFG;
     global $_USER;
     global $_PAGE;
@@ -79,15 +78,9 @@ function get_content($block_name){
     };
        
     $HTML = "";
-    if (!empty($_PAGE->contents)){
-        $isFound = false;
-        foreach($_PAGE["content"] as $xmlcontent){
-            if($xmlcontent["name"] == $block_name){
-                $HTML .= (string) $xmlcontent;
-                $isFound = true;
-                dosyslog(__FUNCTION__.": NOTICE: Found block '".$block_name."' in page contents.");
-            };
-        };
+    if ( ! empty($_PAGE["content"][$block_name]) ){
+        $HTML .= $_PAGE["content"][$block_name];
+        dosyslog(__FUNCTION__.": DEBUG: Found block '".$block_name."' in page contents.");
     };
     
     if(!$HTML) {
@@ -102,7 +95,7 @@ function get_content($block_name){
         
         if ($res !== NULL) {
             $HTML = $res;
-            dosyslog(__FUNCTION__.": NOTICE: Included in '".$block_name."' blocks parsed.");
+            dosyslog(__FUNCTION__.": DEBUG: Included in '".$block_name."' blocks parsed.");
         }else{
             dosyslog(__FUNCTION__.": ERROR: There is an error in preg_replace_callback() while parsing block '".$block_name."'.");
         };

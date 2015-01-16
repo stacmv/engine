@@ -416,14 +416,25 @@ function logout_action(){
     logout();
 }
 function not_auth_action(){
-    global $_RESPONSE;
-    
     $forbidden_template_file = "forbidden.htm";
     
     if (file_exists(TEMPLATES_DIR . $forbidden_template_file)){
         set_template_file("content", $forbidden_template_file);
     }else{
-        set_content("page", "<h1>Доступ запрещен</h1>");
+        set_content("content", "<h1>Доступ запрещен</h1>");
+    };
+    
+    logout();
+}
+function not_logged_action(){
+    global $CFG;
+    
+    $not_logged_template_file = "not_logged.htm";
+    
+    if (file_exists(TEMPLATES_DIR . $not_logged_template_file)){
+        set_template_file("content", $not_logged_template_file);
+    }else{
+        set_content("content", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
     };
     
     logout();
