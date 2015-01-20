@@ -358,7 +358,7 @@ function form_action(){
     }else{
         if ( ! isset($_DATA[$object]) ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
-            die("Code: ea-".__LINE__);
+            die("Code: ea-".__LINE__."-set_objects");
         };
         $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);
     };
