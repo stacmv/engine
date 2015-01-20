@@ -407,18 +407,15 @@ function db_edit($db_table, $id, array $changes, $comment=""){
         
         if (db_get_table($db_table) !== "history") {
             
-            if ( $_USER["isUser"] ){
+            if ( $_USER["authenticated"] ){
                 if ( !empty($_USER["profile"]["id"]) ){
                     $user_id = $_USER["profile"]["id"];
                 }else{
                     dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " [" . $db_table . "]: user id is not set. Query: '".$query."'.");
                     die("Code: db-" . __LINE__);
                 }
-            }elseif($_USER["isGuest"]){
-                $user_id = 0;
             }else{
-              dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " [" . $db_table . "]: unkkown user. Query: '".$query."'.");
-              die("Code: db-" . __LINE__);
+                $user_id = 0;
             };
             
             if (!db_add_history($db_table, $id, $user_id, "db_edit", $comment, $changes)){
