@@ -211,6 +211,18 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
     return array($res, $reason);
     
 };
+function get_auth_types(){
+    global $CFG;
+    
+    if ( ! empty($CFG["AUTH"]["auth_types"]) ){
+        $auth_types = explode(" ", $CFG["AUTH"]["auth_types"]); foreach($auth_types as $k=>$v) $auth_types[$k] = trim($v);
+    }else{
+        $auth_types = array("http_basic");
+    };
+    dosyslog(__FUNCTION__.": DEBUG: Auth_types: ".implode(", ",$auth_types));
+    
+    return $auth_types; 
+}
 function get_filename($name, $ext = "") {//
 	$result = glog_translit($name);
     
@@ -313,13 +325,17 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     global $_RESPONSE;
     global $CFG;
     global $ISREDIRECT;
+    global $IS_IFRAME_MODE;
+    
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    if ($IS_IFRAME_MODE) $params["i"] = is_string($IS_IFRAME_MODE) ? $IS_IFRAME_MODE : "1";
     
     $base_uri = $CFG["URL"]["base"];
     
     if ( $redirect_uri ) $redirect_uri .= $CFG["URL"]["ext"];
 
-    if ( ! empty($params_uri) ) $redirect_uri .= "?" . http_build_query($params);
+    if ( ! empty($params) ) $redirect_uri .= "?" . http_build_query($params);
     if ( ! empty($hash_uri) )   $redirect_uri .= "#" . $hash_uri;
 
     

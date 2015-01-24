@@ -296,14 +296,18 @@ if (!function_exists("logout")){
         unset($_SESSION["msg"]);
         unset($_SESSION["to"]);
         
-        if (!empty($_USER["auth_type"])){
-            $auth_type = $_USER["auth_type"];
-            $logout_function = "auth_".$auth_type."_logout";
-            if (function_exists($logout_function)){
-                call_user_func($logout_function);
+        $auth_types = get_auth_types();
+        foreach($auth_types as $auth_type){
+            if (!empty($_SESSION[$auth_type])){
+                $logout_function = "auth_".$auth_type."_logout";
+                if (function_exists($logout_function)){
+                    call_user_func($logout_function);
+                }else{
+                    unset($_SESSION[$auth_type]);
+                }
             };
         };
-        unset($_SESSION["auth"]);
+        $_USER["authenticated"] = false;
         dosyslog(__FUNCTION__.": NOTICE: User logged out.");
         
     };

@@ -113,9 +113,11 @@ function get_content($block_name){
     return $HTML;
 };
 function render_template($template_file, $data = array() ){
+    // Declare global which must be visible from within templates
     global $CFG;
     global $_PAGE;
     global $_USER;
+    global $IS_IFRAME_MODE;
     
     if ( ! file_exists(TEMPLATES_DIR . $template_file)){
         dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template_file."' is not found.");

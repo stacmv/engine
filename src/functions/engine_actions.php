@@ -428,8 +428,11 @@ function not_auth_action(){
 }
 function not_logged_action(){
     global $CFG;
+    global $_USER;
     
-    $not_logged_template_file = "not_logged.htm";
+    $auth_type = !empty($_SESSION["auth_type"]) ? $_SESSION["auth_type"] : "http_basic";
+    
+    $not_logged_template_file = "not_logged_" . $auth_type . ".htm";
     
     if (file_exists(TEMPLATES_DIR . $not_logged_template_file)){
         set_template_file("content", $not_logged_template_file);

@@ -4,6 +4,10 @@ if (!defined("TEST_MODE")) define ("TEST_MODE", false);
 define("DB_NOTICE_QUERY",true); // писать запросы в лог
 define("DB_LIST_DELIMITER", "||"); // разделитель элементов в полях типа list
 define("DB_PREPARE_VALUE", 1); // флаг для db_get(), что надо вернуть поля типа list, json и др. в виде готовом для записи в БД, т.е. в виде строки, возвращаемой db_prepare_value()
+define("DB_RETURN_ID", 1);  // флаг для db_find() и db_select(), что надо вернуть только ID
+define("DB_RETURN_ROW",2);  // флаг для db_find() и db_select(), что надо вернуть всю запись
+define("DB_RETURN_ONE",4);  // флаг для db_find(), что надо вернуть только одну запись, а не список
+define("DB_RETURN_DELETED",8);  // флаг для db_find(), что надо вернуть и удаленные записи тоже
 
 $_DB = array();
 
@@ -23,7 +27,7 @@ function db_add($db_table, array $data, $comment=""){
        
         if (db_get_table($db_table) !== "history") {
             
-            if ( ! isset($data[0]) && is_array($data[0]) ){  // добавлены несколько записей
+            if ( isset($data[0]) && is_array($data[0]) ){  // добавлены несколько записей
                 if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, array())){
                     
                     dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
@@ -407,13 +411,9 @@ function db_edit($db_table, $id, array $changes, $comment=""){
         
         if (db_get_table($db_table) !== "history") {
             
-            if ( $_USER["authenticated"] ){
-                if ( !empty($_USER["profile"]["id"]) ){
-                    $user_id = $_USER["profile"]["id"];
-                }else{
-                    dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " [" . $db_table . "]: user id is not set. Query: '".$query."'.");
-                    die("Code: db-" . __LINE__);
-                }
+            
+            if ( !empty($_USER["profile"]["id"]) ){
+                $user_id = $_USER["profile"]["id"];
             }else{
                 $user_id = 0;
             };
@@ -435,25 +435,12 @@ function db_error($dbh){
     $err = $dbh->errorInfo();
     return $err[2];
 }
-function db_find($db_table, $field, $keyOrValue, $value=false, $returnDeleted=false){
-    
-    global $S;
+function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    $key = false;
-    if(false === $value){
-        $value = $keyOrValue;
-    }else{
-        $key = $keyOrValue;
-    };
 
 	$dbh = db_set($db_table);
     
     $result = array();
-    
-    if($key) { // ДОРАБОТАТЬ: добавить поддержку поиска по паре ключ:значение в полях типа json.
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Search in JSON is not implemented yet.");
-        die();
-    };
     
     $table = db_get_table($db_table);
     
@@ -477,47 +464,38 @@ function db_find($db_table, $field, $keyOrValue, $value=false, $returnDeleted=fa
     
         switch ($field_type){
         case "list":
-            $where_clause = $field." LIKE ".$dbh->quote("%".$value."%");
+            $where_clause = $field." LIKE ".$dbh->quote("%".DB_LIST_DELIMITER.$value.DB_LIST_DELIMITER."%");
             break;
         default:
             $where_clause = $field."=".$dbh->quote($value);
         }
-        $where_clause .= ( ! $returnDeleted ? " AND (isDeleted IS NULL OR isDeleted = '')" : "");
+        $where_clause .= ( ! ($returnOptions & DB_RETURN_DELETED) ? " AND (isDeleted IS NULL OR isDeleted = '')" : "");
         
-    
-        $query = "SELECT id, " . $field . " FROM " . $table . " WHERE " . $where_clause . ";";
-        // d($query);
+        $limit_clause = ($returnOptions & DB_RETURN_ONE) ? " LIMIT 1" : "";
+        
+        if ($returnOptions & DB_RETURN_ID){
+            $query = "SELECT id, " . $field . " FROM " . $table . " WHERE " . $where_clause . $limit_clause . ";";
+        }elseif($returnOptions & DB_RETURN_ROW){
+            $query = "SELECT *  FROM " . $table . " WHERE " . $where_clause . $limit_clause . ";";
+        }else{
+            die("Code: db-".__LINE__."-db_find");
+        };
         
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
-        $res = $dbh->query($query);
-        if ($res){
-            $tmp = $res->fetchAll(PDO::FETCH_ASSOC); //  ДОРАБОТАТЬ: формат result не проверен, привести в соответствие с ожидаемым
-            
-            if ( $tmp ){
-            
-                foreach($tmp as $k=>$v){
-                    switch($field_type){
-                    case "list":
-                        $tmp_list = explode(",",$v[$field]); foreach($tmp_list as $tmp_list_k=>$tmp_list_v) $tmp_list[$tmp_list_k] = trim($tmp_list_v);
-                        if ( in_array($value, $tmp_list)){
-                            $result[] = $v["id"];
-                        }
-                        break;
-                    default:
-                        $result[] = (int) $v["id"];
-                    }
-                } 
-            };
-            // dump($result,"result");
-        }else{
-            dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh).". Query: ".$query);
-        };
+        $result = db_select($db_table, $query, $returnOptions);
+        
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " DB is not set. Db_set() has to called before db_find().");
     };
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");   
-    return $result;
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    if ($returnOptions & DB_RETURN_ONE){
+        if (isset($result[0])) return $result[0];
+        else return null;
+    }else{
+        return $result;
+    };
 };
 function db_get($db_table, $id, $flags=0){
     
@@ -680,7 +658,7 @@ function db_set($db_table){
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query_table_check."'.");
         //
     
-        if ( ! (int) $dbh->query($query_table_check)->fetchColumn() ){  // создаем таблицу, если она не сущестует
+        if ( ! (int) ($dbh->query($query_table_check)->fetchColumn()) ){  // создаем таблицу, если она не сущестует
             $query = db_create_table_query($db_table);
             // dump($query,"q");
             dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Creating table ".$db_table.".");
@@ -734,7 +712,9 @@ function db_select($db_table, $select_query, $flags=0){
     if ($res){
         while ( ($row = $res->fetch(PDO::FETCH_ASSOC) ) !== false) {
             
-            if ( $flags & DB_PREPARE_VALUE ){
+            if ( $flags & DB_RETURN_ID ){
+                $result[] = $row["id"];
+            }elseif ( $flags & DB_PREPARE_VALUE ){
                 $result[] = db_prepare_record(db_parse_result($db_table, $row));
             }else{
                 $result[] = db_parse_result($db_table, $row);
@@ -824,6 +804,7 @@ function db_create_table_query($db_table){
     foreach($table as $field){
         $tmp = (string) $field["name"];
         $type = (string) $field["type"];
+        $unique = ! empty($field["unique"]);
         switch ($type){
             case "autoincrement": $tmp .= " INTEGER PRIMARY KEY"; break;
             case "number":        $tmp .= " NUMERIC"; break;
@@ -831,6 +812,10 @@ function db_create_table_query($db_table){
             case "string":        $tmp .= " TEXT"; break;
             case "json": $tmp .=" TEXT"; break;
         };
+        
+        if ($unique) $tmp .= " UNIQUE";
+        
+        
         $aTmp[] = $tmp;
     };
     $query .= " (" . implode(", ",$aTmp).")";
@@ -952,17 +937,28 @@ function db_get_tables_list_from_xml($db_name=""){
 };
 function db_parse_result($db_table, $result){
 
-    // Десереализация данных, полученных из БД
+    // Десериализация данных, полученных из БД
     $schema = db_get_table_schema($db_table);
     foreach($schema as $field){
-        $result[ $field["name"] ] = db_parse_value($result[ $field["name"] ], $field["type"]);
+        if (array_key_exists($field["name"], $result)){
+            $result[ $field["name"] ] = db_parse_value($result[ $field["name"] ], $field["type"]);
+        }else{
+            if (DEV_MODE){
+                dosyslog(__FUNCTION__.":  FATAL ERROR: Field '".$field["name"]."' does not exist in db '".$db_table."'. Run DB migration.");
+                dump($result,$db_table);
+                die("Code: db-".__LINE__."-".$db_table."-".$field["name"].". Run DB migration.");
+            }else{
+                dosyslog(__FUNCTION__.": ERROR: Field '".$field["name"]."' does not exist in db '".$db_table."'. Run DB migration.");
+            };
+        };
     };
 
     return $result;
 }
 function db_parse_value($value, $field_type){
     
-    if ($field_type == "list"){
+    switch($field_type){
+    case "list":
         if (isset($value) ){
             if (strpos($value, DB_LIST_DELIMITER) !== false){
                 $value = explode(DB_LIST_DELIMITER, trim($value, DB_LIST_DELIMITER));
@@ -978,9 +974,11 @@ function db_parse_value($value, $field_type){
             }else{
                 $value = array($value);
             };
+        }else{
+            $value = array();
         };
-    };
-    if ($field_type == "json"){
+        break;
+    case "json":
         if (isset($value) ){
             $stored = $value;
             $value = json_decode_array( $value);
@@ -989,8 +987,12 @@ function db_parse_value($value, $field_type){
                 $value = array();
             };
             unset($stored);
+        }else{
+            $value = array();
         };
-    };
+        break;
+        
+    }; // switch
     
     return $value;
     
@@ -1011,6 +1013,10 @@ function db_prepare_value($value, $field_type){
     
     switch($field_type){
         case "list":
+            if (empty($value)){
+                $res = null;
+                break;
+            };
             // dump($value,"value");
             if ( ! is_array($value)){
                 $res = db_parse_value($value, $field_type);
@@ -1028,6 +1034,10 @@ function db_prepare_value($value, $field_type){
             // die(__FUNCTION__);
             break;
         case "json":
+            if (empty($value)){
+                $res = null;
+                break;
+            };
             if (is_array($value)){
                 $res = json_encode_array($value);
             };

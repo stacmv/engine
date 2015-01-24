@@ -11,13 +11,21 @@
 	{
 		"uri":"login",
 		"title":"Вход в систему",
-		"actions": ["login"],
+		"actions": ["login_http_basic"],
 		"templates": {
 			"content":"login.htm",
 			"page":"page.htm",
 			"login_form":"login_form.block.htm"
 		},
-		"acl":["access"]
+		"acl":[]
+	},
+	{
+		"uri": "ulogin",
+		"title": "Авторизация через соц. сети с помощью Ulogin",
+		"params":{
+			"token": { "type": "string", "source": "post" }
+		},
+		"actions": ["ulogin"]
 	},
 	{
 		"uri": "adm_import_first_user",
