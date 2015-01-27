@@ -235,77 +235,25 @@ function GETPAGE(){  // поиск страницы, соответствующ�
     global $_RESPONSE;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $uri = $_URI;
-    
-    $xml = get_pages();
-    
-    //dump($xml,"pages_xml");
-    
-    if ($xml){
-        $_PAGE = false;
-        $page = get_page_by_uri($xml,$uri);
+
+    $page = find_page($uri);
+
+    if(!$page){
+        dosyslog(__FUNCTION__.": WARNING: Page '".$_URI."' not found.");
+        $_RESPONSE["headers"]["HTTP"] = "HTTP/1.0 404 Not Found";
         
-        if ("/" != $uri) {
-                        
-            if (!$page) {
-                // отбрасываем якорь
-                $tmp = explode("#",$uri); // УТОЧНИТЬ: могут ли быть более одного # в URI.
-                if (count($tmp) == 2){
-                    $uri = $tmp[0];
-                    $page = get_page_by_uri($xml, $uri);
-                };
-            };
-            
-            if (!$page) {
-                // отбрасываем GET параметры
-                $tmp = explode("?",$uri); // УТОЧНИТЬ: могут ли быть более одного ? в URI.
-                if (count($tmp) == 2){
-                    $uri = $tmp[0];
-                    $page = get_page_by_uri($xml, $uri);
-                };
-            };
-            
-            if (!$page) {
-                // двигаемся вверх по иерархии, к корню
-                
-                while ( ("" != $uri) && !$page ){
-                    
-                    $tmp = explode("/",$uri);
-                    if (count($tmp)>1){
-                        unset($tmp[count($tmp)-1]);
-                        $uri = implode("/",$tmp);
-                        $page = get_page_by_uri($xml,$uri);
-                    }else{
-                       break;
-                    };
-                };
-            };
-            
-            if(!$page){
-                dosyslog(__FUNCTION__.": WARNING: Page '".$_URI."' not found.");
-                $_RESPONSE["headers"]["HTTP"] = "HTTP/1.0 404 Not Found";
-                
-                $page = get_page_by_uri($xml,"error_404");
-                if (!$page){
-                    dosyslog(__FUNCTION__.": WARNING: Page '".$_URI."' not found.");
-                    $page = get_page_by_uri($xml,"/");
-                };
-            };
-            
+        $page = find_page("error_404");
+        if (!$page){
+            dosyslog(__FUNCTION__.": WARNING: 404 ErrorPage not found.");
+            $page = find_page("/");
         };
-    } else {
-        dosyslog(__FUNCTION__.": FATAL ERROR: Can not load XML.");
-        die("Code: e-".__LINE__);
     };
     
     if (!$page) {
-        dosyslog(__FUNCTION__.": FATAL ERROR: Can not find page for uri '".$_URI."' in XML files.");
+        dosyslog(__FUNCTION__.": FATAL ERROR: Can not find page for uri '".$_URI."' in pages files.");
         die("Code: e-".__LINE__);
     };
     
-    
-    if (!isset($page["header"]) )      $page["header"] = isset($page["title"]) ? $page["title"] : "";
-    if (!isset($page["description"]) ) $page["description"] = "";
-    if (!isset($page["keywords"]) )    $page["keywords"] = "";
     
     
     $_PAGE = $page;

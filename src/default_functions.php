@@ -104,6 +104,66 @@ if (!function_exists("dosyslog")){
         };   
     };
 };
+if (!function_exists("find_page")){
+    function find_page($uri){
+        $pages = get_pages();
+            
+        if ($pages){
+            $page = get_page_by_uri($pages,$uri);
+            
+            if ("/" != $uri) {
+                            
+                if (!$page) {
+                    // отбрасываем якорь
+                    $tmp = explode("#",$uri,2);
+                    if (count($tmp) == 2){
+                        $uri = $tmp[0];
+                        $page = get_page_by_uri($pages, $uri);
+                    };
+                };
+                
+                if (!$page) {
+                    // отбрасываем GET параметры
+                    $tmp = explode("?",$uri, 2); 
+                    if (count($tmp) == 2){
+                        $uri = $tmp[0];
+                        $page = get_page_by_uri($pages, $uri);
+                    };
+                };
+                
+                if (!$page) {
+                    // двигаемся вверх по иерархии, к корню
+                    
+                    while ( ("" != $uri) && !$page ){
+                        
+                        $tmp = explode("/",$uri);
+                        if (count($tmp)>1){
+                            unset($tmp[count($tmp)-1]);
+                            $uri = implode("/",$tmp);
+                            $page = get_page_by_uri($pages,$uri);
+                        }else{
+                           break;
+                        };
+
+                    };
+                };
+                
+            };
+            
+            if (! empty($page)){
+                if (!isset($page["header"]) )      $page["header"] = isset($page["title"]) ? $page["title"] : "";
+                if (!isset($page["description"]) ) $page["description"] = "";
+                if (!isset($page["keywords"]) )    $page["keywords"] = "";
+            };
+                  
+        } else {
+            dosyslog(__FUNCTION__.": FATAL ERROR: Can not load pages files.");
+            die("Code: df-".__LINE__);
+        };
+        
+        return $page;
+    }
+}
 if (!function_exists("get_application_statuses")){
     function get_application_statuses(){
         return array(
@@ -143,13 +203,10 @@ if (!function_exists("get_gravatar")) {
     }   
 };
 if (!function_exists("get_page_by_uri")){
-    function get_page_by_uri($xml, $uri){
+    function get_page_by_uri($pages, $uri){
         
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        foreach($xml as $page){
-            if($page["uri"] == $uri) return $page;
-        };
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        if( isset($pages[$uri]) ) return $pages[$uri];
+        
         return false;
     };
 };
