@@ -71,7 +71,7 @@ function auth_ulogin_authenticate(){
 function auth_ulogin_identicate(){
     
     $user_id = null;
-    $ulogin_user = $_SESSION["ulogin"]["user"];
+    $ulogin_user = isset($_SESSION["ulogin"]["user"]) ? $_SESSION["ulogin"]["user"] : null;
     
     if ( empty($_SESSION["ulogin"]["user"]) || ! isset($ulogin_user["identity"]) ){
         dosyslog(__FUNCTION__.": NOTICE: User is NOT identicated.");
