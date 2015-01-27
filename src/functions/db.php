@@ -514,6 +514,7 @@ function db_get($db_table, $ids, $flags=0){
         $tmp = array();
         $get_all = true;
     }else{
+        $flags |= DB_RETURN_ONE;
         $tmp  = array($ids);
     };
     
@@ -575,7 +576,7 @@ function db_get($db_table, $ids, $flags=0){
         
             if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": DEBUG: " . get_callee() . ": Fetched ".count($result)." records. SQL: '".$statement->queryString ."'.");        
             
-            if (count($ids) == 1){
+            if ($flags & DB_RETURN_ONE){
                 $result = $result[0];
             };
             
