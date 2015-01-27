@@ -8,6 +8,7 @@ define("DB_RETURN_ID", 1);  // флаг для db_find() и db_select(), что 
 define("DB_RETURN_ROW",2);  // флаг для db_find() и db_select(), что надо вернуть всю запись
 define("DB_RETURN_ONE",4);  // флаг для db_find(), что надо вернуть только одну запись, а не список
 define("DB_RETURN_DELETED",8);  // флаг для db_find(), что надо вернуть и удаленные записи тоже
+define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get(), что надо вернуть записи с ключами, равными id, а не порядковым номрам
 
 $_DB = array();
 
@@ -497,37 +498,94 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID){
         return $result;
     };
 };
-function db_get($db_table, $id, $flags=0){
+function db_get($db_table, $ids, $flags=0){
     
-    global $S;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = array();
     $dbh = db_set($db_table);
     
     $table_name = db_get_table($db_table);
 	
-    if ( ! is_numeric($id)){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Non-numeric id: '".serialize($id)."' while querying DB '" . $db_table . "'.");
+
+    $get_all = false;
+    if ( is_array($ids) ){
+        $tmp  = $ids;
+    }elseif($ids == "all"){
+        $tmp = array();
+        $get_all = true;
+    }else{
+        $tmp  = array($ids);
     };
     
-    $query = "SELECT * FROM " . $table_name . " WHERE id='" . $id . "';";
-    
-    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
-    $res = $dbh->query($query);
-    
-    if ($res){
-        $result = $res->fetchAll(PDO::FETCH_ASSOC); //  ДОРАБОТАТЬ: добавить обработку ситуации, когда найдено более одной записи.
-        if (!empty($result)){
-            $result = $result[0]; 
-            $result = db_parse_result($db_table, $result);
-            if ( $flags & DB_PREPARE_VALUE ){
-                $result = db_prepare_record($db_table,$result);
+    $ids = array();
+    if ( ! $get_all){
+        foreach($tmp as $k=>$id){
+            if ( ! is_numeric($id)){
+                dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Non-numeric id: '".serialize($id)."' while querying DB '" . $db_table . "'. Skipped.");
+            }else{
+                $ids[] = (int) $id;
             };
         };
+        unset($tmp, $k, $id);
+    };
+
+    if ($get_all){
+        $query = "SELECT * FROM " . $table_name . ";";
+        $statement = db_prepare_query($db_table, $query);
+        $res = $statement->execute();
+    }elseif (count($ids) == 1){
+        $query = "SELECT * FROM " . $table_name . " WHERE id = ?;";
+        $statement = db_prepare_query($db_table, $query);
+        $res = $statement->execute($ids);
+    }else{
+        $query = "SELECT * FROM " . $table_name . " WHERE id IN (" . implode(", ", array_fill(0,count($ids), "?")) . ");";
+        $statement = db_prepare_query($db_table, $query);
+        $res = $statement->execute($ids);
+    };
+
+    
+    
+    
+    if ($res){
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC); 
+        if ( ! empty($result) ){
+            if (count($ids) == 1){
+                if (count($result) > 1){
+                    dosyslog(__FUNCTION__.": ERROR: Found more than one record with id '".$ids[0]."' in '".$db_table."'. First taken.");
+                };
+                $result = array($result[0]);
+            };
+            
+            foreach($result as $k=>$v){
+                $result[$k] = db_parse_result($db_table, $result[$k]);
+                if ( $flags & DB_PREPARE_VALUE ){
+                    $result[$k] = db_prepare_record($db_table,$result[$k]);
+                };
+            };
+            unset($k,$v);
+            
+            if ($flags & DB_RETURN_ID_INDEXED){
+                $tmp = array();
+                foreach($result as $k=>$v){
+                    $tmp[$v["id"]] = $v;
+                };
+                $result = $tmp;
+                unset($tmp, $k, $v);
+            };
+        
+            if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": DEBUG: " . get_callee() . ": Fetched ".count($result)." records. SQL: '".$statement->queryString ."'.");        
+            
+            if (count($ids) == 1){
+                $result = $result[0];
+            };
+            
+        };
+        
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh).". Query: ".$query);
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+
     return $result;
 };
 function db_get_list($db_table, array $fields = array("id"), $limit=""){
@@ -996,6 +1054,17 @@ function db_parse_value($value, $field_type){
     
     return $value;
     
+}
+function db_prepare_query($db_table, $query){
+    dosyslog(__FUNCTION__.": DEBUG: Preparing query '".$query."' for '".$db_table."'.");
+    $dbh = db_set($db_table);
+    try{
+        $stmt = $dbh->prepare($query);
+    }catch(PDOException $e){
+        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Could not prepare statement for ".$db_table.". PDO message:".$e->getMessage() );
+        die("Code: db-".__LINE__);
+    };
+    return $stmt;
 }
 function db_prepare_record($db_table, $result){
 
