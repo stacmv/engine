@@ -28,6 +28,14 @@
 		"actions": ["ulogin"]
 	},
 	{
+		"uri": "ulogin/unlink",
+		"title": "Отключание профиля Ulogin от профиля приложения",
+		"params":{
+			"id": { "type": "string", "source": "get", "regexp": "/ulogin\\/unlink\\/(\\d+)/", "pos": 1}
+		},
+		"actions": ["ulogin_unlink"]
+	},
+	{
 		"uri": "adm_import_first_user",
 		"title": "Добавление первого пользователя",
 		"params":{

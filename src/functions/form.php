@@ -221,6 +221,7 @@ function form_get_fields($db_table, $form_name){
     return $fields;
 }
 function form_get_field_values($field){
+    global $_DATA;
     
     switch($field["form_values"]){
     case "lst":
@@ -239,7 +240,14 @@ function form_get_field_values($field){
         }
         unset($tsv);
         break;
-
+    case "data":
+        if (isset($_DATA[$field["name"]])){
+            $values = $_DATA[$field["name"]];
+        }else{
+            dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _DATA.");
+            $values = "";
+        }
+        break;
     default:
     
         if ( strpos($field["form_values"], "&") !== false ){

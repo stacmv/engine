@@ -50,7 +50,38 @@ function ulogin_action(){
 function ulogin_reload_action(){
     redirect($_SERVER["HTTP_REFERER"]);
 };
-
+function ulogin_unlink_action(){
+    global $_USER;
+    global $_PARAMS;
+    
+    $id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
+    
+    if (! $id){
+        dosyslog(__FUNCTION__.": ERROR: Mandatory parameter 'id' is not set.");
+        die("Code: ulogin-".__LINE__);
+    };
+    
+    if ($_USER["authenticated"]){
+        $ulogin_data = db_get("users.ulogin", $id);
+        if ($ulogin_data){
+            if ($ulogin_data["user_id"] == $_USER["profile"]["id"]){
+                $comment = "Пользователь user_id:".$_USER["profile"]["id"]." отвязал аккаунт '".$ulogin_data["network"]."'.";
+                list($res, $reason) = db_delete("users.ulogin", $id, $comment);
+                set_session_msg("users.ulogin_delete_".$reason,$reason); 
+                dosyslog(__FUNCTION__.": INFO: ".$comment);
+            }else{
+                dosyslog(__FUNCTION__.": ERROR: User user_id:".$_USER["profile"]["id"]." tried to unlink ulogin account with id:'".$id."' which linked to user_id:".$ulogin_data["user_id"].".");
+            };
+        }else{
+            dosyslog(__FUNCTION__.": ERROR: User user_id:".$_USER["profile"]["id"]." tried to unlink ulogin account with id:'".$id."' which is not found in db.");
+        };
+    }else{
+        dosyslog(__FUNCTION__.": ERROR: User tried to unlink ulogin account with id:'".$id."' but is not authenticated.");
+    };
+    
+    redirect($_SERVER["HTTP_REFERER"]);
+    
+}
 function auth_ulogin_authenticate(){
     global $_USER;
     
@@ -101,15 +132,29 @@ function auth_ulogin_link_profile(){
         $user = db_get("users",$user_id);
         dosyslog(__FUNCTION__.": NOTICE: User identicated as user_id:".$user_id." by current http_basic authentification.");
         
-        // добавить привязку социального профиля
-        $data = array("to" => $ulogin_user);
-        $data["to"]["user_id"] = $user_id;
-        dosyslog(__FUNCTION__.": NOTICE: Linking ".$ulogin_user["network"] . " profile '" . $ulogin_user["identity"] . "' to user_id:" . $user_id . ".");
-        list($res, $added_id) = add_data("users.ulogin", $data);
-        $reason = is_numeric($added_id) ? "success" : "fail";
-        
-        
-        set_session_msg("users.ulogin_link_profile_".$reason, $reason);
+        // Ищем нет ли старой привязки
+        $ulogin_data = db_find("users.ulogin", "identity", $ulogin_user["identity"], DB_RETURN_ROW | DB_RETURN_ONE | DB_RETURN_DELETED);
+        if ( ! empty($ulogin_data) ){
+            if ($ulogin_data["user_id"] == $user_id){
+                $data = array("to" => $ulogin_user);
+                $data["to"]["isDeleted"] = null;
+                $data["from"] = $ulogin_data;
+                $comment = "Existed link restored for user_id".$user_id;
+                list($res, $reason) = db_edit("users.ulogin", $ulogin_data["id"], db_translate_changes($data,1), $comment);
+                set_session_msg("users.ulogin_link_profile_".$reason, $reason);
+                dosyslog(__FUNCTION__.": NOTICE: Linking ".$ulogin_user["network"] . " profile '" . $ulogin_user["identity"] . "' to user_id:" . $user_id . "... ".$reason);
+            }else{
+                set_session_msg("ulogin_link_profile_already_exist","fail");
+            }
+        }else{
+            // добавить привязку социального профиля
+            $data = array("to" => $ulogin_user);
+            $data["to"]["user_id"] = $user_id;
+            dosyslog(__FUNCTION__.": NOTICE: Linking ".$ulogin_user["network"] . " profile '" . $ulogin_user["identity"] . "' to user_id:" . $user_id . ".");
+            list($res, $added_id) = add_data("users.ulogin", $data);
+            $reason = is_numeric($added_id) ? "success" : "fail";
+            set_session_msg("users.ulogin_link_profile_".$reason, $reason);
+        };
     };
         
     return $res;
