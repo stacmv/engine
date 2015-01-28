@@ -276,8 +276,9 @@ function db_delete($db_table, $id, $comment=""){
     //dump($comment,"comment");
     
 	$dbh = db_set($db_table);
-	
-    $object = db_get($db_table, $id);
+	$object = db_get($db_table, $id);
+    $table_name = db_get_table($db_table);
+    
     if (empty($object)) {
         dosyslog(__FUNCTION__.": Attempt to delete object which is absent in DB '".$db_table."'. ID='".$id."'.");
         return array(false, "wrong_id");
@@ -298,7 +299,7 @@ function db_delete($db_table, $id, $comment=""){
     
     // Create query.
          
-    $query = "UPDATE ".$db_table." SET isDeleted=".time()." WHERE id=".$id.";";
+    $query = "UPDATE ".$table_name." SET isDeleted=".time()." WHERE id=".$id.";";
     
     if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
     $res = $dbh->exec($query);
@@ -332,7 +333,9 @@ function db_edit($db_table, $id, array $changes, $comment=""){
     
     //dump($comment,"comment");
     $dbh = db_set($db_table);
-    $object = db_get($db_table, $id, DB_PREPARE_VALUE);
+    $object = db_get($db_table, $id, DB_PREPARE_VALUE | DB_RETURN_DELETED);
+    
+    $table_name = db_get_table($db_table);
     
     if (empty($object)) {
         dosyslog(__FUNCTION__.": Attempt to edit object which is absent in DB '".$db_table."'. ID='".$id."'.");
@@ -387,7 +390,7 @@ function db_edit($db_table, $id, array $changes, $comment=""){
     
     // Create query.
          
-    $query = "UPDATE ".$db_table." SET ";
+    $query = "UPDATE ".$table_name." SET ";
     $tmp = array();
     foreach($changes as $k=>$v){
         if ($v["to"] === NULL){
@@ -540,7 +543,7 @@ function db_get($db_table, $ids, $flags=0){
     };
     
     if ( ! ($flags & DB_RETURN_DELETED) ){
-        $query .= ($get_all ? " WHERE" : " AND") . " isDeleted IS NULL OR isDeleted = '';";
+        $query .= ($get_all ? " WHERE" : " AND") . " isDeleted IS NULL OR isDeleted = ''";
     };
     
     if ($flags & DB_RETURN_ONE){
@@ -1153,7 +1156,7 @@ function db_prepare_value($value, $field_type){
 function db_translate_changes($changes, $mode=0){
 
     // переводит массив элементов формата $changes[$what] = array("from"=>.., "to"=>..)
-    //  в массив элементов формата $changes =array("from" => array($what=>...), "to"=> array($what=>...) ) и наоборот
+    //  в массив элементов формата $changes =array("from" => array($what=>...), "to"=> array($what=>...) ) [mode=1] и наоборот [mode=0]
     
     
     if ($mode == 1){

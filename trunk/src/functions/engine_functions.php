@@ -331,15 +331,19 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     
     if ($IS_IFRAME_MODE) $params["i"] = is_string($IS_IFRAME_MODE) ? $IS_IFRAME_MODE : "1";
     
-    $base_uri = $CFG["URL"]["base"];
-    
-    if ( $redirect_uri ) $redirect_uri .= $CFG["URL"]["ext"];
+    if ( $redirect_uri ){
+        if ( ! filter_var($redirect_uri, FILTER_VALIDATE_URL) ){  // relative uri on this site, not external/full URL
+             $uri = $CFG["URL"]["base"] . $redirect_uri . $CFG["URL"]["ext"];
+        }else{
+            $uri = $redirect_uri;
+        };
+    }else{
+        $uri = $CFG["URL"]["base"];
+    }
 
-    if ( ! empty($params) ) $redirect_uri .= "?" . http_build_query($params);
-    if ( ! empty($hash_uri) )   $redirect_uri .= "#" . $hash_uri;
+    if ( ! empty($params) ) $uri .= "?" . http_build_query($params);
+    if ( ! empty($hash_uri) )   $uri .= "#" . $hash_uri;
 
-    
-    $uri = $base_uri . $redirect_uri;
     
     $_RESPONSE["headers"] = array("Location"=>$uri);
     $_RESPONSE["body"] = "<a href='".$uri."'>Click here</a>";
