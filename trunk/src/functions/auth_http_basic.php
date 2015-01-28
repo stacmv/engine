@@ -89,7 +89,7 @@ function auth_http_basic_identicate(){
     
     if ( $identicated ){
         
-        $user_id = db_find("users","login", $_SERVER["PHP_AUTH_USER"], DB_RETURN_ID | DB_RETURN_ONE);
+        $user_id = db_find("users","login", $_SESSION["http_basic"]["ident"], DB_RETURN_ID | DB_RETURN_ONE);
                 
         if ($user_id){
             if (isset($_SESSION["http_basic"]["logged_out"])) unset($_SESSION["http_basic"]["logged_out"]);
