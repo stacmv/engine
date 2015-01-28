@@ -471,8 +471,8 @@ if (!function_exists("set_template_for_user")){
             if ( ! empty($_PAGE["templates"]["user"])){
                 set_template_file("content", $_PAGE["templates"]["user"]);
             }else{
-                dosyslog(__FUNCTION__.": FATAL ERROR: template 'user' is not set for page '".$_PAGE["uri"]."'");
-                die("Code: ea-".__LINE__);
+                dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: template 'user' is not set for page '".$_PAGE["uri"]."'");
+                die("Code: df-".__LINE__);
             }
         }else{
             if ( ! empty($_PAGE["templates"]["guest"])){

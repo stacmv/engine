@@ -7,7 +7,7 @@ define("DB_PREPARE_VALUE", 1); // флаг для db_get(), что надо ве
 define("DB_RETURN_ID", 1);  // флаг для db_find() и db_select(), что надо вернуть только ID
 define("DB_RETURN_ROW",2);  // флаг для db_find() и db_select(), что надо вернуть всю запись
 define("DB_RETURN_ONE",4);  // флаг для db_find(), что надо вернуть только одну запись, а не список
-define("DB_RETURN_DELETED",8);  // флаг для db_find(), что надо вернуть и удаленные записи тоже
+define("DB_RETURN_DELETED",8);  // флаг для db_get() и db_find(), что надо вернуть и удаленные записи тоже
 define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get(), что надо вернуть записи с ключами, равными id, а не порядковым номрам
 
 $_DB = array();
@@ -529,21 +529,32 @@ function db_get($db_table, $ids, $flags=0){
         };
         unset($tmp, $k, $id);
     };
+    
 
     if ($get_all){
-        $query = "SELECT * FROM " . $table_name . ";";
-        $statement = db_prepare_query($db_table, $query);
-        $res = $statement->execute();
+        $query = "SELECT * FROM " . $table_name;
     }elseif (count($ids) == 1){
-        $query = "SELECT * FROM " . $table_name . " WHERE id = ?;";
-        $statement = db_prepare_query($db_table, $query);
-        $res = $statement->execute($ids);
+        $query = "SELECT * FROM " . $table_name . " WHERE id = ?";
     }else{
-        $query = "SELECT * FROM " . $table_name . " WHERE id IN (" . implode(", ", array_fill(0,count($ids), "?")) . ");";
-        $statement = db_prepare_query($db_table, $query);
+        $query = "SELECT * FROM " . $table_name . " WHERE id IN (" . implode(", ", array_fill(0,count($ids), "?")) . ")";
+    };
+    
+    if ( ! ($flags & DB_RETURN_DELETED) ){
+        $query .= ($get_all ? " WHERE" : " AND") . " isDeleted IS NULL OR isDeleted = '';";
+    };
+    
+    if ($flags & DB_RETURN_ONE){
+        $query .= " LIMIT 1";
+    };
+    
+    $query .=";";
+    
+    $statement = db_prepare_query($db_table, $query);
+    if ($get_all){
+        $res = $statement->execute();
+    }else{
         $res = $statement->execute($ids);
     };
-
     
     
     
@@ -1038,7 +1049,7 @@ function db_parse_value($value, $field_type){
         };
         break;
     case "json":
-        if (isset($value) ){
+        if ( ! empty($value) ){
             $stored = $value;
             $value = json_decode_array( $value);
             if ($value == false){
