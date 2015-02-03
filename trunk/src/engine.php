@@ -184,7 +184,9 @@ function IDENTICATE(){
     $ids = array_unique($ids);
     
     if (count($ids)>1){
-        die(__FUNCTION__.": Multiple logins are not supported.");
+        set_session_msg("Multiple logins are not supported.");
+        dosyslog(__FUNCTION__.": ERROR: Multiple logins are not supported. Ids:'".json_encode($ids)."'.");
+        $ids = array();
     };
     
     $user_id = !empty($ids[0]) ? $ids[0] : null;

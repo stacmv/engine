@@ -353,6 +353,13 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     $ISREDIRECT = true;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
+function redirect_301($redirect_uri = "", array $params = array(), $hash_uri = ""){
+    global $_RESPONSE;
+    
+    redirect($redirect_uri, $params, $hash_uri);
+    $_RESPONSE["headers"]["HTTP"] = "HTTP/1.1 301 Moved Permanently";
+    dosyslog(__FUNCTION__.get_callee().": INFO: 301 redirect mode ON.");
+};
 function show_date($timestamp, $options=0){
 
     if ( ! is_numeric($timestamp) ){
