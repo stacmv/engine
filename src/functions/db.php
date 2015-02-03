@@ -533,6 +533,10 @@ function db_get($db_table, $ids, $flags=0){
         unset($tmp, $k, $id);
     };
     
+    if (empty($ids) && ! $get_all){
+        dosyslog(__FUNCTION__. get_callee() .": FATAL ERROR:  Empty ids  while querying DB '" . $db_table . "'.");
+        die("Code: db-".__LINE__."-".$db_table);
+    }
 
     if ($get_all){
         $query = "SELECT * FROM " . $table_name;
@@ -553,6 +557,8 @@ function db_get($db_table, $ids, $flags=0){
     $query .=";";
     
     $statement = db_prepare_query($db_table, $query);
+    
+    
     if ($get_all){
         $res = $statement->execute();
     }else{
@@ -587,8 +593,8 @@ function db_get($db_table, $ids, $flags=0){
                 $result = $tmp;
                 unset($tmp, $k, $v);
             };
-        
-            if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": DEBUG: " . get_callee() . ": Fetched ".count($result)." records. SQL: '".$statement->queryString ."'.");        
+            
+            if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": DEBUG: " . get_callee() . ": Fetched ".count($result)." records. Query: '".$statement->queryString ."', parameters: ".json_encode($ids).".");
             
             if ($flags & DB_RETURN_ONE){
                 $result = $result[0];
@@ -1052,7 +1058,7 @@ function db_parse_value($value, $field_type){
         };
         break;
     case "json":
-        if ( ! empty($value) ){
+        if ( ! empty($value) && ($value != "[]") ){
             $stored = $value;
             $value = json_decode_array( $value);
             if ($value == false){
@@ -1071,7 +1077,7 @@ function db_parse_value($value, $field_type){
     
 }
 function db_prepare_query($db_table, $query){
-    dosyslog(__FUNCTION__.": DEBUG: Preparing query '".$query."' for '".$db_table."'.");
+    dosyslog(__FUNCTION__.get_callee() . ": DEBUG: Preparing query '".$query."' for '".$db_table."'.");
     $dbh = db_set($db_table);
     try{
         $stmt = $dbh->prepare($query);

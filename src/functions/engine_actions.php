@@ -221,6 +221,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     global $_PARAMS;
     global $_DATA;
     global $CFG;
+    
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     // Проверка прав доступа 
@@ -255,10 +256,14 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 
 
     if ($res){
-        $redirect_uri = $redirect_on_success ? $redirect_on_success : $db_table;
-        redirect($redirect_uri);
+        if ( ! is_null($redirect_on_success) ){
+            $redirect_uri = $redirect_on_success ? $redirect_on_success : $db_table;
+            redirect($redirect_uri);
+        };
     }else{
-        redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
+        if ( ! is_null($redirect_on_success) ){
+            redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
+        };
     };
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
