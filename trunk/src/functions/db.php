@@ -677,6 +677,8 @@ function db_insert($db_table, array $data){
     
     $dbh = db_set($db_table);
     
+    $data["created"] = time();
+    
     $query = db_create_insert_query($db_table, $data);
     
     if ($query){
