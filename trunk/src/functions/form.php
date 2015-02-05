@@ -281,3 +281,12 @@ function form_get_field_values($field){
 function form_get_template_file($template){
     return TEMPLATES_DIR . "form/" . $template . ".form.htm";
 }
+function form_get_action_link($form_name, $is_public=false){
+    global $IS_IFRAME_MODE;
+    global $CFG;
+    
+    $form_uri = implode("/", explode("_", $form_name, 2));
+    
+    
+    return ($is_public ? "pub/" : "") . $form_uri . $CFG["URL"]["ext"] . ($IS_IFRAME_MODE ? "?i=1" : "");
+}

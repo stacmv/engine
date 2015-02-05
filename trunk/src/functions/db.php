@@ -916,19 +916,21 @@ function db_get_table_schema($db_table){
     $db_name = db_get_name($db_table);
     $db_table = db_get_table($db_table);
     
-    $db_file = APP_DIR . "settings/db.xml";
-    $xml = xml_load_file($db_file);
+    $db_files = get_db_files();
     $isFound = false;
-    if ($xml){
-        foreach($xml->db as $xmldb){
-            if ($db_name == (string) $xmldb["name"]){
-                $db = $xmldb;
-                $isFound = true;
-                break;
-            };
-        }; //foreach xml
+    foreach($db_files as $db_file){
+        $xml = xml_load_file($db_file);
+        if ($xml){
+            foreach($xml->db as $xmldb){
+                if ($db_name == (string) $xmldb["name"]){
+                    $db = $xmldb;
+                    $isFound = true;
+                    break;
+                };
+            }; //foreach xml
+        };
     };
-
+   
     if (!$isFound){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
         return false;
@@ -972,7 +974,7 @@ function db_get_tables_list_from_xml($db_name=""){
     
     $db_name = db_get_name($db_name);
     
-    $db_files = array(APP_DIR . "settings/db.xml");
+    $db_files = get_db_files();
     
     $isFound=false;
     foreach ($db_files as $k=>$xmlfile){

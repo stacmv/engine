@@ -176,6 +176,31 @@ if (!function_exists("get_application_statuses")){
         );
     };
 };
+if (!function_exists("get_db_files")){
+    function get_db_files(){
+        // Если в разных файлах определены одинаковые базы, то используеьтся те, что определены (в db_files) РАНЬШЕ
+        
+        $db_files = array();
+        $specific_dbs = glob(APP_DIR . "settings/*.db.xml");
+        if ( ! empty($specific_dbs) ){
+            foreach($specific_dbs as $file){
+                $start = strlen(APP_DIR . "settings/");
+                $length  = strlen($file) - strlen(".db.xml") - $start;
+                $key = substr($file, $start, $length);
+                $db_files[$key] = $file;
+            };
+            unset($file, $start,$length, $key);
+        }
+        
+        
+        $db_files["app"]    = APP_DIR    . "settings/db.xml";
+        $db_files["engine"] = ENGINE_DIR . "settings/db.xml";
+     
+        
+        return $db_files;
+        
+    }
+}
 if (!function_exists("get_gravatar")) {
     /**
      * Get either a Gravatar URL or complete image tag for a specified email address.
@@ -210,6 +235,30 @@ if (!function_exists("get_page_by_uri")){
         return false;
     };
 };
+if (!function_exists("get_page_files")){
+    function get_page_files(){
+        // Если в разных файлах определены одинаковые страницы, то используеьтся те, что определены (в pages_files) ПОЗЖЕ
+        
+        $pages_files = array(
+            "engine" => ENGINE_DIR . "settings/pages.json",
+            "app"    => APP_DIR    . "settings/pages.json",
+        );
+        
+        $extra_pages = glob(APP_DIR . "settings/*.pages.json");
+        if ( ! empty($extra_pages) ){
+            foreach($extra_pages as $file){
+                $start = strlen(APP_DIR . "settings/");
+                $length  = strlen($file) - strlen(".pages.json") - $start;
+                $key = substr($file, $start, $length);
+                $pages_files[$key] = $file;
+            };
+            unset($file, $start,$length, $key);
+        }
+        
+        return $pages_files;
+        
+    }
+}
 if (!function_exists("get_pages")){
     function get_pages(){
         
@@ -218,10 +267,7 @@ if (!function_exists("get_pages")){
         $xml = false;
         
 
-        $pages_files = array(
-            "engine" => ENGINE_DIR . "settings/pages.json",
-            "app"    => APP_DIR    . "settings/pages.json",
-        );
+        $pages_files = get_page_files();
         
         $pages = array();
         foreach($pages_files as $app=>$file){
@@ -238,8 +284,8 @@ if (!function_exists("get_pages")){
                 die("Code: df-".__LINE__);
             }
             
+            $pages_tmp  = array();
             if ( !empty($arr["pages"]) ){
-                $pages_tmp  = array();
                 foreach($arr["pages"] as $k=>$v){
                     $pages_tmp[ $v["uri"] ] = $v;
                 };
@@ -249,8 +295,6 @@ if (!function_exists("get_pages")){
             unset($pages_tmp);
         }
         unset($app,$file);
-        
-        
                 
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
      
