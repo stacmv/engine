@@ -353,6 +353,8 @@ function form_action(){
     $db_name = $object ."s";
     
     set_objects_action($form_name);
+    if (function_exists($form_name."_set_objects")) call_user_func($form_name."_set_objects"); // новый способ готовить данные для форм, от set_objects_action() надо отказываться
+    
         
     if ( $action == "add" ){
         if ( ! isset($_DATA[$object]) ){

@@ -419,7 +419,11 @@ function SETPARAMS(){
                     // dump($tmp,$fparam_name);
                     break;
                 case "request":
-                    $tmp = isset($_REQUEST[$fparam_name]) ? $_REQUEST[$fparam_name] : null;
+                    if ( ! empty($fparam["param_name"]) ){
+                        $tmp = isset($_REQUEST[$fparam["param_name"]]) ? $_REQUEST[$fparam["param_name"]] : null;
+                    }else{
+                        $tmp = isset($_REQUEST[$fparam_name]) ? $_REQUEST[$fparam_name] : null;
+                    };
                     break;
                 case "cookie":
                     $tmp = isset($_COOKIE[$fparam_name]) ? $_COOKIE[$fparam_name] : null;
@@ -570,8 +574,6 @@ $ISREDIRECT = false;
 $IS_API_CALL = false;
 $IS_IFRAME_MODE = ! empty($_GET["i"]) ? true : false;
 
-
-// dump($_SESSION);
 
 GETURI();
 GETPAGE(); // поиск и получение объекта текущей страницы
