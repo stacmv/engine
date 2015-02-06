@@ -439,7 +439,7 @@ function db_error($dbh){
     $err = $dbh->errorInfo();
     return $err[2];
 }
-function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID){
+function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $limit=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 
 	$dbh = db_set($db_table);
@@ -475,7 +475,13 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID){
         }
         $where_clause .= ( ! ($returnOptions & DB_RETURN_DELETED) ? " AND (isDeleted IS NULL OR isDeleted = '')" : "");
         
-        $limit_clause = ($returnOptions & DB_RETURN_ONE) ? " LIMIT 1" : "";
+        $limit_clause = "";
+        if ((int)$limit > 0){
+            $limit_clause = " LIMIT ".(int) $limit;
+        };
+        if ( $returnOptions & DB_RETURN_ONE ){
+            $limit_clause = " LIMIT 1";
+        };
         
         if ($returnOptions & DB_RETURN_ID){
             $query = "SELECT id, " . $field . " FROM " . $table . " WHERE " . $where_clause . $limit_clause . ";";
