@@ -22,7 +22,7 @@ function db_add($db_table, array $data, $comment=""){
     
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
     
-    $added_id = db_insert($db_table, $data);
+    $added_id = db_insert($db_table, array($data));
        
     if ( $added_id ){
        
@@ -675,26 +675,53 @@ function db_insert($db_table, array $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = false;
     
+    if (empty($data[0])){
+        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: data should be array of records. data[0] is empty.");
+        die("Code: db-".__LINE__);
+    };
+    
     $dbh = db_set($db_table);
+
+    $timestamp = time();
+    $data = array_map(function($record) use ($timestamp){
+        $record["created"] = $timestamp;
+        $record = array_filter($record); // get rid of empty fields
+        return $record;
+    }, $data);
     
-    $data["created"] = time();
+    $schema = db_get_table_schema($db_table);
+    $fields = array();
+    foreach($schema as $f){
+        $fields[$f["name"]] = $f;
+    };
+    unset($schema, $f);
+        
+    $keys = array_keys($data[0]);
+    $keys = array_filter($keys, function($k) use ($fields){
+        return ( ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
+    });
     
-    $query = db_create_insert_query($db_table, $data);
+    $query = db_create_insert_query($db_table, $keys, count($data));
+    
+    
     
     $statement = db_prepare_query($db_table, $query);
     
     $insert_data = array();
-    $keys = array_keys($data[0]);
     foreach($data as $record){
         $record = db_prepare_record($db_table, $record);
         if (array_keys($record) !== $keys){
-            dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Keys mismatch. Expected:'".json_encode($keys)."'. Got: '".json_encode(array_keys($record)))."'.");
-            die("Code: ".__LINE__);
+            dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Keys mismatch. Expected:'".json_encode_array($keys)."'. Got: '".json_encode_array(array_keys($record))."'.");
+            die("Code: db-".__LINE__);
         };
         foreach(array_values($record) as $v){
             $insert_data[] = $v;
         };
     };
+    
+    // dump($query,"query");
+    // dump(implode(", ",$insert_data), "data");
+    // die();
     
     $res = $statement->execute($insert_data);
     
@@ -822,35 +849,16 @@ function db_select($db_table, $select_query, $flags=0){
     
     return $result;
 };
-function db_create_insert_query($db_table, array $data){
+function db_create_insert_query($db_table, array $keys, $nRecords){
 	
-    $dbh = db_set($db_table);
     $table_name = db_get_table($db_table);
-    
-    $schema = db_get_table_schema($db_table);
-    $fields = array();
-    foreach($schema as $f){
-        $fields[$f["name"]] = $f;
-    };
-    unset($schema, $f);
-    
-    if (empty($data[0]) || ! is_array($data[0])){
-       $data = array($data); // добавляется одна запись
-    };
-    
-    $keys = array_keys($data[0]);
-    $keys = array_filter($keys, function($k) use ($fields){
-        return ( ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
-    });
     
     $query_base = "INSERT INTO ".$table_name." (" . implode(", ", $keys) . ") VALUES ";
     $query = "";
-    
-        
+            
     $timestamp = time();
-    
-    
-    foreach($data as $record){
+        
+    for($i=0; $i<$nRecords; $i++){
         $placeholders = array_fill(0, count($keys), "?");
         $query .= $query_base . " (" . implode(", ", $placeholders) . ");\n";
     };
@@ -1077,7 +1085,7 @@ function db_parse_value($value, $field_type){
     
 }
 function db_prepare_query($db_table, $query){
-    dosyslog(__FUNCTION__.get_callee() . ": DEBUG: Preparing query '".$query."' for '".$db_table."'.");
+    // dosyslog(__FUNCTION__.get_callee() . ": DEBUG: Preparing query '".$query."' for '".$db_table."'.");
     $dbh = db_set($db_table);
     try{
         $stmt = $dbh->prepare($query);
@@ -1092,7 +1100,9 @@ function db_prepare_record($db_table, $record){
     // Сериализовать поля, требующие этого перед записью в БД
     $schema = db_get_table_schema($db_table);
     foreach($schema as $field){
-        $record[ $field["name"] ] = db_prepare_value($record[ $field["name"] ], $field["type"]);
+        if (isset($record[ $field["name"] ])){
+            $record[ $field["name"] ] = db_prepare_value($record[ $field["name"] ], $field["type"]);
+        };
     };
 
     return $record;
