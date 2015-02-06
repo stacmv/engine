@@ -439,7 +439,7 @@ function db_error($dbh){
     $err = $dbh->errorInfo();
     return $err[2];
 }
-function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $limit=""){
+function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_by="", $limit=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 
 	$dbh = db_set($db_table);
@@ -475,6 +475,19 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $limit=
         }
         $where_clause .= ( ! ($returnOptions & DB_RETURN_DELETED) ? " AND (isDeleted IS NULL OR isDeleted = '')" : "");
         
+        $order_by_clause = "";
+        if ( ! empty($order_by) ){
+            if (!is_array($order_by)) $order_by = array($order_by);
+            
+            $order_by_clause = " ORDER BY ";
+            $i = 0;
+            foreach($order_by as $k=>$v){
+                $order_by_clause .= ($i++>0 ? ", " : "") . $k . " " . (strtoupper($v) == "DESC" ? "DESC" : "ASC");
+            };
+        };
+        
+        
+        
         $limit_clause = "";
         if ((int)$limit > 0){
             $limit_clause = " LIMIT ".(int) $limit;
@@ -484,9 +497,9 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $limit=
         };
         
         if ($returnOptions & DB_RETURN_ID){
-            $query = "SELECT id, " . $field . " FROM " . $table . " WHERE " . $where_clause . $limit_clause . ";";
+            $query = "SELECT id, " . $field . " FROM " . $table . " WHERE " . $where_clause . $order_by_clause . $limit_clause . ";";
         }elseif($returnOptions & DB_RETURN_ROW){
-            $query = "SELECT *  FROM " . $table . " WHERE " . $where_clause . $limit_clause . ";";
+            $query = "SELECT *  FROM " . $table . " WHERE " . $where_clause . $order_by_clause . $limit_clause . ";";
         }else{
             die("Code: db-".__LINE__."-db_find");
         };
