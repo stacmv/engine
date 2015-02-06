@@ -1026,16 +1026,21 @@ function db_parse_result($db_table, $result){
 
     // Десериализация данных, полученных из БД
     $schema = db_get_table_schema($db_table);
+    $fields = array();
     foreach($schema as $field){
-        if (array_key_exists($field["name"], $result)){
-            $result[ $field["name"] ] = db_parse_value($result[ $field["name"] ], $field["type"]);
+        $fields[ $field["name"] ] = $field;
+    };
+    unset($schema, $field);
+    
+    foreach($result as $k=>$v){
+        if ( isset($fields[$k]) ){
+            $result[ $k ] = db_parse_value($v, $fields[$k]["type"]);
         }else{
             if (DEV_MODE){
-                dosyslog(__FUNCTION__.":  FATAL ERROR: Field '".$field["name"]."' does not exist in db '".$db_table."'. Run DB migration.");
-                dump($result,$db_table);
-                die("Code: db-".__LINE__."-".$db_table."-".$field["name"].". Run DB migration.");
+                dosyslog(__FUNCTION__.get_callee().":  FATAL ERROR: Field '".$k."' does not exist in db '".$db_table."'. Run DB migration.");
+                die("Code: db-".__LINE__."-".$db_table."-".$k.". Run DB migration.");
             }else{
-                dosyslog(__FUNCTION__.": ERROR: Field '".$field["name"]."' does not exist in db '".$db_table."'. Run DB migration.");
+                dosyslog(__FUNCTION__.": ERROR: Field '".$k."' does not exist in db '".$db_table."'. Run DB migration.");
             };
         };
     };
