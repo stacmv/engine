@@ -681,12 +681,25 @@ function db_insert($db_table, array $data){
     
     $query = db_create_insert_query($db_table, $data);
     
-    if ($query){
-        $res = $dbh->exec($query);
-    }else{
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Empty query.");
-        $res = false;
+    $statement = db_prepare_query($db_table, $query);
+    
+    $insert_data = array();
+    $keys = array_keys($data[0]);
+    foreach($data as $record){
+        $record = db_prepare_record($db_table, $record);
+        if (array_keys($record) !== $keys){
+            dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Keys mismatch. Expected:'".json_encode($keys)."'. Got: '".json_encode(array_keys($record)))."'.");
+            die("Code: ".__LINE__);
+        };
+        foreach(array_values($record) as $v){
+            $insert_data[] = $v;
+        };
     };
+    
+    $res = $statement->execute($insert_data);
+    
+    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Inserted " . count($data) . " records." : "Insert failed.") . " Query: '".$statement->queryString .", parameters: '" . json_encode($insert_data) ."'.");
+    
     
     if ($res){
         
@@ -694,6 +707,7 @@ function db_insert($db_table, array $data){
         
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'.");
+        $result = false;
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
@@ -835,30 +849,12 @@ function db_create_insert_query($db_table, array $data){
         
     $timestamp = time();
     
-    while(count($data) > 0){
-        $record = array_shift($data);
-        $tmp = array();
-
-        foreach($keys as $key){
-            $v = $record[$key];
-            if ($key == "created"){
-                $tmp[] = $timestamp;
-            }elseif (in_array($fields[$key]["type"], array("list", "json", "number"))){
-                $tmp[] = $dbh->quote( db_prepare_value($v, $fields[$key]["type"]) );
-            }elseif ( ($v!==NULL) && ($v!==false) ){
-                $tmp[] = $dbh->quote($v);
-            }elseif($v === NULL){
-                $tmp[] = "NULL";
-            };
-
-        };
-        unset($key);
-        $query .= $query_base . " (" . implode(", ", $tmp) . ");\n";
+    
+    foreach($data as $record){
+        $placeholders = array_fill(0, count($keys), "?");
+        $query .= $query_base . " (" . implode(", ", $placeholders) . ");\n";
     };
-    
-    
-    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");    
-    
+        
     return $query;
 
 }
@@ -1091,15 +1087,15 @@ function db_prepare_query($db_table, $query){
     };
     return $stmt;
 }
-function db_prepare_record($db_table, $result){
+function db_prepare_record($db_table, $record){
 
     // Сериализовать поля, требующие этого перед записью в БД
     $schema = db_get_table_schema($db_table);
     foreach($schema as $field){
-        $result[ $field["name"] ] = db_prepare_value($result[ $field["name"] ], $field["type"]);
+        $record[ $field["name"] ] = db_prepare_value($record[ $field["name"] ], $field["type"]);
     };
 
-    return $result;
+    return $record;
 }
 function db_prepare_value($value, $field_type){
 
