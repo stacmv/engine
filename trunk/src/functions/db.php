@@ -344,7 +344,7 @@ function db_edit($db_table, $id, array $changes, $comment=""){
   
     // Check that the changes are really change something.
     foreach ($changes as $what=>$v){
-        if ($changes[$what]["from"] == $changes[$what]["to"]){
+        if ($changes[$what]["from"] === $changes[$what]["to"]){
             unset($changes[$what]);
         };
     };
@@ -1130,7 +1130,12 @@ function db_prepare_value($value, $field_type){
                     $res = (array) $value;
                     // dump($res,"res_reseted");
                 };
+                if (empty($res)){
+                    $res = null;
+                    break;
+                };
             };
+            
             array_unshift($res,"");// добавим в начало и конец масива пустые строки, чтобы можно было искать отдельные значения массива с помощью SQL выражения LIKE "%||value||%"
             array_push($res,"");
             // dump($res,"res_unshfted_pushed");
