@@ -159,8 +159,13 @@ function set_template_file($template_name,$template_file){
     if ( empty($_PAGE["templates"])) {
         $_PAGE["templates"] = array();
     };
-      
-    $_PAGE["templates"][$template_name] = $template_file;
+    
+    if (file_exists(TEMPLATES_DIR . $template_file)){
+        $_PAGE["templates"][$template_name] = $template_file;
+    }else{
+        dosyslog(__FUNCTION__.": FATAL ERROR: Template '".$template_name."' file '".$template_file." does not exists.");
+        die("Code: et-".__LINE__."-".$template_file);
+    }
     
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");

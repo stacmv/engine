@@ -369,8 +369,22 @@ function form_action(){
         };
         $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);
     };
+      
+    $form_template = !empty($_PAGE["templates"][$form_name]) ? $_PAGE["templates"][$form_name] : null;
+    if ( ! $form_template && (file_exists(TEMPLATES_DIR . $form_name . "_form.htm"))){
+        $form_template = $form_name . "_form.htm";
+    }elseif ( ! $form_template && (file_exists(TEMPLATES_DIR . $action . "_form.htm"))){
+        $form_template = $action . "_form.htm";
+    }else{
+        dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
+        die("Code: ea-".__LINE__."-".$form_name."-template");
+        
+    }
+
+    $_PAGE["header"] = $_PAGE["title"] = _(ucfirst($action) . " " . $object);
     
-    $form_template = !empty($_PAGE["templates"][$form_name]) ? $_PAGE["templates"][$form_name] : $form_name . "_form.htm";
+    $_DATA["action"] = $action;
+    $_DATA["object"] = $object;
 
     set_template_file("content", $form_template);
 }

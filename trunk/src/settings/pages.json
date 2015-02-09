@@ -1,5 +1,58 @@
 {"pages":[
 	{
+		"uri": "add",
+        "title": "",
+        "params": {
+            "object": {"type": "string", "source": "get",  "regexp": "/(add)\\/(.+)/", "pos": 2},
+            "action": {"type": "string", "source": "get",  "regexp":"/(add)\\/(.+)/", "pos": 1},
+			"to": {"type": "array", "source": "post"}
+        },
+        "actions":[ "add_data" ],
+        "acl": [ "access","manager" ]
+	},
+	{
+		"uri": "edit",
+        "title": "",
+		"params": {
+            "object": {"type": "string", "source": "get",  "regexp":"/(edit)\\/(.+)/" , "pos": 2},
+			"action": {"type": "string", "source": "get",  "regexp":"/(edit)\\/(.+)/", "pos": 1},
+			"id": {"type": "string", "source": "post"},
+			"from": {"type": "array", "source": "post"},
+			"to": {"type": "array", "source": "post"}
+        },
+        "actions":[ "edit_data" ],
+        "acl": [ "access" ]
+	},
+	{
+		"uri": "delete",
+        "title": "",
+        "params": {
+            "object": {"type": "string", "source": "get",  "regexp":"/(delete)\\/(.+)/" , "pos": 2},
+			"action": {"type": "string", "source": "get",  "regexp":"/(delete)\\/(.+)/", "pos": 1},
+			"id": {"type": "string", "source": "post"},
+			"confirm": {"type": "string", "source": "post"},
+			"comment": {"type": "string", "source": "post"}
+        },
+        "actions":[ "delete_data" ],
+        "acl": [ "access" ]
+	},
+	{
+		"uri": "form",
+        "title": "",
+        "params": {
+            "action": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/", "pos": 1},
+            "object": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/" , "pos": 2},
+            "id": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/" , "pos": 3},
+			"msg": {"type": "json", "source": "session"}
+        },
+		"templates": {
+			"msg": "message.block.htm",
+			"page": "page.htm"
+		},
+        "actions":[ "form" ],
+        "acl": ["access"]
+	},
+	{
 		"uri": "logout",
 		"title":"Выход из системы",
 		"actions": ["logout"],
