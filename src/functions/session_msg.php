@@ -26,7 +26,7 @@ function set_session_msg($message, $class="info", array $options=array() ){
     } 
     
     // Текст сообщения
-    $predefined_messages = parse_ini_file(APP_DIR . "settings/messages_done.ini", true);
+    $predefined_messages = parse_ini_file( cfg_get_filename("settings", "messages_done.ini"), true);
     $predefined_messages = $predefined_messages["RU"];
     
     if ( isset($predefined_messages[$message]) ) {  // msg это код предопределенного сообщения

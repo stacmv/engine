@@ -225,13 +225,13 @@ function form_get_field_values($field){
     
     switch($field["form_values"]){
     case "lst":
-        $values = glog_file_read_as_array( APP_DIR . "settings/" . glog_codify($field["name"]) . ".lst" );
+        $values = glog_file_read_as_array( cfg_get_filename("settings", glog_codify($field["name"]) . ".lst") );
         $values = array_map("trim", $values);
         break;
 
     case "tsv":
         $values = array();
-        $tsv = import_tsv( APP_DIR . "settings/" . glog_codify($field["name"]) . ".tsv" );
+        $tsv = import_tsv( cfg_get_filename("settings", glog_codify($field["name"]) . ".tsv") );
         if ($tsv){
             foreach($tsv as $record){
                 $values[ trim($record["caption"]) ] = trim( isset($record[ $field["name"] ]) ? $record[ $field["name"] ] : $record["value"] );

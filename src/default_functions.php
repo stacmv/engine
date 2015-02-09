@@ -3,6 +3,27 @@
 **  ACTIONS
 **
 ** ******************************************************** */
+if (!function_exists("cfg_get_filename")){
+    function cfg_get_filename($type, $filename, $engine=false){
+        
+        switch($type){
+        case "settings": // no break;
+        case "templates": // no break;
+        case "email_templates": 
+            if ($engine){
+                $filename = ENGINE_DIR . $type . "/" . $filename;
+            }else{
+                $filename = APP_DIR . $type . "/" . $filename;
+            };
+            break;
+        default:
+            dosyslog(__FUNCTION__.": FATAL ERROR: Unknown type '".$type."' for file '".$filename."'.");
+            die("Code: df-".__LINE__);
+        };
+        
+        return $filename;
+    }
+}
 if (!function_exists("check_application_already_in_db")){
     function check_application_already_in_db($application){
     
@@ -193,8 +214,8 @@ if (!function_exists("get_db_files")){
         }
         
         
-        $db_files["app"]    = APP_DIR    . "settings/db.xml";
-        $db_files["engine"] = ENGINE_DIR . "settings/db.xml";
+        $db_files["app"]    = cfg_get_filename("settings", "db.xml");
+        $db_files["engine"] = cfg_get_filename("settings", "db.xml", true);
      
         
         return $db_files;
@@ -240,8 +261,8 @@ if (!function_exists("get_page_files")){
         // Если в разных файлах определены одинаковые страницы, то используеьтся те, что определены (в pages_files) ПОЗЖЕ
         
         $pages_files = array(
-            "engine" => ENGINE_DIR . "settings/pages.json",
-            "app"    => APP_DIR    . "settings/pages.json",
+            "engine" => cfg_get_filename("settings", "pages.json", true),
+            "app"    => cfg_get_filename("settings", "pages.json"),
         );
         
         $extra_pages = glob(APP_DIR . "settings/*.pages.json");
@@ -304,7 +325,7 @@ if (!function_exists("get_pages")){
 if (!function_exists("get_rights_all")){
     function get_rights_all(){
         
-        $tsv = import_tsv(APP_DIR."settings/acl.tsv");
+        $tsv = import_tsv( cfg_get_filename("settings", "acl.tsv") );
         
         $rights = array();
         foreach($tsv as $v){
@@ -536,7 +557,7 @@ if (!function_exists("set_template_for_user")){
 if (!function_exists("set_topmenu")){
     function set_topmenu(){
         $menu = array();
-        $menu_file = APP_DIR . "settings/menu.tsv";
+        $menu_file = cfg_get_filename("settings", "menu.tsv");
         $tmp = import_tsv($menu_file);
         if (!$tmp){
             dosyslog(__FUNCTION__.": FATAL ERROR: Can not import menu file.");
