@@ -349,7 +349,7 @@ function form_action(){
     
     $action = $_PARAMS["action"];
     $object = $_PARAMS["object"];
-    $form_name = $action."_".$object;
+    $form_name = str_replace(".", "__", $action."_".$object); // object может содержать "." - разделитель имени БД и таблицы.
     $db_name = $object ."s";
     
     set_objects_action($form_name);
@@ -371,14 +371,10 @@ function form_action(){
     };
       
     $form_template = !empty($_PAGE["templates"][$form_name]) ? $_PAGE["templates"][$form_name] : null;
-    if ( ! $form_template && (file_exists(TEMPLATES_DIR . $form_name . "_form.htm"))){
+    if ( ! $form_template && (file_exists( cfg_get_filename("templates", $form_name . "_form.htm"))) ){
         $form_template = $form_name . "_form.htm";
-    }elseif ( ! $form_template && (file_exists(TEMPLATES_DIR . $action . "_form.htm"))){
+    }elseif ( ! $form_template && (file_exists( cfg_get_filename("templates",  $action . "_form.htm"))) ){
         $form_template = $action . "_form.htm";
-    }else{
-        dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
-        die("Code: ea-".__LINE__."-".$form_name."-template");
-        
     }
 
     $_PAGE["header"] = $_PAGE["title"] = _(ucfirst($action) . " " . $object);

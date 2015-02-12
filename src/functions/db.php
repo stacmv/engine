@@ -716,8 +716,11 @@ function db_insert($db_table, array $data){
     unset($schema, $f);
         
     $keys = array_keys($data[0]);
-    $keys = array_filter($keys, function($k) use ($fields){
-        return ( ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
+    $keys = array_filter($keys, function($k) use ($fields, $db_table){
+        if ( ! isset($fields[$k]) ){
+            dosyslog(__FUNCTION__.get_callee().": DEBUG: Field '".$k."' does not exist in table '".$db_table."'.");
+        };
+        return ( isset($fields[$k]) && ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
     });
     
     $query = db_create_insert_query($db_table, $keys, count($data));
@@ -726,25 +729,25 @@ function db_insert($db_table, array $data){
     
     $statement = db_prepare_query($db_table, $query);
     
+    
     $insert_data = array();
     foreach($data as $record){
         $record = db_prepare_record($db_table, $record);
-        if (array_keys($record) !== $keys){
-            dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Keys mismatch. Expected:'".json_encode_array($keys)."'. Got: '".json_encode_array(array_keys($record))."'.");
-            die("Code: db-".__LINE__);
-        };
-        foreach(array_values($record) as $v){
-            $insert_data[] = $v;
+        foreach($keys as $k){
+            $insert_data[] = $record[$k];
         };
     };
+        
+        // dump($query,"query");
+        // dump(implode(", ",$insert_data), "data");
+        // die();
+    if ( $statement ){    
+        $res = $statement->execute($insert_data);
+    }else{
+        $res = false;
+    };
     
-    // dump($query,"query");
-    // dump(implode(", ",$insert_data), "data");
-    // die();
-    
-    $res = $statement->execute($insert_data);
-    
-    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Inserted " . count($data) . " records." : "Insert failed.") . " Query: '".$statement->queryString .", parameters: '" . json_encode($insert_data) ."'.");
+    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Inserted " . count($data) . " records." : "Insert failed.") . " Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'.");
     
     
     if ($res){

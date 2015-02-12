@@ -12,6 +12,7 @@ function APPLYPAGETEMPLATE(){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 
     if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
+
     
     if (! empty($_PAGE["templates"]["page"]) ){
         if (empty($_PAGE["templates"]["content"]) ) set_template_for_user();
@@ -557,12 +558,6 @@ function SETPARAMS(){
     return $_PARAMS;
 };
 
-
-
-
-if (!isset($ERROR)) $ERROR = array();
-if (!isset($CFG)) $CFG = array(); // CONFIG
-if (!isset($S)) $S = array(); // STATE
 
 
 // register_shutdown_function("shutdown");
