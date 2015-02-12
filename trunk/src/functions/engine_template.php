@@ -29,9 +29,9 @@ function apply_template($template_name, $content_block = ""){
     if ( ! empty($_PAGE["templates"][$template_name]) ){
         $template_file = $_PAGE["templates"][$template_name];
     }else{
-        if (file_exists(TEMPLATES_DIR . $template_name . ".htm")){
+        if (file_exists( cfg_get_filename("templates", $template_name . ".htm") )){
             $template_file = $template_name . ".htm";
-        }elseif(file_exists(TEMPLATES_DIR . $template_name . ".block.htm")){
+        }elseif(file_exists(cfg_get_filename("templates", $template_name . ".block.htm"))){
             $template_file = $template_name .".block.htm";
         }else{
             dosyslog(__FUNCTION__.": FATAL ERROR: Template '".$template_name."' for page '".$_PAGE["uri"]."' is not set in pages file and not found at default paths.");
@@ -119,7 +119,9 @@ function render_template($template_file, $data = array() ){
     global $_USER;
     global $IS_IFRAME_MODE;
     
-    if ( ! file_exists(TEMPLATES_DIR . $template_file)){
+    $template_file_name = cfg_get_filename("templates", $template_file);
+    
+    if ( ! file_exists( $template_file_name )){
         dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template_file."' is not found.");
         die("Code: et-".__LINE__."-".$template_file);
     };
@@ -130,7 +132,7 @@ function render_template($template_file, $data = array() ){
     // dosyslog(__FUNCTION__.": NOTICE: Rendering template file '".$template_file."' with data '" . json_encode($data) . "'.");
     
     ob_start();
-        include TEMPLATES_DIR . $template_file;
+        include $template_file_name;
         $HTML = ob_get_contents();
     ob_end_clean();
     return $HTML;
@@ -160,7 +162,7 @@ function set_template_file($template_name,$template_file){
         $_PAGE["templates"] = array();
     };
     
-    if (file_exists(TEMPLATES_DIR . $template_file)){
+    if (file_exists( cfg_get_filename("templates", $template_file) )){
         $_PAGE["templates"][$template_name] = $template_file;
     }else{
         dosyslog(__FUNCTION__.": FATAL ERROR: Template '".$template_name."' file '".$template_file." does not exists.");

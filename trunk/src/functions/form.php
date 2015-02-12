@@ -54,11 +54,9 @@ function form_prepare($db_table, $form_name, $object=""){
             
             $field["values"] = array();
             if (empty($v["form_values"])){
-                dosyslog(__FUNCTION__.": ERROR: Values for ".$template." field '" . $v["name"] . "' is not set table ' " . $db_table . "' config.");
-                $field = null;
-                break;
+                dosyslog(__FUNCTION__.": FATAL ERROR: Values for ".$template." field '" . $v["name"] . "' is not set table ' " . $db_table . "' config.");
+                die("Code: efrm-".__LINE__."-".$field["name"]."-form_values");
             };
-            
             $field["values"] = form_get_field_values($v);
             
             $field["label"] = $v["label"];
@@ -68,6 +66,8 @@ function form_prepare($db_table, $form_name, $object=""){
         case "select_pub":
         case "radio":
         case "radio_pub":
+        case "radio_inline_pub":
+        
             $field["name"]      = $v["name"];
             $field["name_from"] = "from[".$v["name"]."]";
             $field["name_to"]   = "to[".$v["name"]."]";
@@ -79,11 +79,9 @@ function form_prepare($db_table, $form_name, $object=""){
             
             $field["values"] = array();
             if (empty($v["form_values"])){
-                dosyslog(__FUNCTION__.": ERROR: Values for ".$template." field '" . $v["name"] . "' is not set table ' " . $db_table . "' config.");
-                $field = null;
-                break;
-            };
-            
+                dosyslog(__FUNCTION__.": FATAL ERROR: Values for ".$template." field '" . $v["name"] . "' is not set table ' " . $db_table . "' config.");
+                die("Code: efrm-".__LINE__."-".$field["name"]."-form_values");
+            };            
             $field["values"] = form_get_field_values($v);
             
             $field["label"] = $v["label"];
@@ -153,7 +151,6 @@ function form_prepare($db_table, $form_name, $object=""){
             };
             
             $fields[] = $field;
-            
         }else{
             if (! $template ) dosyslog(__FUNCTION__.": ERROR: Template is not set for field ".$v["name"]." of form '" . $form_name . "'.");
         }
@@ -279,7 +276,7 @@ function form_get_field_values($field){
     return $values;
 }
 function form_get_template_file($template){
-    return TEMPLATES_DIR . "form/" . $template . ".form.htm";
+    return cfg_get_filename("templates/form", $template . ".form.htm");
 }
 function form_get_action_link($form_name, $is_public=false){
     global $IS_IFRAME_MODE;

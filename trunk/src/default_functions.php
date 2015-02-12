@@ -490,7 +490,7 @@ if (!function_exists("send_message")){
             return false;
         };
         
-        $message_id = md5($email, $template, serialize($data));
+        $message_id = md5($email . $template . serialize($data));
         $data["tracking_pixel_url"] = $CFG["URL"]["base"] . "/reg_msg_opened/" . $message_id . $CFG["URL"]["ext"];
         
         // parse template.
