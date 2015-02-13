@@ -234,32 +234,20 @@ function IDENTICATE(){
 function GETPAGE(){  // поиск страницы, соответствующей текущему URI
     global $_PAGE;
     global $_URI;
-    global $CFG;
-    global $_RESPONSE;
+
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    $uri = $_URI;
+    
 
-    $page = find_page($uri);
+    $_PAGE = find_page($_URI);
 
-    if(!$page){
-        dosyslog(__FUNCTION__.": WARNING: Page '".$_URI."' not found.");
-        $_RESPONSE["headers"]["HTTP"] = "HTTP/1.0 404 Not Found";
-        
-        $page = find_page("error_404");
-        if (!$page){
-            dosyslog(__FUNCTION__.": WARNING: 404 ErrorPage not found.");
-            $page = find_page("/");
-        };
+    if( ! $_PAGE ){
+        $_PAGE = response_404_page();
     };
     
-    if (!$page) {
+    if ( ! $_PAGE ) {
         dosyslog(__FUNCTION__.": FATAL ERROR: Can not find page for uri '".$_URI."' in pages files.");
         die("Code: e-".__LINE__);
     };
-    
-    
-    
-    $_PAGE = $page;
     
     dosyslog(__FUNCTION__.": INFO: ".$_PAGE["uri"]);
     

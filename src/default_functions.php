@@ -127,6 +127,8 @@ if (!function_exists("dosyslog")){
 };
 if (!function_exists("find_page")){
     function find_page($uri){
+        global $CFG;
+        
         $pages = get_pages();
             
         if ($pages){
@@ -167,6 +169,11 @@ if (!function_exists("find_page")){
                         };
 
                     };
+                };
+                
+                if ( ! empty($CFG["URL"]["default"])){
+                    dosyslog(__FUNCTION__.get_callee().": DEBUG: Getting default page '".$CFG["URL"]["default"]."'.");
+                    $page = get_page_by_uri($pages, $CFG["URL"]["default"]);
                 };
                 
             };
@@ -251,7 +258,12 @@ if (!function_exists("get_gravatar")) {
 if (!function_exists("get_page_by_uri")){
     function get_page_by_uri($pages, $uri){
         
-        if( isset($pages[$uri]) ) return $pages[$uri];
+        
+        if( isset($pages[$uri]) ){
+            return $pages[$uri];
+        }else{
+            dosyslog(__FUNCTION__.get_callee().": DEBUG: Page with uri '".$uri."' not found.");
+        };
         
         return false;
     };
