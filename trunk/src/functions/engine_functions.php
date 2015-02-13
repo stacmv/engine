@@ -360,6 +360,21 @@ function redirect_301($redirect_uri = "", array $params = array(), $hash_uri = "
     $_RESPONSE["headers"]["HTTP"] = "HTTP/1.1 301 Moved Permanently";
     dosyslog(__FUNCTION__.get_callee().": INFO: 301 redirect mode ON.");
 };
+function response_404_page(){
+    global $_URI;
+    global $_RESPONSE;
+    
+    dosyslog(__FUNCTION__.": WARNING: Page '".$_URI."' not found.");
+    $_RESPONSE["headers"]["HTTP"] = "HTTP/1.0 404 Not Found";
+    
+    $page = find_page("error_404");
+    if (!$page){
+        dosyslog(__FUNCTION__.": WARNING: 404 ErrorPage not found.");
+        $page = find_page("/");
+    };
+    
+    return $page;
+}
 function show_date($timestamp, $options=0){
 
     if ( ! is_numeric($timestamp) ){
