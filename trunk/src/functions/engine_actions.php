@@ -301,7 +301,7 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
     
     if ($confirm){
         
-		$item = db_get($db_table, $id);
+		$item = db_get($db_table, $id,DB_RETURN_DELETED);
 		if ($item){
 			
             list($res, $reason) = db_delete($db_table, $id, $comment );
@@ -333,7 +333,7 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
     if ($res){
         redirect($redirect_on_success ? $redirect_on_success : $db_table);
     }else{
-        redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"]);
+        redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"]."/".$id);
     };
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");

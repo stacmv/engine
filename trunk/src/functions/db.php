@@ -276,7 +276,7 @@ function db_delete($db_table, $id, $comment=""){
     //dump($comment,"comment");
     
 	$dbh = db_set($db_table);
-	$object = db_get($db_table, $id);
+	$object = db_get($db_table, $id, DB_RETURN_DELETED);
     $table_name = db_get_table($db_table);
     
     if (empty($object)) {

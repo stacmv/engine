@@ -76,6 +76,9 @@ function add_data($db_table, $data){
         
     };//foreach
        
+    // Валидация формы по новому алгоритму 2015-02-10
+    list($res, $messages) = validate_form("add_".str_replace(".","__",$db_table), $data);
+       
 
     $added_id = false;
     if ($isDataValid){
@@ -284,11 +287,11 @@ function parse_post_data($data, $action){
         // Проверить, все ли поля имеют пару from и to (старое и новое значения)
         // TODO: Проверить, как это рабоатет, аозможно усилить защиту - удалять непарные элементы и т.п.
         $diff1 = array_diff(array_keys($data["to"]), array_keys($data["from"]));
-        if ( ! empty($diff1) ) dosyslog(__FUNCTION__.": ERROR: Theese fields of 'to' are absent in 'from' data:" . implode(", ",$diff1).".");
+        if ( ! empty($diff1) ) dosyslog(__FUNCTION__.": ERROR: These fields of 'to' are absent in 'from' data:" . implode(", ",$diff1).".");
         $diff2 = array_diff(array_keys($data["from"]), array_keys($data["to"]));
         if ( ! empty($diff2) ){
-            foreach($diff2 as $v) $data["to"][$v] = "";
-            dosyslog(__FUNCTION__.": WARNING: Theese fields of 'from' are absent in 'to' data:" . implode(", ",$diff2).". Added to 'to' with empty values.");
+            foreach($diff2 as $v) unset($data["from"][$v]);
+            dosyslog(__FUNCTION__.": WARNING: These fields of 'from' are absent in 'to' data:" . implode(", ",$diff2).". Removed.");
         };
         
         // Убрать поля, значения которых не будут меняться (одинаковые)
@@ -348,7 +351,7 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     $_RESPONSE["headers"] = array("Location"=>$uri);
     $_RESPONSE["body"] = "<a href='".$uri."'>Click here</a>";
     
-    dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . ": Prepare for  redirect to '".$uri."'.");
+    dosyslog(__FUNCTION__.get_callee().": NOTICE: Prepare for  redirect to '".$uri."'.");
     
     $ISREDIRECT = true;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
