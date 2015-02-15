@@ -492,7 +492,7 @@ function process_application_action(){
                 $res = true;
                 $empty_fields = array();
                 foreach($table as $field){
-                    if ( ! empty($field["required"]) && ($application[ $field["name"] ] == NULL) ){ // если хоть одно из обязательных полей не заполено.
+                    if ( ! empty($field["required"]) && ($application[ $field["name"] ] === NULL) ){ // если хоть одно из обязательных полей не заполнено.
                         // dump($application,"application");
                         // die();
                         $res = false; 
