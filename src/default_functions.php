@@ -485,43 +485,43 @@ if (!function_exists("send_message")){
         
         if (is_numeric($emailOrUserId)){
             
-            $user = db_get("users", $emailOrUserId);
-            if (empty($user) || empty($user["email"])){
+            $user = db_get("users", $emailOrUserId, DB_RETURN_DELETED);
+            if (empty($user) ){
                 dosyslog(__FUNCTION__.": User width id '".@$emailOrUserId."' is not found. Message could not be sent.");
+                return false;
+            }elseif( empty($user["email"]) ){
+                dosyslog(__FUNCTION__.": Email for user width id '".@$emailOrUserId."' is not set.");
+                return false;
+            }elseif( ! filter_var($user["email"], FILTER_VALIDATE_EMAIL) ){
+                dosyslog(__FUNCTION__.": Email for user width id '".@$emailOrUserId."' is invalid: '".$user["email"]."'.");
                 return false;
             };
             $email = $user["email"];
         }else{
             $email = $emailOrUserId;
+            if( ! filter_var($email, FILTER_VALIDATE_EMAIL) ){
+                dosyslog(__FUNCTION__.": Spicified email is invalid: '".$user["email"]."'.");
+                return false;
+            };
         };
         
-        $t = glog_file_read(EMAIL_TEMPLATES_DIR.$template.".htm");
-        if (empty($t)){
-            dosyslog(__FUNCTION__.": ERROR: Email template is empty or template file '".$template."' is not found in email templates dir.");
-            if ($t == "") die("Code: df-".__LINE__); // убиваемся при ошибке конфигурирования (пустой шаблон), но работаем, если произошла ошибка чтения в продакшене
-            return false;
-        };
         
         $message_id = md5($email . $template . serialize($data));
         $data["tracking_pixel_url"] = $CFG["URL"]["base"] . "/reg_msg_opened/" . $message_id . $CFG["URL"]["ext"];
         
         // parse template.
-        
-        $t = str_replace("\r\n", "\n", $t);
-        $t = str_replace("\r", "\n", $t);
-        if (!empty($data) && is_array($data)){
-            foreach($data as $k=>$v){
-                $t = str_replace("%%".$k."%%", $v, $t);
-            };
+        $t = glog_render( cfg_get_filename("email_templates", $template.".htm") );
+        if (empty($t)){
+            dosyslog(__FUNCTION__.": ERROR: Email template is empty.");
+            if ($t == "") die("Code: df-".__LINE__); // убиваемся при ошибке конфигурирования (пустой шаблон), но работаем, если произошла ошибка чтения в продакшене
+            return false;
         };
-        $t = preg_replace("/%%[^%]+%%/","",$t); // удаляем все placeholders для которых нет данных во входных параметрах.
-        
+                
         $tmp = @explode("\n\n",$t,2);
         $subject = @$tmp[0];
         $message = @$tmp[1];
         
-        
-        
+                
         if (!$subject){
             dosyslog(__FUNCTION__.": WARNING: Subject is not set in email template '".$template."'.");
             $subject = "Email from ".@$_SERVER["HTTP_HOST"];
@@ -533,8 +533,7 @@ if (!function_exists("send_message")){
         
         
         dosyslog(__FUNCTION__."\t".$message_id."\t".@$template."\t".@$emailOrUserId."\t".$email."\t".($res? "success" : "fail")."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
-               
-        
+         
         return $res;
     };
 };
