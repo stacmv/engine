@@ -510,7 +510,7 @@ if (!function_exists("send_message")){
         $data["tracking_pixel_url"] = $CFG["URL"]["base"] . "/reg_msg_opened/" . $message_id . $CFG["URL"]["ext"];
         
         // parse template.
-        $t = glog_render( cfg_get_filename("email_templates", $template.".htm") );
+        $t = glog_render( cfg_get_filename("email_templates", $template.".htm"), $data );
         if (empty($t)){
             dosyslog(__FUNCTION__.": ERROR: Email template is empty.");
             if ($t == "") die("Code: df-".__LINE__); // убиваемся при ошибке конфигурирования (пустой шаблон), но работаем, если произошла ошибка чтения в продакшене
