@@ -12,6 +12,39 @@ define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get(), что надо
 
 $_DB = array();
 
+/* *********************************************************** */
+function db_get_obj_name($db_table){
+    // Works only when db_table has plural form - has "s" on end.
+    return str_replace(".", "__", substr($db_table, 0, -1));    
+};
+function db_get_name($db_table){
+
+    if (strpos($db_table,".") != false){
+        list($name, $table) = explode(".", $db_table, 2);
+    }else{
+        $name = $db_table;
+        $table = $name;
+    };
+    
+    if ( ! $name && $table) $name = $table;
+    
+    return $name;
+}
+function db_get_table($db_table){
+
+    if (strpos($db_table,".") != false){
+        list($name, $table) = explode(".", $db_table, 2);
+    }else{
+        $name = "";
+        $table = $db_table;
+        
+    };
+    
+    if ( $name && ! $table) $table = $name;
+    
+    return $table;
+}
+
 /* ***********************************************************
 **  DATABASE FUNCTIONS
 **
@@ -664,33 +697,6 @@ function db_get_list($db_table, array $fields = array("id"), $limit=""){
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $result;
-}
-function db_get_name($db_table){
-
-    if (strpos($db_table,".") != false){
-        list($name, $table) = explode(".", $db_table, 2);
-    }else{
-        $name = $db_table;
-        $table = $name;
-    };
-    
-    if ( ! $name && $table) $name = $table;
-    
-    return $name;
-}
-function db_get_table($db_table){
-
-    if (strpos($db_table,".") != false){
-        list($name, $table) = explode(".", $db_table, 2);
-    }else{
-        $name = "";
-        $table = $db_table;
-        
-    };
-    
-    if ( $name && ! $table) $table = $name;
-    
-    return $table;
 }
 function db_insert($db_table, array $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");

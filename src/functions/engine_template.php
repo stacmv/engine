@@ -115,6 +115,7 @@ function get_content($block_name){
 function render_template($template_file, $data = array() ){
     // Declare global which must be visible from within templates
     global $CFG;
+    global $_SITE;
     global $_PAGE;
     global $_USER;
     global $IS_IFRAME_MODE;

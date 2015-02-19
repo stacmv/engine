@@ -50,34 +50,44 @@ function add_data($db_table, $data){
         }else{
                     
             if ( ! isset($data[$name]) ) $data[$name] = null;
-            $validate_result = validate_data($field, $data[$name], "add", $db_table);
-       
-            $res = $validate_result[0];
-            $msg = $validate_result[1];
-            $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
-        
-            if ($res){
-                if ( ! empty($msg)) {
-                   set_session_msg($msg, "info");
-                };
+            if (function_exists("validate_data")){
+                $validate_result = validate_data($field, $data[$name], "add", $db_table);
+           
+                $res = $validate_result[0];
+                $msg = $validate_result[1];
+                $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
             
-                if ( ! empty($proposed_value) ){
-                    $data[$name] = $proposed_value;
+                if ($res){
+                    if ( ! empty($msg)) {
+                       set_session_msg($msg, "info");
+                    };
+                
+                    if ( ! empty($proposed_value) ){
+                        $data[$name] = $proposed_value;
+                    };
+                }else{
+                    $isDataValid = false;
+                    dosyslog(__FUNCTION__ . ": WARNING: Поле '" . $name . "' = '".@$data[$name]."' не валидно.");
+                    if (!empty($msg)) {
+                        set_session_msg($msg, "error");
+                    };
                 };
             }else{
-                $isDataValid = false;
-                dosyslog(__FUNCTION__ . ": WARNING: Поле '" . $name . "' = '".@$data[$name]."' не валидно.");
-                if (!empty($msg)) {
-                    set_session_msg($msg, "error");
+                if (!isset($notice_logged)){
+                    dosyslog(__FUNCTION__.get_callee() . ": WARNING: Function validate_data() is not defined.");
+                    $notice_logged = true;
                 };
-            };
+            }
 
         };
         
     };//foreach
+    unset($field, $type, $name, $msg, $proposed_value, $notice_logged, $storage_name, $res, $msg);
+    
+    
        
     // Валидация формы по новому алгоритму 2015-02-10
-    list($res, $messages) = validate_form("add_".str_replace(".","__",$db_table), $data);
+    list($res, $messages) = form_validate($db_table, "add_".db_get_obj_name($db_table), $data);
        
 
     $added_id = false;
