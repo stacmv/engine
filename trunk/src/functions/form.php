@@ -287,3 +287,23 @@ function form_get_action_link($form_name, $is_public=false){
     
     return ($is_public ? "pub/" : "") . $form_uri . $CFG["URL"]["ext"] . ($IS_IFRAME_MODE ? "?i=1" : "");
 }
+function form_validate($db_table, $form_name, $object){
+    
+    $res = true;
+    $invalid_fields = array();
+    
+    $fields_form = form_prepare($db_table, $form_name,$object);
+    
+    foreach($fields_form as $field){
+        $name = $field["name"];
+        
+        // required
+        if ( $field["required"] && empty($object[$name]) ){
+            $res = false;
+            $invalid_fields = $name;
+        };
+    };
+        
+    
+    return $res;
+}

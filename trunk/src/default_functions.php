@@ -7,6 +7,9 @@ if (!function_exists("cfg_get_filename")){
     function cfg_get_filename($type, $filename, $engine=false){
         
         switch($type){
+        case "templates/form":
+            $filename = TEMPLATES_DIR . "/form/" . $filename;
+            break;
         case "settings": // no break;
         case "templates": // no break;
         case "email_templates": 
@@ -841,4 +844,3 @@ if (!function_exists("user_has_access_by_ip")){
         return false;
     }
 }
-
