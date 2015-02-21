@@ -88,9 +88,20 @@ function get_content($block_name){
     };
        
     if ($HTML){
-        $res = preg_replace_callback("/%%([\w\d_\-\s]+)%%/",create_function('$m','return get_content($m[1]);'),$HTML); // all %%block%% replacing with result of get_content("block")
+        $res = preg_replace_callback(
+            "/%%([\w\d_\-\s\.]+)%%/",
+            function($m) use ($block_name){
+                return get_content($m[1]);
+            },
+            $HTML
+        ); // all %%block%% replacing with result of get_content("block")
             
-        $res = preg_replace_callback("/{cfg_(\w+)}/", create_function('$m', 'global $CFG; return $CFG["GENERAL"][$m[1]];'), $res);
+        $res = preg_replace_callback("/{cfg_(\w+)}/", function($m){
+                global $CFG;
+                return isset($CFG["GENERAL"][$m[1]]) ? $CFG["GENERAL"][$m[1]] : "";
+            },
+            $res
+        );
         
         
         if ($res !== NULL) {
