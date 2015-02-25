@@ -281,8 +281,8 @@ function db_check_schema($db_table){ // проверяет схему табли
                             if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$q."'.");
 							$res[$table][$q] = $dbh->query($q);
 							if(!$res[$table][$q]){
-								dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not backup data while migrate DB schema. Query failed: '$q'.");
-								die("FATAL ERROR: Can not backup data while migrate DB schema.");
+								dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not backup data while migrate DB schema. Query failed: '$q'. SQL ERROR:  [" . $temp_table . "]: '".db_error($dbh).".");
+								die("FATAL ERROR: Can not backup data while migrate DB schema. SQL ERROR:  [" . $temp_table . "]: '".db_error($dbh).".");
 							};
 						};
 						echo "</li>";
