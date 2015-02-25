@@ -11,6 +11,17 @@
         "acl": [ "access","manager" ]
 	},
 	{
+		"uri": "pub/add",
+        "title": "",
+        "params": {
+            "object": {"type": "string", "source": "get",  "regexp": "/(add)\\/(.+)/", "pos": 2},
+            "action": {"type": "string", "source": "get",  "regexp":"/(add)\\/(.+)/", "pos": 1},
+			"to": {"type": "array", "source": "post"}
+        },
+        "actions":[ "add_data" ],
+        "acl": [ ]
+	},
+	{
 		"uri": "edit",
         "title": "",
 		"params": {

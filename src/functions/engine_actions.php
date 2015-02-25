@@ -6,7 +6,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     if (!$db_table){
-        $db_table = $_PARAMS["object"]."s";  //uri: add/account.html, but db = accounts; add/user => users.
+        $db_table = db_get_db_table($_PARAMS["object"]);  //uri: add/account.html, but db = accounts; add/user => users.
     };
     
     $result = "";
@@ -232,7 +232,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     //
     if (!$db_table){
         $object = $_PARAMS["object"];
-        $db_table = $object."s";  //uri: edit/account.html, but db = accounts; edit/user => users.
+        $db_table = db_get_db_table($_PARAMS["object"]);;  //uri: edit/account.html, but db = accounts; edit/user => users.
     }else{
         $object = substr($db_table,0,-1);
     }
@@ -285,7 +285,7 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
     //
     
     if (!$db_table){
-        $db_table = $_PARAMS["object"]."s";  //uri: add/account.html, but db = accounts; add/user => users.
+        $db_table = db_get_db_table($_PARAMS["object"]);  //uri: add/account.html, but db = accounts; add/user => users.
     };
     
 	$id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
@@ -350,7 +350,7 @@ function form_action(){
     $action = $_PARAMS["action"];
     $object = $_PARAMS["object"];
     $form_name = str_replace(".", "__", $action."_".$object); // object может содержать "." - разделитель имени БД и таблицы.
-    $db_name = $object ."s";
+    $db_table = db_get_db_table($_PARAMS["object"]);
     
     set_objects_action($form_name);
     if (function_exists($form_name."_set_objects")) call_user_func($form_name."_set_objects"); // новый способ готовить данные для форм, от set_objects_action() надо отказываться
