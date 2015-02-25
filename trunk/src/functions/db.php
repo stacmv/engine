@@ -17,6 +17,10 @@ function db_get_obj_name($db_table){
     // Works only when db_table has plural form - has "s" on end.
     return str_replace(".", "__", substr($db_table, 0, -1));    
 };
+function db_get_db_table($obj_name){
+    // Works only when db_table has plural form - has "s" on end.
+    return str_replace("__", ".", $obj_name . "s");
+};
 function db_get_name($db_table){
 
     if (strpos($db_table,".") != false){
