@@ -8,7 +8,7 @@ define("DB_RETURN_ID", 1);  // флаг для db_find() и db_select(), что 
 define("DB_RETURN_ROW",2);  // флаг для db_find() и db_select(), что надо вернуть всю запись
 define("DB_RETURN_ONE",4);  // флаг для db_find(), что надо вернуть только одну запись, а не список
 define("DB_RETURN_DELETED",8);  // флаг для db_get() и db_find(), что надо вернуть и удаленные записи тоже
-define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get(), что надо вернуть записи с ключами, равными id, а не порядковым номрам
+define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get() и db_select(), что надо вернуть записи с ключами, равными id, а не порядковым номрам
 
 $_DB = array();
 
@@ -876,6 +876,16 @@ function db_select($db_table, $select_query, $flags=0){
                 $result[] = db_parse_result($db_table, $row);
             };
         };
+        
+        if ($flags & DB_RETURN_ID_INDEXED){
+            $tmp = array();
+            foreach($result as $k=>$v){
+                $tmp[$v["id"]] = $v;
+            };
+            $result = $tmp;
+            unset($tmp, $k, $v);
+        };        
+        
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  '".db_error($dbh)."'. Query: '".$select_query."'.");
     };
