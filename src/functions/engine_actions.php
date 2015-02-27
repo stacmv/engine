@@ -358,16 +358,16 @@ function form_action(){
         
     if ( $action == "add" ){
         if ( ! isset($_DATA[$object]) ){
-            $_DATA["fields_form"] = form_prepare($db_name, $form_name);
+            $_DATA["fields_form"] = form_prepare($db_table, $form_name);
         }else{
-            $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);
+            $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA[$object]);
         }
     }else{
         if ( ! isset($_DATA[$object]) ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
             die("Code: ea-".__LINE__."-set_objects");
         };
-        $_DATA["fields_form"] = form_prepare($db_name, $form_name, $_DATA[$object]);
+        $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA[$object]);
     };
       
     $form_template = !empty($_PAGE["templates"][$form_name]) ? $_PAGE["templates"][$form_name] : null;
