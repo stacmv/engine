@@ -1035,8 +1035,8 @@ function db_get_tables_list_from_xml($db_name=""){
         if (!empty($db)) break;
     };
     if ($db_name && !$isFound){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
-        die("Code: db-".__LINE__);
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
+        return array();
     };
         
     foreach($dbs as $db){
