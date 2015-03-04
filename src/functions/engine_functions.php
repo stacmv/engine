@@ -327,9 +327,9 @@ function parse_post_data($data, $action){
     
     // Для многострочных текстовых строк - заменить конец строки на \n;
     if ($action == "edit"){
-        foreach($data["from"] as $k=>$v) if ( $v ) $data["from"][$k] = preg_replace('~\R~u', "\n", $v);
+        foreach($data["from"] as $k=>$v) if ( $v && is_string($v) ) $data["from"][$k] = preg_replace('~\R~u', "\n", $v);
     };
-    foreach($data["to"]   as $k=>$v) if ( $v ) $data["to"][$k]   = preg_replace('~\R~u', "\n", $v);
+    foreach($data["to"]   as $k=>$v) if ( $v && is_string($v) ) $data["to"][$k]   = preg_replace('~\R~u', "\n", $v);
     
     
     return $data;
