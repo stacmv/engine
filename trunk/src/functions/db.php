@@ -852,13 +852,8 @@ function db_select($db_table, $select_query, $flags=0){
     $dbh = db_set($db_table);
 	
     
-    if (substr($select_query,0,strlen("SELECT ")) !== "SELECT "){
+    if (strtoupper(substr($select_query,0,strlen("SELECT "))) !== "SELECT "){
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Only SELECT query is allowed. Query: '".htmlspecialchars($select_query)."'. IP:".$_SERVER["REMOTE_ADDR"]);
-        die();
-    };
-    
-    if ( (strpos($select_query,";") !== false) && (strpos($select_query,";") < strlen($select_query)-1) ){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Only one SELECT query is allowed. Query: '".htmlspecialchars($select_query)."'. IP:".$_SERVER["REMOTE_ADDR"]);
         die();
     };
     
@@ -1079,13 +1074,6 @@ function db_parse_result($db_table, $result){
     foreach($result as $k=>$v){
         if ( isset($fields[$k]) ){
             $result[ $k ] = db_parse_value($v, $fields[$k]["type"]);
-        }else{
-            if (DEV_MODE){
-                dosyslog(__FUNCTION__.get_callee().":  FATAL ERROR: Field '".$k."' does not exist in db '".$db_table."'. Run DB migration.");
-                die("Code: db-".__LINE__."-".$db_table."-".$k.". Run DB migration.");
-            }else{
-                dosyslog(__FUNCTION__.": ERROR: Field '".$k."' does not exist in db '".$db_table."'. Run DB migration.");
-            };
         };
     };
 
