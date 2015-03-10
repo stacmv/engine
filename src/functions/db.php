@@ -567,18 +567,23 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
 	
 
     $get_all = false;
+    $get_random = false;
     if ( is_array($ids) ){
         $tmp  = $ids;
     }elseif($ids == "all"){
         $tmp = array();
         $get_all = true;
+    }elseif($ids == "random"){
+        $tmp = array();
+        $get_random = true;
+        if (!$limit) $limit = 1;
     }else{
         $flags |= DB_RETURN_ONE;
         $tmp  = array($ids);
     };
     
     $ids = array();
-    if ( ! $get_all){
+    if ( ! $get_all && ! $get_random ){
         foreach($tmp as $k=>$id){
             if ( ! is_numeric($id)){
                 dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Non-numeric id: '".serialize($id)."' while querying DB '" . $db_table . "'. Skipped.");
@@ -589,12 +594,13 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
         unset($tmp, $k, $id);
     };
     
-    if (empty($ids) && ! $get_all){
+    if (empty($ids) && ! $get_all && ! $get_random){
         dosyslog(__FUNCTION__. get_callee() .": FATAL ERROR:  Empty ids  while querying DB '" . $db_table . "'.");
         die("Code: db-".__LINE__."-".$db_table);
     }
 
-    if ($get_all){
+    // Select
+    if ($get_all || $get_random){
         $query = "SELECT * FROM " . $table_name;
     }elseif (count($ids) == 1){
         $query = "SELECT * FROM " . $table_name . " WHERE id = ?";
@@ -602,27 +608,40 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
         $query = "SELECT * FROM " . $table_name . " WHERE id IN (" . implode(", ", array_fill(0,count($ids), "?")) . ")";
     };
     
+    
+    // Where
     if ( ! ($flags & DB_RETURN_DELETED) ){
-        $query .= ($get_all ? " WHERE" : " AND") . " isDeleted IS NULL OR isDeleted = ''";
+        $query .= ($get_all || $get_random ? " WHERE" : " AND") . " isDeleted IS NULL OR isDeleted = ''";
     };
     
+    // Order by
+    if ($get_random){
+        $query .= " ORDER BY RANDOM()";
+        
+    }
+    
+    // Limit
     if ($flags & DB_RETURN_ONE){
         $query .= " LIMIT 1";
     }elseif ($limit){
         $query .= " LIMIT ". (int) $limit;
     };
     
+    
+    // Finish
     $query .=";";
     
     $statement = db_prepare_query($db_table, $query);
     
-    
-    if ($get_all){
-        $res = $statement->execute();
+    if ($statement){
+        if ($get_all || $get_random){
+            $res = $statement->execute();
+        }else{
+            $res = $statement->execute($ids);
+        };
     }else{
-        $res = $statement->execute($ids);
+        $res = false;
     };
-    
     
     
     if ($res){
