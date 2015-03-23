@@ -137,8 +137,7 @@ if (!function_exists("find_page")){
         if ($pages){
             $page = get_page_by_uri($pages,$uri);
             
-            if ("/" != $uri) {
-                            
+            if ( ! $page && ("/" != $uri) ) {
                 if (!$page) {
                     // отбрасываем якорь
                     $tmp = explode("#",$uri,2);
@@ -261,9 +260,8 @@ if (!function_exists("get_gravatar")) {
 if (!function_exists("get_page_by_uri")){
     function get_page_by_uri($pages, $uri){
         
-        
         if( isset($pages[$uri]) ){
-            return $pages[$uri];
+           return $pages[$uri];
         }else{
             dosyslog(__FUNCTION__.get_callee().": DEBUG: Page with uri '".$uri."' not found.");
         };
