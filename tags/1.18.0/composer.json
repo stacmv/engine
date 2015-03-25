@@ -1,0 +1,11 @@
+{
+    "name": "optimit/engine",
+    "description": "Optimit framework for general PHP websites.",
+    "authors": [
+        {
+            "name": "Vyacheslav Matsnev",
+            "email": "stacmv@gmail.com"
+        }
+    ],
+    "require": {}
+}
