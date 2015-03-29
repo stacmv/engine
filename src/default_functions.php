@@ -133,11 +133,16 @@ if (!function_exists("find_page")){
         global $CFG;
         
         $pages = get_pages();
-            
+		
+		            
         if ($pages){
+			
+			// Find page by direct URI
             $page = get_page_by_uri($pages,$uri);
             
+			// If not found find page by indirect (partial) URI
             if ( ! $page && ("/" != $uri) ) {
+				
                 if (!$page) {
                     // отбрасываем якорь
                     $tmp = explode("#",$uri,2);
@@ -172,15 +177,18 @@ if (!function_exists("find_page")){
 
                     };
                 };
-                
-                if ( ! empty($CFG["URL"]["default"])){
-                    dosyslog(__FUNCTION__.get_callee().": DEBUG: Getting default page '".$CFG["URL"]["default"]."'.");
-                    $page = get_page_by_uri($pages, $CFG["URL"]["default"]);
-                };
-                
-            };
+			};
+			
+			// If not found find default page				
+			if ( ! $page ){
+				if ( ! empty($CFG["URL"]["default"])){
+					dosyslog(__FUNCTION__.get_callee().": DEBUG: Getting default page '".$CFG["URL"]["default"]."'.");
+					$page = get_page_by_uri($pages, $CFG["URL"]["default"]);
+				};
+			};
             
-            if (! empty($page)){
+			// If found set some META data
+            if ( ! empty($page)){
                 if (!isset($page["header"]) )      $page["header"] = isset($page["title"]) ? $page["title"] : "";
                 if (!isset($page["description"]) ) $page["description"] = "";
                 if (!isset($page["keywords"]) )    $page["keywords"] = "";
@@ -260,6 +268,8 @@ if (!function_exists("get_gravatar")) {
 if (!function_exists("get_page_by_uri")){
     function get_page_by_uri($pages, $uri){
         
+		dosyslog(__FUNCTION__.get_callee().": DEBUG: Searching page with uri '".$uri."'.");
+		
         if( isset($pages[$uri]) ){
            return $pages[$uri];
         }else{
