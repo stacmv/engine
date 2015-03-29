@@ -793,6 +793,22 @@ function db_insert($db_table, array $data){
     
     return $result;
 };
+function db_last_modified($db_table){
+	
+	$table_name = db_get_table($db_table);
+	
+	// Max created
+	$tmp = db_select($db_table, "SELECT max(created) as m FROM ".$table_name, DB_RETURN_ONE);
+	$max_created = ! empty($tmp["m"]) ? $tmp["m"] : 0;
+	
+	// Max modified
+	$tmp = db_select($db_table, "SELECT max(modified) as m FROM ".$table_name, DB_RETURN_ONE);
+	$max_modified = ! empty($tmp["m"]) ? $tmp["m"] : 0;
+	
+	$last_modified = max($max_created, $max_modified);
+	
+	return $last_modified ? $last_modified : null;
+}
 function db_set($db_table){
     global $_DB;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -1230,7 +1246,8 @@ function db_prepare_value($value, $field_type){
     
     return $res;
 }
-function db_translate_changes($changes, $mode=0){
+// DEPRECATED since 2.0.0 
+function db_translate_changes($changes, $mode = DB_TRANSLATE_POST_2_DB ){
 
     // переводит массив элементов формата $changes[$what] = array("from"=>.., "to"=>..)
     //  в массив элементов формата $changes =array("from" => array($what=>...), "to"=> array($what=>...) ) [mode=1] и наоборот [mode=0]
