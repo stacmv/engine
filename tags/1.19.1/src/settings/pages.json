@@ -1,0 +1,134 @@
+{"pages":[
+	{
+		"uri": "add",
+        "title": "",
+        "params": {
+            "object": {"type": "string", "source": "get",  "regexp": "/(add)\\/(.+)/", "pos": 2},
+            "action": {"type": "string", "source": "get",  "regexp":"/(add)\\/(.+)/", "pos": 1},
+			"to": {"type": "array", "source": "post"}
+        },
+        "actions":[ "add_data" ],
+        "acl": [ "access","manager" ]
+	},
+	{
+		"uri": "pub/add",
+        "title": "",
+        "params": {
+            "object": {"type": "string", "source": "get",  "regexp": "/(add)\\/(.+)/", "pos": 2},
+            "action": {"type": "string", "source": "get",  "regexp":"/(add)\\/(.+)/", "pos": 1},
+			"to": {"type": "array", "source": "post"}
+        },
+        "actions":[ "add_data" ],
+        "acl": [ ]
+	},
+	{
+		"uri": "edit",
+        "title": "",
+		"params": {
+            "object": {"type": "string", "source": "get",  "regexp":"/(edit)\\/(.+)/" , "pos": 2},
+			"action": {"type": "string", "source": "get",  "regexp":"/(edit)\\/(.+)/", "pos": 1},
+			"id": {"type": "string", "source": "post"},
+			"from": {"type": "array", "source": "post"},
+			"to": {"type": "array", "source": "post"}
+        },
+        "actions":[ "edit_data" ],
+        "acl": [ "access" ]
+	},
+	{
+		"uri": "delete",
+        "title": "",
+        "params": {
+            "object": {"type": "string", "source": "get",  "regexp":"/(delete)\\/(.+)/" , "pos": 2},
+			"action": {"type": "string", "source": "get",  "regexp":"/(delete)\\/(.+)/", "pos": 1},
+			"id": {"type": "string", "source": "post"},
+			"confirm": {"type": "string", "source": "post"},
+			"comment": {"type": "string", "source": "post"}
+        },
+        "actions":[ "delete_data" ],
+        "acl": [ "access" ]
+	},
+	{
+		"uri": "form",
+        "title": "",
+        "params": {
+            "action": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/", "pos": 1},
+            "object": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/" , "pos": 2},
+            "id": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/" , "pos": 3},
+			"msg": {"type": "json", "source": "session"}
+        },
+		"templates": {
+			"msg": "message.block.htm",
+			"page": "page.htm"
+		},
+        "actions":[ "form" ],
+        "acl": ["access"]
+	},
+	{
+		"uri": "logout",
+		"title":"Выход из системы",
+		"actions": ["logout"],
+		"templates":{
+			"content": "logout.htm",
+			"page":"page.htm"
+		}
+	},
+	{
+		"uri":"login",
+		"title":"Вход в систему",
+		"actions": ["login_http_basic"],
+		"templates": {
+			"content":"login.htm",
+			"page":"page.htm",
+			"login_form":"login_form.block.htm"
+		},
+		"acl":[]
+	},
+	{
+		"uri": "ulogin",
+		"title": "Авторизация через соц. сети с помощью Ulogin",
+		"params":{
+			"token": { "type": "string", "source": "post" }
+		},
+		"actions": ["ulogin"]
+	},
+	{
+		"uri": "ulogin/unlink",
+		"title": "Отключание профиля Ulogin от профиля приложения",
+		"params":{
+			"id": { "type": "string", "source": "get", "regexp": "/ulogin\\/unlink\\/(\\d+)/", "pos": 1}
+		},
+		"actions": ["ulogin_unlink"]
+	},
+	{
+		"uri": "adm_import_first_user",
+		"title": "Добавление первого пользователя",
+		"params":{
+			"login": { "type": "string", "source": "get", "regexp": "/adm_import_first_user\\/(\\w+):([\\w\\d]+):(.+)/", "pos": 1 },
+			"pass": { "type": "string", "source": "get", "regexp": "/adm_import_first_user\\/(\\w+):([\\w\\d]+):(.+)/", "pos": 2 },
+			"rights": { "type": "string", "source": "get", "regexp": "/adm_import_first_user\\/(\\w+):([\\w\\d]+):(.+)/", "pos": 3 }
+		},
+		"actions": ["import_first_user"],
+		"templates": {
+			"content":"html.htm",
+			"page":"page.htm"
+		}
+	},
+	{
+		"uri": "reg_msg_opened",
+		"title": "Трекинг открытия письма получателем",
+		"params":{
+			"message_id": { "type": "string", "source": "get", "regexp": "/reg_msg_opened\\/(.+)/", "pos": 1 }
+		},
+		"actions": ["register_message_opened"]
+	},
+	{
+		"uri":"dbmigrate",
+		"title": "Проверка схем БД и миграция",
+		"actions": ["dbmigrate"],
+		"templates": {
+			"content":"empty.htm",
+			"page":"page.htm"
+		},
+		"acl": ["manager"]
+	}
+]}
