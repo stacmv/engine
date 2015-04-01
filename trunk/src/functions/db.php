@@ -962,7 +962,7 @@ function db_create_table_query($db_table){
     $aTmp = array();
     foreach($table as $field){
         $tmp = (string) $field["name"];
-        $type = (string) $field["type"];
+        $type = ! empty($field["type"]) ? (string) $field["type"] : "string";
         $unique = ! empty($field["unique"]);
         switch ($type){
             case "autoincrement": $tmp .= " INTEGER PRIMARY KEY"; break;
