@@ -19,7 +19,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     //
     
     
-    list($res, $added_id) = add_data($db_table, $_PARAMS);
+    list($res, $added_id) = add_data($db_table, prepare_post_data($_PARAMS, "add"));
     if ( (int) $added_id ){
         $reason = "success";
     }else{
@@ -230,11 +230,11 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             return array(false, "deny");
         }
     //
-    if (!$db_table){
+    if ( ! $db_table ){
         $object = $_PARAMS["object"];
         $db_table = db_get_db_table($_PARAMS["object"]);;  //uri: edit/account.html, but db = accounts; edit/user => users.
     }else{
-        $object = substr($db_table,0,-1);
+        $object = db_get_obj_name($db_table);
     }
     
     if ( ! $object ){
@@ -242,8 +242,9 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
         die("Code: ea-".__LINE__);
     };
   
+    $data = prepare_post_data($_PARAMS, "edit");
     
-    list($res, $reason) = edit_data($db_table, $_PARAMS);
+    list($res, $reason) = edit_data($db_table, $data["changes"], $data["id"]);
     set_session_msg($db_table."_edit_".$reason);
     
     if (! $res){
@@ -345,42 +346,38 @@ function form_action(){
     global $_PAGE;
     global $_DATA;
     
-    set_topmenu_action();
+    if (function_exists("set_topmenu_action")) set_topmenu_action();
     
-    $action = $_PARAMS["action"];
-    $object = $_PARAMS["object"];
-    $form_name = str_replace(".", "__", $action."_".$object); // object может содержать "." - разделитель имени БД и таблицы.
-    $db_table = db_get_db_table($_PARAMS["object"]);
+    $action      = ! empty($_PARAMS["action"])   ? $_PARAMS["action"]     : null;
+    $object_name = ! empty($_PARAMS["object"])   ? $_PARAMS["object"]     : null;
+    $db_table    = db_get_db_table($object_name);
+    $id          = ! empty($_PARAMS["id"])       ? $_PARAMS["id"]         : null;
+    $form_name   = ! empty($_PARAMS["form_name"]) ? $_PARAMS["form_name"] : $action."_".$object_name;
+
+    // 
+    $_PAGE["header"] = $_PAGE["title"] = _(ucfirst($action) . " " . $object_name);
     
-    set_objects_action($form_name);
-            
-    if ( $action == "add" ){
-        if ( ! isset($_DATA[$object]) ){
-            $_DATA["fields_form"] = form_prepare($db_table, $form_name);
-        }else{
-            $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA[$object]);
-        }
-    }else{
-        if ( ! isset($_DATA[$object]) ){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
-            die("Code: ea-".__LINE__."-set_objects");
-        };
-        $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA[$object]);
-    };
+    
+    $_DATA["action"]      = $action;
+    $_DATA["db_table"]    = $db_table;
+    $_DATA["object_name"] = $object_name;
+    
+    form_prepare($db_table, $form_name, $id);
       
+    
     $form_template = !empty($_PAGE["templates"][$form_name]) ? $_PAGE["templates"][$form_name] : null;
     if ( ! $form_template && (file_exists( cfg_get_filename("templates", $form_name . "_form.htm"))) ){
         $form_template = $form_name . "_form.htm";
     }elseif ( ! $form_template && (file_exists( cfg_get_filename("templates",  $action . "_form.htm"))) ){
         $form_template = $action . "_form.htm";
-    }
+    };  
 
-    $_PAGE["header"] = $_PAGE["title"] = _(ucfirst($action) . " " . $object);
-    
-    $_DATA["action"] = $action;
-    $_DATA["object"] = $object;
-
-    set_template_file("content", $form_template);
+	if ($form_template){
+		set_template_file("content", $form_template);
+	}else{
+		dosyslog(__FUNCTION__.": FATAL ERROR: Form template for form '".$form_name."' is not found.");
+		die("Code: ea-".__LINE__."-form_template");
+	}
 }
 function import_first_user_action(){
     global $_PARAMS;
