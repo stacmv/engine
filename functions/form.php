@@ -1,0 +1,304 @@
+<?php
+define ("FORM_PASS_SUBSTITUTION", "--cut--");
+
+function form_prepare($db_table, $form_name, $object_id=""){
+    global $_DATA;
+    
+    dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . ").");
+    
+    if ($object_id){
+        $object = db_get($db_table, $object_id, DB_RETURN_DELETED);
+    }else{
+        $object = array();
+    };
+        
+    // Подготовка данных для полей формы
+    $fields = array();
+    $table = form_get_fields($db_table, $form_name);
+    
+    foreach($table as $v){
+        $is_stand_alone = false;
+        $value = isset($_SESSION["to"][$v["name"]])  ? $_SESSION["to"][$v["name"]] : ( !empty($object[ $v["name"] ]) ? $object[ $v["name"] ] : "");
+        $value_from = ! empty($object[ $v["name"] ]) ? $object[ $v["name"] ] : "";
+        $fields[] = form_prepare_field($v, $is_stand_alone, $value, $value_from);
+    }
+    unset($v);
+        
+    dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){ return $i["name"];}, $fields)) );
+    
+    $_DATA["object"]      = $object;
+    $_DATA["fields_form"] = $fields;
+    $_DATA["fields_form"][] = form_prepare_field( array("type"=>"string", "form_template"=>"hidden", "name"=>"form_name"), true, $form_name);
+}
+function form_prepare_field($field, $is_stand_alone = false, $value = "", $value_from = ""){
+                
+        $type     = $field["type"]; // тип поля в БД
+        $template = $field["template"] = $field["form_template"]; 
+        
+        // Label
+        if ($template == "hidden"){
+            $field["label"] = "";
+        };
+
+        // Name & Id
+        $name = $field["name"];
+        $field["id"]    = $name;
+
+        if ($is_stand_alone){
+            $field["name_from"] = "";
+            $field["name_to"]   = $name;
+        }else{
+            $field["name_from"] = "from[" . $name . "]";
+
+            if ($type == "list"){
+                $field["name_to"]   = "to[" . $name . "][]";
+            }else{
+                $field["name_to"]   = "to[" . $name . "]";
+            };
+        };
+        
+        // CSS Class
+        if ( strpos($name, "phone") !== false ) $field["class"] = "phone";
+        if ( strpos($name, "date")  !== false ) $field["class"] = "date";
+        if ( strpos($name, "time")  !== false ) $field["class"] = "time";
+        
+        // Available values 
+        $field["values"] = form_get_field_values($field);
+        
+               
+        // Current value
+        // from значение поля 
+        $field["value_from"] = "";
+        if ($value_from){
+            if ($type == "password") {
+                $field["value_from"] = FORM_PASS_SUBSTITUTION;
+            }else{
+                $field["value_from"] = db_prepare_value($value_from, $type);
+            };
+        };
+        
+        // to значение поля 
+        $field["value"] = "";
+        if ($value){
+            if ($type == "password") {
+                $field["value"] = "";
+            }elseif($type == "list"){
+                $field["value"] = $value;
+            }else{
+                $field["value"] = db_prepare_value($value, $type);
+            };
+        };
+        
+        if ( ($type !== "list") && is_array($field["value"]) ){
+            if (count($field["value"]) == 1){
+                $field["value"] = $field["value"][0];
+            }else{
+                // Несколько выбранных значений, при том, что может быть только одно. Не устанавливаем значение по умолчанию, перекладываем выбор на пользователя
+                dosyslog(__FUNCTION__.": WARNING: Value of array type for " . $template . " field '".$field["name"]."' in form '".$form_name."'. Field[value]: '".json_encode($field["value"])."'. Check form config.");
+            };
+        }
+        
+        if ($template == "hidden"){
+            if (empty($field["value"]) && !empty($vlues)){
+                $field["value"] = form_get_field_values($v);
+            };
+        }
+        
+        // Подсказки, обязательность, валидация ...
+        $field["hint"] = ! empty($field["form_hint"]) ? $field["form_hint"] : "";
+        if ( ! isset($field["required"]) ) $field["required"]   = "";
+        if ( ! isset($field["validate"]) ) $field["validate"]   = "";
+        
+                 
+         
+        // Шаблон поля : показывать ли поле на форме и как именно
+        $field["template_file"] = form_get_template_file($template);
+        if ( ! file_exists($field["template_file"]) ){
+            dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template."' is not found.");
+            die("Code: efrm-".__LINE__."-".$template);
+        };
+        
+        // Убрать не нужные на форме свойства
+        unset($field["form"]);
+        unset($field["form_template"]);
+        unset($field["form_values"]);
+        unset($field["form_hint"]);
+        
+        return $field;
+}
+function form_get_fields($db_table, $form_name){
+    
+    $schema = db_get_table_schema($db_table);
+    
+    if ($form_name == "all") return $schema;
+    
+    
+    if ( ! $schema ){
+        dosyslog(__FUNCTION__.": " . get_callee() .": FATAL ERROR:  '".$db_table."' is not found in DB config.");
+        die("Code: efrm-".__LINE__);
+    };
+    
+    $fields = array();
+    foreach($schema as $v){
+        
+        $forms = array();
+        $form_index = false; // порядковый номер $form_name в списке форм
+        if ( empty($v["form"]) ) continue;
+        if ( strpos($v["form"], "|") !== false ){
+            $forms = explode("|", $v["form"]);
+            
+        }else{
+            $forms = array($v["form"]);
+        }
+        $form_index = array_search($form_name, $forms);
+        if ($form_index === false) continue; // поле БД не попадает в форму $form_name
+            
+        $v["form"] = $form_name;
+    
+        // Parse some data
+        foreach($v as $prop_key=>$prop_value){
+            if (substr($prop_key, 0, 5) == "form_"){
+                if ( strpos($prop_value, "|") !== false ){
+                    $tmp = explode("|", $prop_value);
+                    if ( isset($tmp[$form_index]) ){
+                        $v[$prop_key] = $tmp[$form_index];
+                    }else{
+                        
+                        dosyslog(__FUNCTION__.": FATAL ERROR: Template for field '".$prop_key."' in form '".$form_name."' is not set. Check db config file.");
+                        die("Code: efrm-".__LINE__);
+                        
+                    }
+                    unset($tmp);
+                };
+            }
+        }
+        unset($prop_key, $prop_value);
+        
+        if ( ! isset($v["label"]) ) $v["label"] = "";
+        
+        $fields[] = $v;
+        
+    };
+    unset($v, $schema);
+    return $fields;
+}
+function form_get_field_values($field){
+    global $_DATA;
+    
+    if ( ! isset($field["form_values"]) ){
+        return array();
+    };
+    
+    switch($field["form_values"]){
+    case "lst":
+        $values = glog_file_read_as_array( cfg_get_filename("settings", glog_codify($field["name"]) . ".lst") );
+        $values = array_map("trim", $values);
+        break;
+
+    case "tsv":
+        $values = array();
+        $tsv = import_tsv( cfg_get_filename("settings", glog_codify($field["name"]) . ".tsv") );
+        if ($tsv){
+            foreach($tsv as $record){
+                $values[ trim($record["caption"]) ] = trim( isset($record[ $field["name"] ]) ? $record[ $field["name"] ] : $record["value"] );
+            }
+            unset($record);
+        }
+        unset($tsv);
+        break;
+    case "data":
+        if (isset($_DATA[$field["name"]])){
+            $values = $_DATA[$field["name"]];
+        }else{
+            dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _DATA.");
+            $values = "";
+        }
+        break;
+    default:
+    
+        if ( strpos($field["form_values"], "&") !== false ){
+            $values = explode("&", $field["form_values"]);
+        }elseif ( function_exists($field["form_values"]) ){
+            $values = call_user_func($field["form_values"]);
+        }else{
+            dosyslog(__FUNCTION__.": ERROR: Values for select field '" . $field["name"] . "' have unknown format. Check DB config.");
+            die("Code: efrm-".__LINE__."-".$field["name"]."->".$field["form_values"]);
+        }
+        
+        if ( is_array($values) && ! empty($values) ){
+        
+            $keys = array_keys($values);
+            if ( ! is_array($values[ $keys[0] ]) ){ // одномерный список значений
+                $values = array_map("trim", $values);
+            }else{
+                $tsv = $values;
+                $values = array();
+                foreach($tsv as $record){
+                    $values[ trim($record["caption"]) ] = trim($record["value"]);
+                };
+                unset($record);
+            };
+        };
+        
+    }; // switch form_values
+    
+    return $values;
+}
+function form_get_template_file($template){
+    return cfg_get_filename("templates/form", $template . ".form.htm");
+}
+function form_get_action_link($form_name, $is_public=false){
+    global $IS_IFRAME_MODE;
+    global $CFG;
+    
+    $form_uri = implode("/", explode("_", $form_name, 2));
+    
+    
+    return ($is_public ? "pub/" : "") . $form_uri . $CFG["URL"]["ext"] . ($IS_IFRAME_MODE ? "?i=1" : "");
+}
+function form_validate($db_table, $form_name, $object){
+    
+    $res = true;
+    $invalid_fields = array();
+    
+    $fields_form = form_prepare($db_table, $form_name,$object);
+    
+    foreach($fields_form as $field){
+        $name = $field["name"];
+        
+        // required
+        if ( $field["required"] && empty($object[$name]) ){
+            $res = false;
+            $invalid_fields[] = array($name => "required");
+        };
+		
+		// field specific validation rules
+		if ( ! empty($field["validate"]) ){
+			$rules = explode("|", $field["validate"]);
+		
+			foreach($rules as $rule){
+				$params = array();
+				if (strpos($rule, ":") > 0){
+					$params = explode(":",$rule);
+					$rule = array_shift($params);
+				};
+				
+				if (function_exists("validate_".$rule)){
+					$res = call_user_func_array("validate_".$rule, $params);
+				}else{
+					dosyslog(__FUNCTION__.get_callee().": ERROR: Validate function for rule '".$rule."' on field '".$name."' on form '".$form_name."' is not defined.");
+					$res = false;
+				};
+				
+				if ( ! $res){
+					$invalid_fields[] = array($name => $rule);
+				};
+				
+			};
+		};
+		
+    };
+        
+    
+    return array($res, $invalid_fields);
+}
