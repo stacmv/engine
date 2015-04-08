@@ -219,6 +219,7 @@ function form_get_fields($db_table, $form_name){
 }
 function form_get_field_values($field){
     global $_DATA;
+    global $_USER;
     
     switch($field["form_values"]){
     case "lst":
@@ -242,6 +243,14 @@ function form_get_field_values($field){
             $values = $_DATA[$field["name"]];
         }else{
             dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _DATA.");
+            $values = "";
+        }
+        break;
+    case "user_id":
+        if (isset($_USER["profile"]["id"])){
+            $values = $_USER["profile"]["id"];
+        }else{
+            dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _USER.");
             $values = "";
         }
         break;

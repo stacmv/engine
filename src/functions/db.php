@@ -1225,6 +1225,12 @@ function db_prepare_value($value, $field_type){
                 $res = (int) $value;
             };
             break;
+        case "date":
+            if ($value === "") $res = null;
+            elseif ( ! is_null($value) ){
+                $res = glog_isodate($value);
+            };
+            break;
         case "password":
             $res = passwords_hash($value);
             if ( ! empty($value) && empty($res) ){

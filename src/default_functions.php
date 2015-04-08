@@ -317,7 +317,7 @@ if (!function_exists("get_pages")){
         foreach($pages_files as $app=>$file){
             $str = glog_file_read($file);
             if ($str){
-                $arr = json_decode($str, true);
+                $arr = json_decode_array($str, false); // false means "do not urldecode output";
                 if ( ! $arr ){
                     dosyslog(__FUNCTION__.": FATAL ERROR: Can not decode JSON file '".$file."'.");
                     die("Code: df-".__LINE__."-".$app."_pages_json");
