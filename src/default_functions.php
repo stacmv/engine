@@ -172,7 +172,7 @@ if (!function_exists("find_page")){
                             $uri = implode("/",$tmp);
                             $page = get_page_by_uri($pages,$uri);
                         }else{
-                           break;
+                           $page = get_page_by_uri($pages,"/");
                         };
 
                     };
