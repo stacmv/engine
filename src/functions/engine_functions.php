@@ -13,6 +13,7 @@ function add_data($db_table, $data){
         die("Code: ef-".__LINE__);
     };
     
+    $data = parse_post_data($data,"add");
     $data = $data["to"];
     
     $table = db_get_table_schema($db_table);
@@ -119,31 +120,107 @@ function dosyslog_data_changes($data_before){
     }
     
 };
-function edit_data($db_table, $changes, $id="", $form_name = "", $comment = null){
+function edit_data($db_table, $data, $id="", array $err_msg=array()){
 	global $CFG;
     
     if (! $id) $id = ! empty($data["id"]) ? $data["id"] : null;
-    if (! $form_name){
-        $form_name = "edit_" . db_get_obj_name($db_table);
-    };
-    
     
     if (!$id){
         dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'id' is not set. Check pages XML and edit form template.");
         die("Code: ef-" . __LINE__);
     };
     
-    $changes["id"] = $id;
+    $table = db_get_table_schema($db_table);
+     
+    $isDataValid = true;
+    $changes=array();
+    $data = parse_post_data($data, "edit");
     
-    // Validate
-    list($is_valid, $invalid_fields) = form_validate($db_table, $form_name, $changes);
-    
-    if ($is_valid){
-        list($res, $reason) = db_edit($db_table, $id, $changes, $comment);
+    foreach($data["to"] as $key=>$value){
+        $type = "";
+        foreach($table as $field){ // есть ли такое поле в таблице БД?
+            if ($field["name"] == $key) {
+                $type = $field["type"];
+                $name = $field["name"];
+                break;
+            }
+        };
+        
+        if ( ! $type){
+            dosyslog(__FUNCTION__ . ": ERROR: Parameter '".$key."' does not found in '".$db_table."'.");
+            $isDataValid = false;
+           
+            set_session_msg("Ошибка в поле '".htmlspecialchars($key)."'. Поле не существует.","error");
+            break;
+        }
+        
+        if($type == "file"){
+            if (!empty($data["to"][$name])){
+                $storage_name = $db_table;
+                list($res, $dest_file) = upload_file($name, $storage_name);
+                if ($res){
+                    $msg = "upload_file_success";
+                    $changes[$name]["from"] = $data["from"][$name];
+                    $changes[$name]["to"] = $dest_file;
+                }else{
+                    $msg = "upload_file_".$dest_file;
+                    $isDataValid = false;
+                };
+            };
+        }else{;
+        
+            $validate_result = validate_data($field, $data["to"][$name], "edit", $db_table, isset($data["from"][$name]) ? $data["from"][$name] : "");
+           
+            $res = $validate_result[0];
+            $msg = $validate_result[1];
+            $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
+           
+           
+            if ($res){
+                if (!empty($msg)) {
+                   set_session_msg($msg, "info");
+                };
+                
+                if (!empty($proposed_value)){
+                    $data["to"][$name] = $proposed_value;
+                };
+  
+                if (
+                    ($type !== "password") ||
+                    ( ($type == "password") && ! empty($data["to"][$name]) ) 
+                   ){
+                    $changes[$name]["from"] = $type !== "password" ? db_prepare_value($data["from"][$name], $type) : "";
+                    $changes[$name]["to"] = db_prepare_value($data["to"][$name], $type);
+                    
+                    $log_data = $changes[$name];
+                    if ($type == "password") $log_data["to"] = ! empty($log_data["to"]) ? substr($log_data["to"],0,10)."...cut" : "";
+                    dosyslog(__FUNCTION__.": DEBUG: changes[".$name."] = ".json_encode_array($log_data).".");
+               };
+
+            }else{
+                $isDataValid = false;
+                if (empty($msg)) $msg = "Ошибка в поле '". $field["name"]."'.";
+                dosyslog(__FUNCTION__.": WARNING: ".$msg);
+                set_session_msg($msg, "error");
+            };
+        };
+        
+        
+        
+    };//foreach
+    unset($key, $value, $res);
+
+
+    if ($isDataValid){
+               
+        list($res, $reason) = db_edit($db_table, $id, $changes);
+        if (! $res) set_session_msg($db_table."_edit_".$reason, $reason);
+                      
     }else{
-        // TODO: Сценарий "ФОрма не валидна"
-    }
-   
+        $res = false;
+        $reason = "fail";
+    };
+
     return array($res, $reason);
     
 };
@@ -191,7 +268,7 @@ function month_name($month_num){
     
     return $month_name;    
 }
-function prepare_post_data($data){
+function parse_post_data($data, $action){
 
     // Обработка загружаемых файлов
     $files = array();
@@ -205,7 +282,20 @@ function prepare_post_data($data){
     };
     if ( $files ) dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".implode(", ",$files)."'.");
 
-    if ( ! empty($data["from"]) ){
+    switch($action){
+    case "add":
+        if (isset($data["from"]["id"])) unset($data["from"]["id"]);
+        if (isset($data["to"]["id"])) unset($data["to"]["id"]);
+
+        if (isset($data["from"]["created"])) unset($data["from"]["created"]);
+        if (isset($data["to"]["created"])) unset($data["to"]["created"]);
+        if (isset($data["from"]["modified"])) unset($data["from"]["modified"]);
+        if (isset($data["to"]["modified"])) unset($data["to"]["modified"]);
+        break;
+        
+    case "edit":
+        // Проверить, все ли поля имеют пару from и to (старое и новое значения)
+        // TODO: Проверить, как это рабоатет, аозможно усилить защиту - удалять непарные элементы и т.п.
         $diff1 = array_diff(array_keys($data["to"]), array_keys($data["from"]));
         if ( ! empty($diff1) ) dosyslog(__FUNCTION__.": ERROR: These fields of 'to' are absent in 'from' data:" . implode(", ",$diff1).".");
         $diff2 = array_diff(array_keys($data["from"]), array_keys($data["to"]));
@@ -225,30 +315,22 @@ function prepare_post_data($data){
             };
         };
         if ( $deleted ) dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Удалены поля '".implode(", ",$deleted)."'.");
+        
+        if (isset($data["from"]["created"])) unset($data["from"]["created"]);
+        if (isset($data["to"]["created"])) unset($data["to"]["created"]);
+        if (isset($data["from"]["modified"])) unset($data["from"]["modified"]);
+        if (isset($data["to"]["modified"])) unset($data["to"]["modified"]);
+        
+        dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Оставлены поля [to] '".implode(", ",array_keys($data["to"]))."'.");
+    }
+    
+    
+    // Для многострочных текстовых строк - заменить конец строки на \n;
+    if ($action == "edit"){
+        foreach($data["from"] as $k=>$v) if ( $v && is_string($v) ) $data["from"][$k] = preg_replace('~\R~u', "\n", $v);
     };
+    foreach($data["to"]   as $k=>$v) if ( $v && is_string($v) ) $data["to"][$k]   = preg_replace('~\R~u', "\n", $v);
     
-    if (isset($data["from"]["created"])) unset($data["from"]["created"]);
-    if (isset($data["to"]["created"])) unset($data["to"]["created"]);
-    if (isset($data["from"]["modified"])) unset($data["from"]["modified"]);
-    if (isset($data["to"]["modified"])) unset($data["to"]["modified"]);
-    
-    dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Оставлены поля [to] '".implode(", ",array_keys($data["to"]))."'.");
-
-    // Трансляция данных в формат для записи в БД.
-    //   Для многострочных текстовых строк - заменить конец строки на \n;
-    $changes = array();
-    foreach($data["to"] as $what=>$v){
-        $changes[$what] = array(
-            "to" => ( $v && is_string($v) ) ? preg_replace('~\R~u', "\n", $v) : $v,
-        );
-        if ( isset($data["from"][$what]) ){
-            $changes[$what]["from"] = ( $data["from"][$what] && is_string($data["from"][$what]) ) ? preg_replace('~\R~u', "\n", $data["from"][$what]) : $data["from"][$what];
-        };
-    };
-    
-    $data["changes"] = $changes;
-    unset($data["to"]);
-    if (isset($data["from"])) unset($data["from"]);
     
     return $data;
 }

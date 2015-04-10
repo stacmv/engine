@@ -5,8 +5,7 @@
         "params": {
             "object": {"type": "string", "source": "get",  "regexp": "/(add)\\/(.+)/", "pos": 2},
             "action": {"type": "string", "source": "get",  "regexp":"/(add)\\/(.+)/", "pos": 1},
-			"to": {"type": "array", "source": "post"},
-			"form_name": {"type": "string", "source": "post"}
+			"to": {"type": "array", "source": "post"}
         },
         "actions":[ "add_data" ],
         "acl": [ "access","manager" ]
@@ -17,8 +16,7 @@
         "params": {
             "object": {"type": "string", "source": "get",  "regexp": "/(add)\\/(.+)/", "pos": 2},
             "action": {"type": "string", "source": "get",  "regexp":"/(add)\\/(.+)/", "pos": 1},
-			"to": {"type": "array", "source": "post"},
-			"form_name": {"type": "string", "source": "post"}
+			"to": {"type": "array", "source": "post"}
         },
         "actions":[ "add_data" ],
         "acl": [ ]
@@ -31,8 +29,7 @@
 			"action": {"type": "string", "source": "get",  "regexp":"/(edit)\\/(.+)/", "pos": 1},
 			"id": {"type": "string", "source": "post"},
 			"from": {"type": "array", "source": "post"},
-			"to": {"type": "array", "source": "post"},
-			"form_name": {"type": "string", "source": "post"}
+			"to": {"type": "array", "source": "post"}
         },
         "actions":[ "edit_data" ],
         "acl": [ "access" ]
@@ -45,8 +42,7 @@
 			"action": {"type": "string", "source": "get",  "regexp":"/(delete)\\/(.+)/", "pos": 1},
 			"id": {"type": "string", "source": "post"},
 			"confirm": {"type": "string", "source": "post"},
-			"comment": {"type": "string", "source": "post"},
-			"form_name": {"type": "string", "source": "post"}
+			"comment": {"type": "string", "source": "post"}
         },
         "actions":[ "delete_data" ],
         "acl": [ "access" ]

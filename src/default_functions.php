@@ -172,7 +172,7 @@ if (!function_exists("find_page")){
                             $uri = implode("/",$tmp);
                             $page = get_page_by_uri($pages,$uri);
                         }else{
-                           $page = get_page_by_uri($pages,"/");
+                           break;
                         };
 
                     };
@@ -587,17 +587,14 @@ if (!function_exists("set_topmenu")){
         };
         $menu = $tmp;
        
+            
         // формирование topmenu для конкретного пользователя
         $topmenu = array();
        
         foreach($menu as $menuItem){
-            if ( ! empty($menuItem["rights"]) ){
-                $rights = array_map( "trim", explode(",",$menuItem["rights"]) );
-                $isOk = false;
-                if ( ! empty($rights)) foreach($rights as $right) $isOk = userHasRight( trim($right) );
-            }else{
-                $isOk = true;
-            };
+            $rights = isset($menuItem["rights"]) ? explode(",",$menuItem["rights"]) : array();
+            $isOk = false;
+            if (!empty($rights)) foreach($rights as $right) $isOk = userHasRight( trim($right) );
             
             if ($isOk) $topmenu[] = $menuItem;
         };
