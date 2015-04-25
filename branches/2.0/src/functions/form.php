@@ -29,6 +29,8 @@ function form_prepare($db_table, $form_name, $object_id=""){
     $_DATA["object"]      = $object;
     $_DATA["fields_form"] = $fields;
     $_DATA["fields_form"][] = form_prepare_field( array("type"=>"string", "form_template"=>"hidden", "name"=>"form_name"), true, $form_name);
+    
+    return $fields;
 }
 function form_prepare_field($field, $is_stand_alone = false, $value = "", $value_from = ""){
                 
@@ -184,6 +186,7 @@ function form_get_fields($db_table, $form_name){
 }
 function form_get_field_values($field){
     global $_DATA;
+    global $_USER;
     
     if ( ! isset($field["form_values"]) ){
         return array();
@@ -211,6 +214,14 @@ function form_get_field_values($field){
             $values = $_DATA[$field["name"]];
         }else{
             dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _DATA.");
+            $values = "";
+        }
+        break;
+    case "user_id":
+        if (isset($_USER["profile"]["id"])){
+            $values = $_USER["profile"]["id"];
+        }else{
+            dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _USER.");
             $values = "";
         }
         break;
@@ -256,20 +267,23 @@ function form_get_action_link($form_name, $is_public=false){
     
     return ($is_public ? "pub/" : "") . $form_uri . $CFG["URL"]["ext"] . ($IS_IFRAME_MODE ? "?i=1" : "");
 }
-function form_validate($db_table, $form_name, $object){
+function form_validate($db_table, $data, $object_id = ""){
     
     $res = true;
-    $invalid_fields = array();
+    $errors = array();
     
-    $fields_form = form_prepare($db_table, $form_name,$object);
-    
+    $fields_form = form_prepare($db_table, $data["form_name"],$object_id);
+    $canges = $data["changes"];
+            
     foreach($fields_form as $field){
         $name = $field["name"];
         
+        if ( ! isset($changes[$name]) ) continue;
+        
         // required
-        if ( $field["required"] && empty($object[$name]) ){
+        if ( $field["required"] && empty($changes[$name]["to"]) ){
             $res = false;
-            $invalid_fields[] = array($name => "required");
+            $errors[] = array($name => array("rule" => "required", "msg" => "Поле '" . ($field["label"] ? $field["label"] : $field["name"]) . "' обязательно для заполнения."));
         };
 		
 		// field specific validation rules
@@ -284,14 +298,14 @@ function form_validate($db_table, $form_name, $object){
 				};
 				
 				if (function_exists("validate_".$rule)){
-					$res = call_user_func_array("validate_".$rule, $params);
+					list($res, $rule_errors) = call_user_func_array("validate_".$rule, $name, $changes[$name], $params);
 				}else{
 					dosyslog(__FUNCTION__.get_callee().": ERROR: Validate function for rule '".$rule."' on field '".$name."' on form '".$form_name."' is not defined.");
 					$res = false;
 				};
 				
-				if ( ! $res){
-					$invalid_fields[] = array($name => $rule);
+				if ( ! empty($rule_errors) ){
+					$errors = array_merge($errors, $rule_errors);
 				};
 				
 			};
@@ -300,5 +314,5 @@ function form_validate($db_table, $form_name, $object){
     };
         
     
-    return array($res, $invalid_fields);
+    return array($res, $errors);
 }

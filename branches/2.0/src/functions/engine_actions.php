@@ -2,6 +2,7 @@
 function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fail=""){
     global $_PARAMS;
     global $_DATA;
+    global $CFG;
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
@@ -38,7 +39,8 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     
     if ($res){
         if ( ! is_null($redirect_on_success) ){
-            redirect($redirect_on_success ? $redirect_on_success : $db_table);
+           $redirect_uri = $redirect_on_success ? $redirect_on_success : (!empty($CFG["URL"]["redirect_on_success_default"]) ? $CFG["URL"]["redirect_on_success_default"] : $db_table);
+           redirect($redirect_uri);
         };
     }else{
         if ( ! is_null($redirect_on_fail) ){
@@ -230,6 +232,12 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             return array(false, "deny");
         }
     //
+    $id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
+    if ( ! $id ){
+        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'id' is not set. Check form or pages file.");
+        die("Code: ea-".__LINE__);
+    };
+    
     if ( ! $db_table ){
         $object = $_PARAMS["object"];
         $db_table = db_get_db_table($_PARAMS["object"]);;  //uri: edit/account.html, but db = accounts; edit/user => users.
@@ -242,9 +250,8 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
         die("Code: ea-".__LINE__);
     };
   
-    $data = prepare_post_data($_PARAMS, "edit");
     
-    list($res, $reason) = edit_data($db_table, $data["changes"], $data["id"]);
+    list($res, $reason) = edit_data($db_table, prepare_post_data($_PARAMS), $id);
     set_session_msg($db_table."_edit_".$reason);
     
     if (! $res){
@@ -258,11 +265,11 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 
     if ($res){
         if ( ! is_null($redirect_on_success) ){
-            $redirect_uri = $redirect_on_success ? $redirect_on_success : $db_table;
+            $redirect_uri = $redirect_on_success ? $redirect_on_success : (!empty($CFG["URL"]["redirect_on_success_default"]) ? $CFG["URL"]["redirect_on_success_default"] : $db_table);
             redirect($redirect_uri);
         };
     }else{
-        if ( ! is_null($redirect_on_success) ){
+        if ( ! is_null($redirect_on_fail) ){
             redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
         };
     };

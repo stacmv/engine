@@ -325,10 +325,13 @@ function SENDHTML(){
 function SETACTIONLIST(){
     global $_PAGE;
     global $_ACTIONS;
+    global $_DEFAULT_ACTIONS;
     
      
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb."); 
-    $_ACTIONS = array();
+    // $_DEFAULT_ACTIONS - action-функции, которые должны выполняться для каждой страницы. См. register_default_action() из engine_functions.php, коорая может вызываться из actions.php.
+    
+    $_ACTIONS = ! empty($_DEFAULT_ACTIONS) ? $_DEFAULT_ACTIONS : array(); 
       
         
     if (empty($_PAGE["actions"])) {
@@ -445,6 +448,9 @@ function SETPARAMS(){
                         if ($tmp === NULL) dosyslog(__FUNCTION__.": ERROR: Parameter '".@$fparam_name."' of type '".@$fparam["type"]."' does not satisfy to type requirements. Discarded. URI: '" . $_URI . "'.");
                         break;
                     case "file": //  here $tmp supposed to be file name.
+                        list($res, $dest_file) = upload_file($tmp, FILES_DIR);
+                        if ($res) $tmp = $dest_file;
+                        break;
                     case "string":
                     case "text":
                         $tmp = is_string($tmp) ? $tmp : NULL;
