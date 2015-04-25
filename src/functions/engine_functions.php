@@ -6,104 +6,32 @@ define("SHOW_DATE_TIME_DIFF_ONLY", 4);
 define("SHOW_DATE_AGO", 8);
 
 
-function add_data($db_table, $data){
+function add_data($db_table, $data, $comment = null){
     
-    if ( ! isset($data["to"]) ){
-        dosyslog(__FUNCTION__.": Data array does not have  item 'to'.");
-        die("Code: ef-".__LINE__);
+    if ( empty($data["form_name"]) ){
+        $data["form_name"] = "add_" . db_get_obj_name($db_table);
     };
     
-    $data = $data["to"];
+            
+    // Validate
+    list($is_valid, $errors) = form_validate($db_table, $data);
     
-    $table = db_get_table_schema($db_table);
-    
-    $isDataValid = true;
-    
-    foreach($table as $field){
-        $type = (string) $field["type"];
-        $name = (string) $field["name"];
+    if ($is_valid){
         
-        if($type=="file"){
-            
-            if ( ! $data[$name] ) continue;
-            
-            $storage_name = $db_table;
-            if ( filter_var($data[$name], FILTER_VALIDATE_URL) ){   // передан URL
-                list($res, $dest_file) = upload_file($data[$name], $storage_name, $isUrl = true);
-            }elseif( file_exists($data[$name]) && (strpos($data[$name], FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
-                list($res, $dest_file) = upload_file($data[$name], $storage_name, $isUrl = true);
-            }else{// загружен новый файл
-                list($res, $dest_file) = upload_file($name, $storage_name);
-            };
-            
-            if ($res){
-                $msg = "upload_file_success";
-                $data[$name] = $dest_file;
-            }else{
-                $msg = "upload_file_".$dest_file;
-                $isDataValid = false;
-            };
-            
-            set_session_msg($msg);
-            
-        }else{
-                    
-            if ( ! isset($data[$name]) ) $data[$name] = null;
-            if (function_exists("validate_data")){
-                $validate_result = validate_data($field, $data[$name], "add", $db_table);
-           
-                $res = $validate_result[0];
-                $msg = $validate_result[1];
-                $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
-            
-                if ($res){
-                    if ( ! empty($msg)) {
-                       set_session_msg($msg, "info");
-                    };
-                
-                    if ( ! empty($proposed_value) ){
-                        $data[$name] = $proposed_value;
-                    };
-                }else{
-                    $isDataValid = false;
-                    dosyslog(__FUNCTION__ . ": WARNING: Поле '" . $name . "' = '".@$data[$name]."' не валидно.");
-                    if (!empty($msg)) {
-                        set_session_msg($msg, "error");
-                    };
-                };
-            }else{
-                if (!isset($notice_logged)){
-                    dosyslog(__FUNCTION__.get_callee() . ": WARNING: Function validate_data() is not defined.");
-                    $notice_logged = true;
-                };
-            }
-
-        };
         
-    };//foreach
-    unset($field, $type, $name, $msg, $proposed_value, $notice_logged, $storage_name, $res, $msg);
-    
-    
-       
-    // Валидация формы по новому алгоритму 2015-02-10
-    list($res, $messages) = form_validate($db_table, "add_".db_get_obj_name($db_table), $data);
-       
-
-    $added_id = false;
-    if ($isDataValid){
-            
-            $added_id = db_add($db_table, $data);
-            if ( ! $added_id ){
+        $added_id = db_add($db_table, $data["changes"], $comment);
+        if ( ! $added_id ){
                 dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Ошибка db_add().");
             };
-            
     }else{
         dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Данные не валидны.");
-    };   
-    
+        dump($data,"data");
+        dump($errors,"errors");die(__FUNCTION__);
+    }
+   
     if ( $added_id ) return array(true, $added_id);
     else return array(false, "fail");
-
+    
 }
 function dosyslog($message, $file="") {								// Пишет сообщение в системный лог при включенной опции DO_SYSLOG.
     glog_dosyslog($message, $file);
@@ -119,11 +47,11 @@ function dosyslog_data_changes($data_before){
     }
     
 };
-function edit_data($db_table, $changes, $id="", $form_name = "", $comment = null){
+function edit_data($db_table, $data, $id="", $comment = null){
 	global $CFG;
     
     if (! $id) $id = ! empty($data["id"]) ? $data["id"] : null;
-    if (! $form_name){
+    if (! $data["form_name"]){
         $form_name = "edit_" . db_get_obj_name($db_table);
     };
     
@@ -133,15 +61,15 @@ function edit_data($db_table, $changes, $id="", $form_name = "", $comment = null
         die("Code: ef-" . __LINE__);
     };
     
-    $changes["id"] = $id;
     
     // Validate
-    list($is_valid, $invalid_fields) = form_validate($db_table, $form_name, $changes);
+    list($is_valid, $errors) = form_validate($db_table, $data, $id);
     
     if ($is_valid){
-        list($res, $reason) = db_edit($db_table, $id, $changes, $comment);
+        list($res, $reason) = db_edit($db_table, $id, $data["changes"], $comment);
     }else{
-        // TODO: Сценарий "ФОрма не валидна"
+        dump($changes,"changes");
+        dump($errors,"errors");die(__FUNCTION__);
     }
    
     return array($res, $reason);
@@ -291,6 +219,17 @@ function redirect_301($redirect_uri = "", array $params = array(), $hash_uri = "
     $_RESPONSE["headers"]["HTTP"] = "HTTP/1.1 301 Moved Permanently";
     dosyslog(__FUNCTION__.get_callee().": INFO: 301 redirect mode ON.");
 };
+function register_default_action($action){ // регистрирует функцию, которая должна выполняться как action для каждой страницы
+    global $_DEFAULT_ACTIONS;
+    
+    // Do not invoke inside this function any functions defined in other files since they may not be loaded yet.
+    
+    if ( ! isset($_DEFAULT_ACTIONS) ) $_DEFAULT_ACTIONS = array();
+    
+    $_DEFAULT_ACTIONS[] = $action;
+        
+}
+
 function response_404_page(){
     global $_URI;
     global $_RESPONSE;

@@ -74,12 +74,8 @@ function db_add($db_table, array $data, $comment=""){
                 };
                 
             }else{   // добавлена 1 запись
-                $changes=array();
-                foreach($data as $k=>$v){
-                    $changes[$k]["from"] = "";
-                    $changes[$k]["to"] = $v;
-                };
-                
+                $changes = $data;
+
                 if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, $changes)){
                     // ДОРАБОТАТЬ: реализовать откат операции INSERT
                     
@@ -115,27 +111,28 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $ch
     };
     
     $record = array(
-        "db"        => $db,
-        "action"    => $action,
-        "objectId"  => (int) $objectId,
-        "subjectId" => (int) $subjectId,
-        "subjectIP" => @$_SERVER["REMOTE_ADDR"],
-        "timestamp" => time(),
+        "db"        => array("to" => $db),
+        "action"    => array("to" => $action),
+        "objectId"  => array("to" => (int) $objectId),
+        "subjectId" => array("to" => (int) $subjectId),
+        "subjectIP" => array("to" => @$_SERVER["REMOTE_ADDR"]),
+        "timestamp" => array("to" => time()),
     );
     
-    if ($comment) $record["comment"] = $comment;
-       
-    $changes = db_translate_changes($changes, 0);
+    if ($comment) $record["comment"] = array("to" => $comment);
     
     $changes_from = $changes_to = array();
-    foreach($changes["to"] as $k=>$v){
-        if ($changes["from"][$k] != $v){
-            $changes_from[] = $k." = ".json_encode_array($changes["from"][$k]);
-            $changes_to[]   = $k." = ".json_encode_array($v);
+    foreach($changes as $k=>$v){
+        if ( ! isset($v["from"]) ){ // action == add
+            $v["from"] = null;
+        };
+        if ($v["from"] != $v["to"]){
+            $changes_from[] = $k." = ".json_encode_array($v["from"]);
+            $changes_to[]   = $k." = ".json_encode_array($v["to"]);
         };
     };
-    $record["changes_from"] = implode("\n",$changes_from);
-    $record["changes_to"]   = implode("\n",$changes_to);
+    $record["changes_from"] = array("to" => implode("\n",$changes_from) );
+    $record["changes_to"]   = array("to" => implode("\n",$changes_to) );
         
         
     if (!db_add($db_name . ".history", $record)){
@@ -304,6 +301,24 @@ function db_check_schema($db_table){ // проверяет схему табли
 	
 	
 };
+function db_create_update_query($db_table, $keys){
+    
+    $table_name = db_get_table($db_table);
+    // Create query.
+         
+    $query = "UPDATE ".$table_name." SET ";
+    $tmp = array();
+    foreach($keys as $k){
+        $tmp[] = $k . " = ? ";
+    };
+    $tmp[] = "modified = '" . time(). "'";
+    $query .= implode(", ",$tmp);
+    
+    $query .= " WHERE id = ? ;";
+    
+    return $query;
+    
+}
 function db_delete($db_table, $id, $comment=""){
     global $_USER;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -401,7 +416,7 @@ function db_edit($db_table, $id, array $changes, $comment=""){
             continue;
         };
         
-        if ( ($what == "pass") && ($changes[$what]["from"] == "") ) { // при смене пароля оригинальный пароль (или хэш) на сервер от клиента не приходит, только новый.
+        if ( (db_get_field_type($db_table, $what) == "password") && ($changes[$what]["from"] == FORM_PASS_SUBSTITUTION) ) { // при смене пароля оригинальный пароль (или хэш) на сервер от клиента не приходит, только новый.
             continue;
         }
         
@@ -425,24 +440,26 @@ function db_edit($db_table, $id, array $changes, $comment=""){
     };
     
     
-    // Create query.
-         
-    $query = "UPDATE ".$table_name." SET ";
-    $tmp = array();
-    foreach($changes as $k=>$v){
-        if ($v["to"] === NULL){
-            $tmp[] = $k."= NULL";
-        }else{
-            $tmp[] = $k."=".$dbh->quote($v["to"])."";
-        }
+       
+    $update_data = array();
+    foreach($changes as $what=>$values){
+        $update_data[$what] = $values["to"];
     };
-    $tmp[] = "modified = '" . time(). "'";
-    $query .= implode(", ",$tmp);
     
-    $query .= " WHERE id=".$id.";";
-      
-    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
-    $res = $dbh->exec($query);
+    $update_data = db_prepare_record($db_table, $update_data);
+    $query = db_create_update_query($db_table, array_keys($update_data), $id);
+    $update_data[] = $id;
+       
+    // dump($update_data, "update_data");die(__FUNCTION__);
+    
+    $statement = db_prepare_query($db_table, $query);
+    if ($statement) {
+        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
+        $res = $statement->execute(array_values($update_data));
+    }else{
+        $res = false;
+    };
+    $update_data = db_prepare_record($db_table, $update_data);
        
     if (!$res){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'.");
@@ -686,6 +703,19 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
 
     return $result;
 };
+function db_get_field_type($db_table, $field_name){
+    $schema = db_get_table_schema($db_table);
+    
+    foreach($schema as $field){
+        if ($field["name"] == $field_name){
+            return $field["type"];
+        };
+    };
+    
+    dosyslog(__FUNCTION__.get_callee().": ERROR: Field '".$field_name."' not found in db table '".$db_table."'.");
+    if (DEV_MODE) die("Code: db-".__LINE__."-".$field_name."-type");
+    return "";
+}
 function db_get_list($db_table, array $fields = array("id"), $limit=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     // ДОРАБОТАТЬ: проверить существования поля $field в БД.
@@ -732,12 +762,30 @@ function db_insert($db_table, array $data){
     
     $dbh = db_set($db_table);
 
+    
+    
+    // Преобразование $data от формата
+    //   [$field=>["to"=>$value]]
+    // к формату
+    //   [$field=>$value]
+    
     $timestamp = time();
-    $data = array_map(function($record) use ($timestamp){
-        $record["created"] = $timestamp;
-        $record = array_filter($record); // get rid of empty fields
-        return $record;
-    }, $data);
+   
+    $data = array_map(
+        function($record) use ($timestamp) {
+            dump($record,"record");
+            $res = array();
+            foreach($record as $k=>$v){
+                $res[$k] = $v["to"];
+            };
+            $res["created"] = $timestamp;
+            $res = array_filter($res); // get rid of empty fields
+            return $res;
+        },
+        $data
+    );
+    
+    
     
     $schema = db_get_table_schema($db_table);
     $fields = array();
@@ -749,7 +797,8 @@ function db_insert($db_table, array $data){
     $keys = array_keys($data[0]);
     $keys = array_filter($keys, function($k) use ($fields, $db_table){
         if ( ! isset($fields[$k]) ){
-            dosyslog(__FUNCTION__.get_callee().": DEBUG: Field '".$k."' does not exist in table '".$db_table."'.");
+            dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Field '".$k."' does not exist in table '".$db_table."'.");
+            die("Code: db-".__LINE__);
         };
         return ( isset($fields[$k]) && ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
     });
@@ -1223,6 +1272,12 @@ function db_prepare_value($value, $field_type){
             if ($value === "") $res = null;
             elseif ( ! is_null($value) ){
                 $res = (int) $value;
+            };
+            break;
+        case "date":
+            if ($value === "") $res = null;
+            elseif ( ! is_null($value) ){
+                $res = glog_isodate($value);
             };
             break;
         case "password":

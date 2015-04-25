@@ -36,13 +36,22 @@ function upload_file($param_name, $storage_name, $isUrl = false){
         die("Code: eu-" . __LINE__);
     };
     $upload_dir = upload_get_dir($storage_name);
+    
+    if ( filter_var($param_name, FILTER_VALIDATE_URL) ){   // передан URL
+         $isUrl = true;
+    }elseif( file_exists($param_name) && (strpos($param_name, FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
+         $isUrl = true;
+    }else{// загружен новый файл ; $param_name - имя параметра в $_FILES
+        $isUrl = false;
+    };
+    
 
     if ( ! $isUrl ){
         if ( ! empty($_FILES["to"]["name"][$param_name]) ){
             $orig_filename  = pathinfo($_FILES["to"]["name"][$param_name],PATHINFO_FILENAME);
             $orig_extension = pathinfo($_FILES["to"]["name"][$param_name],PATHINFO_EXTENSION);
             
-            if ( ! $orig_extension ) $orig_extension = "jpg";
+            if ( ! $orig_extension ) $orig_extension = "txt";
             
             $dest_name = $upload_dir . get_filename($orig_filename."__".date("YmdHis"), ".".$orig_extension);
             
@@ -69,7 +78,6 @@ function upload_file($param_name, $storage_name, $isUrl = false){
         // TODO: добавить проверку доступности удаленного файла, его типа и размера.
         if (file_put_contents( $dest_name, file_get_contents($param_name)) ){
             dosyslog(__FUNCTION__.": NOTICE: Downloaded file from '".$param_name."' and moved to storage path '".$dest_name."'.");
-            
             
             return array(true, $dest_name);
         }else{
