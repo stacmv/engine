@@ -1,0 +1,21 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["ext"],
+	$action,
+	$db_table,
+	$object,
+	$object_name,
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+?>
+<form class="form-horizontal" action="<?=$action;?>/<?=$object_name;?><?=$CFG["URL"]["ext"];?>" method="post" enctype="multipart/form-data">
+	<?if ( isset($object["id"]) ):?>
+		<input type="hidden" name="id" value="<?=$object["id"];?>">
+	<?endif;?>
+	
+	%%form_generate%%
+		
+	<div class="pull-right">
+		<input class="btn btn-success" type="submit" value="Сохранить">
+		<a class="btn btn-default" href="<?=$db_table;?><?=$CFG["URL"]["ext"];?>">Отменить</a>
+	</div>
+</form>

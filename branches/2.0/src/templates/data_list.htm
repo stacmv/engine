@@ -1,0 +1,86 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["base"],
+	$CFG["URL"]["ext"],
+	$CFG["GENERAL"]["app_name"],
+	$users,
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+
+?>
+<article class="app_content">
+	<div class="page-header">
+		<h1>Пользователи</h1>
+	</div>
+	
+	<div class="row">
+		<div class="form-actions">
+			<div class="pull-right">
+				<a href="form/add/user<?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> Добавить нового пользователя</a>
+			</div>
+		</div>
+	</div>
+	
+	<?if(empty($users)):?>
+		<div class="alert alert-warning">
+			В системе нет зарегистрированных пользователей! <em>Что странно, раз вы видите это.</em>
+		</div>
+	<?else:?>
+			
+		<div class="row">
+			<div class="span12">
+				<table class="table table-bordered table-striped">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Логин</th>
+							<th>Имя</th>
+							<th>Доступ</th>
+							<th>Операции</th></tr>
+					</thead>
+					<tbody>
+						<col style="width:10px">
+						<col style="width:150px">
+						<col style="width:200px">
+						<col style="width:150px">
+						<col style="width:150px">
+					<?foreach ($users as $user):?>
+						<?if ($user["isDeleted"]) continue;?>
+						<tr>
+							<td><?=$user["id"];?></td>
+							<td>
+								<code>login: <?=$user["login"];?></code>
+							</td>
+							<td><?=$user["name"];?></td>
+							<td>
+								<?if (userHasRight("manager",$user["login"])):?>
+									<span class="label label-info">Менеджер</span>
+								<?endif;?>
+								<?if (userHasRight("editor",$user["login"])):?>
+									<span class="label label-info">Редактор</span>
+								<?endif;?>
+								<?if(userHasRight("access", $user["login"])):?>
+									<span class="label label-success">Есть</span>
+								<?else:?>
+									<span class="label label-important">Нет</span>
+								<?endif;?>
+							</td>
+							<td>
+								<?if (userHasRight("manager")):?>
+									<a href="form/edit/user/<?=$user["id"].$CFG["URL"]["ext"];?>" class="btn btn-small"><i class="icon-edit"></i>Ред.</a>
+									<a href="form/delete/user/<?=$user["id"].$CFG["URL"]["ext"];?>" class="btn btn-small btn-danger">&times;</a>
+								<?else:?>
+									&nbsp;
+								<?endif;?>
+							</td>
+						</tr>
+					<?endforeach;?>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	<?endif;?>
+</article> <!-- /.app_content -->
+<?php
+	unset($_SESSION["msg"]);
+	unset($_SESSION["to"]);
+?>
