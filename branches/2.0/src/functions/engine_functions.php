@@ -6,27 +6,22 @@ define("SHOW_DATE_TIME_DIFF_ONLY", 4);
 define("SHOW_DATE_AGO", 8);
 
 
-function add_data($db_table, $data, $comment = null){
-    
-    if ( empty($data["form_name"]) ){
-        $data["form_name"] = "add_" . db_get_obj_name($db_table);
-    };
-    
+function add_data(FormData $data, $comment = null){
             
     // Validate
-    list($is_valid, $errors) = form_validate($db_table, $data);
+    list($is_valid, $errors) = validate_formdata($data);
     
     if ($is_valid){
         
+        $data = upload_files($data);
         
-        $added_id = db_add($db_table, $data["changes"], $comment);
+        
+        $added_id = db_add($data->db_table, $data->changes, $comment);
         if ( ! $added_id ){
                 dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Ошибка db_add().");
             };
     }else{
         dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Данные не валидны.");
-        dump($data,"data");
-        dump($errors,"errors");die(__FUNCTION__);
     }
    
     if ( $added_id ) return array(true, $added_id);
@@ -47,29 +42,27 @@ function dosyslog_data_changes($data_before){
     }
     
 };
-function edit_data($db_table, $data, $id="", $comment = null){
+function edit_data(FormData $data, $id="", $comment = null){
 	global $CFG;
     
-    if (! $id) $id = ! empty($data["id"]) ? $data["id"] : null;
-    if (! $data["form_name"]){
-        $form_name = "edit_" . db_get_obj_name($db_table);
-    };
-    
+    if ( ! $id) $id = ! empty($data->id) ? $data->id : null;
+        
     
     if (!$id){
         dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'id' is not set. Check pages XML and edit form template.");
         die("Code: ef-" . __LINE__);
     };
+
     
-    
-    // Validate
-    list($is_valid, $errors) = form_validate($db_table, $data, $id);
-    
-    if ($is_valid){
-        list($res, $reason) = db_edit($db_table, $id, $data["changes"], $comment);
+    if ( $data->is_valid ){
+        
+        // dump($data->changes,"changes");die(__FUNCTION__);
+        
+        list($res, $reason) = db_edit($data->db_table, $data->id, $data->changes, $comment);
     }else{
-        dump($changes,"changes");
-        dump($errors,"errors");die(__FUNCTION__);
+        dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Данные не валидны.");
+        $res = false;
+        $reason = "fail";
     }
    
     return array($res, $reason);
@@ -119,67 +112,7 @@ function month_name($month_num){
     
     return $month_name;    
 }
-function prepare_post_data($data){
 
-    // Обработка загружаемых файлов
-    $files = array();
-    if ( ! empty($_FILES["to"]["name"]) ){
-        foreach($_FILES["to"]["name"] as $file_param_name=>$file_name){
-            if ( $file_name ){
-                $data["to"][$file_param_name] = $file_name;
-                $files[] = $file_param_name."=".$file_name;
-            };
-        };
-    };
-    if ( $files ) dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".implode(", ",$files)."'.");
-
-    if ( ! empty($data["from"]) ){
-        $diff1 = array_diff(array_keys($data["to"]), array_keys($data["from"]));
-        if ( ! empty($diff1) ) dosyslog(__FUNCTION__.": ERROR: These fields of 'to' are absent in 'from' data:" . implode(", ",$diff1).".");
-        $diff2 = array_diff(array_keys($data["from"]), array_keys($data["to"]));
-        if ( ! empty($diff2) ){
-            foreach($diff2 as $v) unset($data["from"][$v]);
-            dosyslog(__FUNCTION__.": WARNING: These fields of 'from' are absent in 'to' data:" . implode(", ",$diff2).". Removed.");
-        };
-        
-        // Убрать поля, значения которых не будут меняться (одинаковые)
-        $deleted = array();
-        foreach($data["to"] as $k=>$v){
-            if ( ! isset($data["from"][$k])) continue;
-            
-            if ( $data["to"][$k] == $data["from"][$k] ){
-                unset($data["to"][$k], $data["from"][$k]);
-                $deleted[] =$k;
-            };
-        };
-        if ( $deleted ) dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Удалены поля '".implode(", ",$deleted)."'.");
-    };
-    
-    if (isset($data["from"]["created"])) unset($data["from"]["created"]);
-    if (isset($data["to"]["created"])) unset($data["to"]["created"]);
-    if (isset($data["from"]["modified"])) unset($data["from"]["modified"]);
-    if (isset($data["to"]["modified"])) unset($data["to"]["modified"]);
-    
-    dosyslog(__FUNCTION__.": DEBUG: ". get_callee().": Оставлены поля [to] '".implode(", ",array_keys($data["to"]))."'.");
-
-    // Трансляция данных в формат для записи в БД.
-    //   Для многострочных текстовых строк - заменить конец строки на \n;
-    $changes = array();
-    foreach($data["to"] as $what=>$v){
-        $changes[$what] = array(
-            "to" => ( $v && is_string($v) ) ? preg_replace('~\R~u', "\n", $v) : $v,
-        );
-        if ( isset($data["from"][$what]) ){
-            $changes[$what]["from"] = ( $data["from"][$what] && is_string($data["from"][$what]) ) ? preg_replace('~\R~u', "\n", $data["from"][$what]) : $data["from"][$what];
-        };
-    };
-    
-    $data["changes"] = $changes;
-    unset($data["to"]);
-    if (isset($data["from"])) unset($data["from"]);
-    
-    return $data;
-}
 function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     global $_RESPONSE;
     global $CFG;
@@ -316,4 +249,3 @@ function time_diff($from, $to){
     
     return $diff_msg;
 }
-

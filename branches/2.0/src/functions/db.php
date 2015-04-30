@@ -15,6 +15,10 @@ $_DB = array();
 /* *********************************************************** */
 function db_get_obj_name($db_table){
     // Works only when db_table has plural form - has "s" on end.
+    if ( ! is_string($db_table) ){
+        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Parameter 'db_table' should be of type 'string', '" . gettype($db_table). "' given.");
+        die("Code: db-".__LINE__);
+    };
     return str_replace(".", "__", substr($db_table, 0, -1));    
 };
 function db_get_db_table($obj_name){
@@ -53,7 +57,7 @@ function db_get_table($db_table){
 **  DATABASE FUNCTIONS
 **
 ** ******************************************************** */
-function db_add($db_table, array $data, $comment=""){
+function db_add($db_table, ChangesSet $data, $comment=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     global $_USER;
     
@@ -93,7 +97,7 @@ function db_add($db_table, array $data, $comment=""){
         return false;
     }    
 };
-function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $changes){
+function db_add_history($db_table, $objectId, $subjectId, $action, $comment, ChangesSet $changes){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $res = true;
@@ -128,7 +132,11 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, $ch
         };
         if ($v["from"] != $v["to"]){
             $changes_from[] = $k." = ".json_encode_array($v["from"]);
-            $changes_to[]   = $k." = ".json_encode_array($v["to"]);
+            if ( db_get_field_type($db_table, $k) == "password" ){
+                $changes_to[]   = $k." = ".json_encode_array(db_prepare_value($v["to"]));
+            }else{
+                $changes_to[]   = $k." = ".json_encode_array($v["to"]);
+            };
         };
     };
     $record["changes_from"] = array("to" => implode("\n",$changes_from) );
@@ -377,7 +385,7 @@ function db_delete($db_table, $id, $comment=""){
         
     };
 }
-function db_edit($db_table, $id, array $changes, $comment=""){
+function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
     
     global $_USER;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -393,16 +401,18 @@ function db_edit($db_table, $id, array $changes, $comment=""){
         dosyslog(__FUNCTION__.": Attempt to edit object which is absent in DB '".$db_table."'. ID='".$id."'.");
         return array(false, "wrong_id");
     };
+    
   
     // Check that the changes are really change something.
-    foreach ($changes as $what=>$v){
-        if ($changes[$what]["from"] === $changes[$what]["to"]){
-            unset($changes[$what]);
+    foreach ($changes["to"] as $key=>$value){
+        if (isset($changes["from"][$key]) && ($changes["from"][$key] === $changes["to"][$key]) ){
+            unset($changes["to"][$key]);
+            unset($changes["from"][$key]);
         };
     };
-    unset($what, $v);
+    unset($key, $value);
     
-    if (empty($changes)){
+    if (empty($changes["to"])){
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " No changes.");
         return array(true, "no_changes");
     };
@@ -410,26 +420,26 @@ function db_edit($db_table, $id, array $changes, $comment=""){
     // Check if object is in state it supposed to be in.
     $conflicted = array(); // список полей, у которых состояние from не совпадает с текущим состоянием в БД.
     $not_existed = array(); // поля, которые отсутствуют у объекта, взятого из БД.
-    foreach ($changes as $what=>$v){
-        if ( ! array_key_exists($what, $object) ){
-            $not_existed[] = $what;
+    foreach ($changes["to"] as $key=>$value){
+        if ( ! array_key_exists($key, $object) ){
+            $not_existed[] = $key;
             continue;
         };
         
-        if ( (db_get_field_type($db_table, $what) == "password") && ($changes[$what]["from"] == FORM_PASS_SUBSTITUTION) ) { // при смене пароля оригинальный пароль (или хэш) на сервер от клиента не приходит, только новый.
+        if ( (db_get_field_type($db_table, $key) == "password") ) { // при смене пароля оригинальный пароль (или хэш) на сервер от клиента не приходит, только новый.
             continue;
         }
         
-        if ($changes[$what]["from"] != $object[$what]){ 
+        if ($changes["from"][$key] != $object[$key]){ 
             // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
-            if (preg_replace('~\R~u', "\n", $changes[$what]["from"]) == preg_replace('~\R~u', "\n", $object[$what])){
+            if (preg_replace('~\R~u', "\n", $changes["from"][$key]) == preg_replace('~\R~u', "\n", $object[$key])){
                 // Это не конфликт.
             }else{
-                $conflicted[] = $what . "(from: '".$changes[$what]["from"]."', in db: '".$object[$what]."')";
+                $conflicted[] = $key . "(passed 'from': '".$changes["from"][$key]."', in db: '".$object[$key]."')";
             };
         };
     };
-    unset($what, $v);
+    unset($key, $value);
    
     if ( ! empty($not_existed) ){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Theese fields are not exist in [".$db_table."]: ". implode(", ", $not_existed).".");
@@ -441,16 +451,11 @@ function db_edit($db_table, $id, array $changes, $comment=""){
     
     
        
-    $update_data = array();
-    foreach($changes as $what=>$values){
-        $update_data[$what] = $values["to"];
-    };
-    
-    $update_data = db_prepare_record($db_table, $update_data);
-    $query = db_create_update_query($db_table, array_keys($update_data), $id);
+    $query = db_create_update_query($db_table, array_keys($changes["to"]) );
+    $update_data = db_prepare_record($db_table, array_values($changes["to"]));
     $update_data[] = $id;
        
-    // dump($update_data, "update_data");die(__FUNCTION__);
+    
     
     $statement = db_prepare_query($db_table, $query);
     if ($statement) {
@@ -708,6 +713,11 @@ function db_get_field_type($db_table, $field_name){
     
     foreach($schema as $field){
         if ($field["name"] == $field_name){
+            
+            if ( in_array($field["type"], array("password"))) {
+                dosyslog(__FUNCTION__.get_callee().": DEBUG: Field '".$field_name."' has type '".$field["type"]."'.");
+            };
+            
             return $field["type"];
         };
     };
@@ -751,7 +761,7 @@ function db_get_list($db_table, array $fields = array("id"), $limit=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $result;
 }
-function db_insert($db_table, array $data){
+function db_insert($db_table, ChangesSet $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = false;
     
@@ -1300,30 +1310,4 @@ function db_prepare_value($value, $field_type){
     
     
     return $res;
-}
-// DEPRECATED since 2.0.0 
-function db_translate_changes($changes, $mode = DB_TRANSLATE_POST_2_DB ){
-
-    // переводит массив элементов формата $changes[$what] = array("from"=>.., "to"=>..)
-    //  в массив элементов формата $changes =array("from" => array($what=>...), "to"=> array($what=>...) ) [mode=1] и наоборот [mode=0]
-    
-    
-    if ($mode == 1){
-        $res = array();
-        foreach($changes["to"] as $what=>$v){
-            $res[$what] = array(
-                "from" => $changes["from"][$what],
-                "to"   => $changes["to"][$what]
-            );
-        };
-    }else{
-        $res = array("from"=>array(), "to"=>array());
-        foreach($changes as $what => $v){
-            $res["from"][$what] = $v["from"];
-            $res["to"][$what] = $v["to"];
-        };
-    }
-   
-    return $res;
-
 }

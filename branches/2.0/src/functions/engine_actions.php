@@ -20,7 +20,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     //
     
     
-    list($res, $added_id) = add_data($db_table, prepare_post_data($_PARAMS, "add"));
+    list($res, $added_id) = add_data( new FormData($db_table, $_PARAMS) );
     if ( (int) $added_id ){
         $reason = "success";
     }else{
@@ -251,7 +251,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     };
   
     
-    list($res, $reason) = edit_data($db_table, prepare_post_data($_PARAMS), $id);
+    list($res, $reason) = edit_data( new FormData($db_table, $_PARAMS), $id);
     set_session_msg($db_table."_edit_".$reason);
     
     if (! $res){
@@ -406,18 +406,19 @@ function import_first_user_action(){
     $res = db_select("users", "SELECT * FROM users LIMIT 1");
     
     if (empty($res)){
-        if (db_add("users", array("login"=>$login,"pass"=>$pass, "acl"=>$rights), "Импортирован первый пользователь с логином '".$login."' и правами '".$rights."'.") ){
-            $_DATA["html"] = "<h1>Пользователь импортирован</h1><p>Добавлен пользователь:</p><ul><li><b>login:</b> ".htmlspecialchars($login)."</li><li><b>Пароль:</b> ".htmlspecialchars($pass)."</li><li><b>Права: </b> ".htmlspecialchars($rights)."</li></ul>";
+        if (db_add("users", new ChangesSet(array("to" => array("login"=>$login,"pass"=>$pass, "acl"=>$rights))), "Импортирован первый пользователь с логином '".$login."' и правами '".$rights."'.") ){
+            echo "<h1>Пользователь импортирован</h1><p>Добавлен пользователь:</p><ul><li><b>login:</b> ".htmlspecialchars($login)."</li><li><b>Пароль:</b> ".htmlspecialchars($pass)."</li><li><b>Права: </b> ".htmlspecialchars($rights)."</li></ul>";
             dosyslog(__FUNCTION__.": WARNING: First user imported into db: user '".htmlspecialchars($login)."' with rights '".htmlspecialchars($rights)."' to db. IP:".$_SERVER["REMOTE_ADDR"]);
         }else{
-            $_DATA["html"] = "<h1>Ошибка импорта пользователя</h1>";
+            echo "<h1>Ошибка импорта пользователя</h1>";
             dosyslog(__FUNCTION__.": ERROR: Can not add user '".htmlspecialchars($login)."' with rights '".htmlspecialchars($rights)."' to db. IP:".@$_SERVER["REMOTE_ADDR"]);
         };
     }else{
-        $_DATA["html"] = "<h1>Операция не доступна</h1>";
+        echo "<h1>Операция не доступна</h1>";
         dosyslog(__FUNCTION__.": ERROR: Attempt to import user '".htmlspecialchars($login)."' and rights '".htmlspecialchars($rights)."' to db. IP:".@$_SERVER["REMOTE_ADDR"]);
     };
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    die(__FUNCTION__);
 };
 function login_action(){
     global $CFG;

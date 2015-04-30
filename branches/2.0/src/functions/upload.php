@@ -86,3 +86,37 @@ function upload_file($param_name, $storage_name, $isUrl = false){
         };
     };
 };
+function upload_files(FormData $data, $storage=""){
+    
+    if ( ! $storage ) $storage = $data->db_table;
+       
+    if ( ! $data->form_name ){
+        dosyslog(__FUNCTION__.get_callee() . ": FATAL ERROR: Mandatory paramerter data[form_name] is not set.");
+        die("Code: upl-".__LINE__);
+    };
+    
+    
+    
+    $fields = form_get_fields($data->db_table, $data->form_name);
+    
+    $file_fields = array_filter($fields, function($field){
+        return $field["type"] == "file";
+    });
+    
+    $files_uploaded = array();
+    
+    if ( ! empty($file_fields) ){
+        foreach($file_fields as $field){
+            list($res, $dest_file) = upload_file($field["name"], $storage);
+            dosyslog(__FUNCTION__.get_callee().": DEBUG: Пытались загрузить файл для поля '".$field["name"]."' формы '".$data->form_name."'. ..." . ($res ? "успешно" : "безуспешно") . ".");
+            if ( $res ){
+                $files_uploaded[ $field["name"] ] = $dest_file;
+            };
+        }
+    }else{
+        dosyslog(__FUNCTION__.get_callee().": DEBUG: Форма '".$data->form_name."' не имеет поле типа 'file'.");
+    };
+    
+    return $files_uploaded;
+    
+}
