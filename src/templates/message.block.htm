@@ -1,0 +1,13 @@
+<?if(!empty($_SESSION["msg"])):?>
+	<article class="app_content session_msg">
+		<div class="row">
+			<div class="span12">
+				<?foreach ($_SESSION["msg"] as $msg):?>
+				<div class="alert <?=$msg["class"];?>">
+					<p><?=$msg["text"];?></p>
+				</div>
+				<?endforeach;?>
+			</div> 
+		</div> <!-- /.row -->
+	</article> <!-- /.app_content -->
+<?endif;?>

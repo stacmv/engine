@@ -1,0 +1,33 @@
+<?php
+	if ( ! isset(
+		$fields_form
+	) ){
+		die("Code: ".basename(__FILE__)."-init");
+	}
+?>
+<?foreach($fields_form as $field):?>
+	<?if ( $field["type"] == "list"):?>
+		<?foreach((array)$field["value_from"] as $value):?>
+			<input type="hidden" name="<?=$field["name_from"];?>" value='<?=$value;?>'>
+		<?endforeach;?>
+	<?else:?>
+		<input type="hidden" name="<?=$field["name_from"];?>" value='<?=$field["value_from"];?>'>
+	<?endif;?>
+	
+	<?if ($field["template"] != "hidden"):?>
+		<div class="control-group">
+			<label class="control-label" <?if (!empty($field["id"])):?>for="<?=$field["id"];?>"<?endif;?>>
+					<?=$field["label"];?>
+					<?if ($field["required"]):?> <span class="text-error" style="color:red"><b>*</b></span><?endif;?>
+			</label>
+			<div class="controls">
+
+				<?include $field["template_file"];?>
+
+			</div>
+		</div>
+	<?else:?>
+		<?include $field["template_file"];?>
+	<?endif;?>
+	
+<?endforeach;?>
