@@ -349,10 +349,12 @@ function form_action(){
     
     $action = $_PARAMS["action"];
     $object = $_PARAMS["object"];
+    $id     = !empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
+    
     $form_name = str_replace(".", "__", $action."_".$object); // object может содержать "." - разделитель имени БД и таблицы.
     $db_table = db_get_db_table($_PARAMS["object"]);
     
-    set_objects_action($form_name);
+    if (function_exists("set_objects_action")) set_objects_action($form_name);
             
     if ( $action == "add" ){
         if ( ! isset($_DATA[$object]) ){
@@ -362,8 +364,10 @@ function form_action(){
         }
     }else{
         if ( ! isset($_DATA[$object]) ){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
-            die("Code: ea-".__LINE__."-set_objects");
+            if ( ! $id || ! ($_DATA[$object] = db_get($db_table, $id)) ) {
+                dosyslog(__FUNCTION__.": FATAL ERROR: Object '".$object."' is not set for form '".$form_name."'. Check set_objects_action()");
+                die("Code: ea-".__LINE__."-set_objects");
+            };
         };
         $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA[$object]);
     };
@@ -378,7 +382,9 @@ function form_action(){
     $_PAGE["header"] = $_PAGE["title"] = _(ucfirst($action) . " " . $object);
     
     $_DATA["action"] = $action;
-    $_DATA["object"] = $object;
+    $_DATA["db_table"] = $db_table;
+    if(isset($_DATA[$object])) $_DATA["object"] = $_DATA[$object];
+    $_DATA["object_name"] = $object;
 
     set_template_file("content", $form_template);
 }
@@ -664,4 +670,3 @@ function set_topmenu_action(){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };    
-

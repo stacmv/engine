@@ -1,0 +1,30 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["base"],
+	$CFG["URL"]["ext"],
+	$CFG["GENERAL"]["app_name"],
+	$action,
+	$object_name,
+	$_PAGE["header"],
+
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+?>
+<article class="app_content">
+	<div class="row">
+		<div class="span12">
+			<h1><?=unescape_template_data($_PAGE["header"]);?></h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="span6 offset3">
+			%%form%%
+		</div>
+	</div> <!-- /.row -->
+</article>
+
+<?if(file_exists("assets/app/".$action."_".$object_name.".js")):?>
+	<script src="assets/app/<?=$action;?>_<?=$object_name;?>.js"></script>
+<?endif;?>
+<?php
+	unset($_SESSION["msg"]);
+?>

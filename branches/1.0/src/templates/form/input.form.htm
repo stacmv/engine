@@ -1,0 +1,17 @@
+<input
+	<?if (isset($field["name"]) && ($field["name"] == "email") ):?>
+		type="email"
+	<?else:?>
+		type="text"
+	<?endif;?>
+	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
+	<?if (isset($field["id"])):?>id="<?=$field["id"];?>"<?endif;?> 
+	<?if (isset($field["class"])):?>class="<?=$field["class"];?>"<?endif;?> 
+	<?if (isset($field["value"])):?>value="<?=$field["value"];?>"<?endif;?> 
+	<?if (isset($field["placeholder"])):?>placeholder="<?=$field["placeholder"];?>"<?endif;?> 
+	<?if ($field["required"]):?>required<?endif;?>
+	<?if (!empty($field["readonly"])):?>readonly<?endif;?>
+><?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
+<?if(!empty($field["hint"])):?>
+	<span class="help-block"><?=$field["hint"];?></span>
+<?endif;?>

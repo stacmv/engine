@@ -54,7 +54,7 @@ function form_prepare($db_table, $form_name, $object=""){
             
             $field["values"] = array();
             if (empty($v["form_values"])){
-                dosyslog(__FUNCTION__.": FATAL ERROR: Values for ".$template." field '" . $v["name"] . "' is not set table ' " . $db_table . "' config.");
+                dosyslog(__FUNCTION__.": FATAL ERROR: Values for ".$template." field '" . $v["name"] . "' is not set in table '" . $db_table . "' config.");
                 die("Code: efrm-".__LINE__."-".$field["name"]."-form_values");
             };
             $field["values"] = form_get_field_values($v);
