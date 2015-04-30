@@ -1,0 +1,111 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["base"],
+	$CFG["GENERAL"]["app_name"],
+	$CFG["GENERAL"]["app_version"],
+	$_PAGE["title"],
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <title><?=$_PAGE["title"];?></title>
+	<base href="<?=$CFG["URL"]["base"];?>">
+	
+	<style>
+		.app_content {margin-top: 70px;}
+	</style>
+
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css">
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css">
+	<link rel="stylesheet" href="assets/jquery-ui/jquery-ui.min.css" type="text/css" />
+	<link rel="stylesheet" href="assets/css/chosen.css" type="text/css" />
+	<link rel="stylesheet" href="assets/css/multiple-select.css" type="text/css" />
+	<link rel="stylesheet" href="assets/css/custom.css">
+
+	<script src="assets/js/jquery.js"></script>
+	<script src="assets/jquery-ui/jquery-ui.js"></script>
+	<script src="assets/js/chosen.jquery.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+	<script src="assets/js/jquery.maskedinput.js"></script>
+	<script src="assets/js/jquery.hotkeys.js"></script>
+	<script src="assets/js/whizzywig2011.js"></script>
+
+</head>
+<body>
+<div class="navbar navbar-fixed-top">
+	<div class="navbar-inner">
+		<div class="container">
+			<a href="index.html" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
+			
+			<?if ( ! empty($topmenu) ) :?>
+				<ul class="nav">
+					<?foreach ($topmenu as $menuItem) :?>
+						<li <?if ($_PAGE["uri"] == $menuItem["href"]) :?>class="active"<?endif;?>>
+							<a href="<?=$menuItem["href"].$CFG["URL"]["ext"];?>">
+								<?=$menuItem["caption"];?>
+								<?if (!empty($menuItem["badge"])):?>
+									<span class="badge badge-<?=$menuItem["badge"]["class"];?>" title="<?=$menuItem["badge"]["title"];?>"><?=$menuItem["badge"]["value"];?></span>
+								<?endif;?>
+							</a>
+						</li>
+					<?endforeach;?>
+				</ul>
+			<?endif;?>
+			
+			%%login_logout_link%%
+			
+		</div>
+		<div class="navbar-overlay"></div>
+	</div>
+</div>
+
+
+	<div class="container">
+    
+	<?if (!empty($_SESSION["msg"])):?>
+        <?=get_content("msg");?>
+	<?endif;?>
+	
+	<?=get_content("content");?>
+	   
+	</div>
+
+
+<div class="navbar navbar-fixed-bottom">
+	<div class="navbar-inner">
+		<div class="container footer-margin-top">
+			
+			<div class="muted text-muted">&copy; 2015<?if(date("Y")>2015):?>&ndash;<?=date("Y");?><?endif;?> &laquo;<a href="<?=$CFG["URL"]["base"];?>"><?=$CFG["GENERAL"]["app_name"];?></a>&raquo; &nbsp;&nbsp;&nbsp; <small class="muted">Версия: <?=$CFG["GENERAL"]["app_version"];?></small>
+				
+				<div class="pull-right optimit"><small>Поддержка &laquo;ОптимИТ&raquo;</small></div>
+			</div>
+			
+		</div>
+	</div>
+</div> 
+
+<script type="text/javascript" src="assets/js/jquery.multiple.select.js"></script>
+
+<script>
+	$(function(){
+		$(".loader").	hide();
+		$(".displayOnload").removeClass("displayOnload");
+		
+		$(".date").mask("99.99.9999");
+		$("#date").datepicker({
+			dateFormat: "yy-mm-dd"
+		})
+
+	});
+</script>
+
+<?if ( ! DEV_MODE ) :?>
+	<!-- Yandex.Metrika counter -->
+	
+	<!-- /Yandex.Metrika counter -->
+<?endif;?>
+</body>
+</html>

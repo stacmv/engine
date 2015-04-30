@@ -1,0 +1,17 @@
+<article class="app_content">
+	<div class="row">
+		<div class="span12">
+			<div class="alert alert-info alert-block">
+				<p>Вы вышли из системы.</p>
+				<div class="alert-actions">
+					<a href="login<?=$CFG["URL"]["ext"];?>" class="btn btn-small">Войти снова</a>
+				</div>
+			</div>
+		</div> 
+	</div> <!-- /.row -->
+</article> <!-- /.app_content -->
+
+<?php
+	unset($_SESSION["msg"]);
+	unset($_SESSION["to"]);
+?>

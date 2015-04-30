@@ -4,27 +4,39 @@
 **
 ** ******************************************************** */
 if (!function_exists("cfg_get_filename")){
-    function cfg_get_filename($type, $filename, $engine=false){
+    function cfg_get_filename($type, $filename, $engine=null){
+        // engine == true - get file from engine
+        // engine == false - get file from app
+        // engine == null - get file from app then if not found get it from engine
         
-        switch($type){
-        case "templates/form":
-            $filename = TEMPLATES_DIR . "/form/" . $filename;
-            break;
-        case "settings": // no break;
-        case "templates": // no break;
-        case "email_templates": 
-            if ($engine){
-                $filename = ENGINE_DIR . $type . "/" . $filename;
-            }else{
-                $filename = APP_DIR . $type . "/" . $filename;
-            };
-            break;
-        default:
+        // Type whitelist
+        $types = array("templates/form", "templates", "settings", "email_templates" );
+        if ( ! in_array($type, $types) ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Unknown type '".$type."' for file '".$filename."'.");
             die("Code: df-".__LINE__);
         };
         
-        return $filename;
+        
+        
+        $path = array();
+        if ($engine){
+            $path[] = ENGINE_DIR;
+        }elseif( is_null($engine) ){
+            $path[] = APP_DIR;
+            $path[] = ENGINE_DIR;
+        }else{
+            $pah[] = APP_DIR;
+        };
+        
+        if (count($path) == 1){
+            return $path[0] . $type . "/" . $filename;
+        }else{
+            do {
+                $test_filename = array_shift($path) . $type . "/" . $filename;
+            } while ( ! file_exists($test_filename) && ( count($path) > 0) );
+                        
+            return $test_filename;
+        }
     }
 }
 if (!function_exists("check_application_already_in_db")){
