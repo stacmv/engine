@@ -406,7 +406,7 @@ function import_first_user_action(){
     $res = db_select("users", "SELECT * FROM users LIMIT 1");
     
     if (empty($res)){
-        if (db_add("users", new ChangesSet(array("to" => array("login"=>$login,"pass"=>$pass, "acl"=>$rights))), "Импортирован первый пользователь с логином '".$login."' и правами '".$rights."'.") ){
+        if (db_add("users", new ChangesSet(array("login"=>$login,"pass"=>$pass, "acl"=>$rights)), "Импортирован первый пользователь с логином '".$login."' и правами '".$rights."'.") ){
             echo "<h1>Пользователь импортирован</h1><p>Добавлен пользователь:</p><ul><li><b>login:</b> ".htmlspecialchars($login)."</li><li><b>Пароль:</b> ".htmlspecialchars($pass)."</li><li><b>Права: </b> ".htmlspecialchars($rights)."</li></ul>";
             dosyslog(__FUNCTION__.": WARNING: First user imported into db: user '".htmlspecialchars($login)."' with rights '".htmlspecialchars($rights)."' to db. IP:".$_SERVER["REMOTE_ADDR"]);
         }else{

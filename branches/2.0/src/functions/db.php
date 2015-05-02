@@ -63,32 +63,22 @@ function db_add($db_table, ChangesSet $data, $comment=""){
     
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
     
-    $added_id = db_insert($db_table, array($data));
+    $added_id = db_insert($db_table, $data);
        
     if ( $added_id ){
        
         if (db_get_table($db_table) !== "history") {
-            
-            if ( isset($data[0]) && is_array($data[0]) ){  // добавлены несколько записей
-                if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, array())){
-                    
-                    dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
-                    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-                    return false;
-                };
-                
-            }else{   // добавлена 1 запись
-                $changes = $data;
 
-                if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, $changes)){
-                    // ДОРАБОТАТЬ: реализовать откат операции INSERT
-                    
-                    dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
-                    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-                    return false;
-                };
+            $changes = $data;
+
+            if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, $changes)){
+                // ДОРАБОТАТЬ: реализовать откат операции INSERT
+                
+                dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
+                if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+                return false;
             };
-            
+
         };
             
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -114,36 +104,38 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, Cha
         $db = $db_table;
     };
     
-    $record = array(
-        "db"        => array("to" => $db),
-        "action"    => array("to" => $action),
-        "objectId"  => array("to" => (int) $objectId),
-        "subjectId" => array("to" => (int) $subjectId),
-        "subjectIP" => array("to" => @$_SERVER["REMOTE_ADDR"]),
-        "timestamp" => array("to" => time()),
+    $history_record = array(
+        "db"        => $db,
+        "action"    => $action,
+        "objectId"  => (int) $objectId,
+        "subjectId" => (int) $subjectId,
+        "subjectIP" => @$_SERVER["REMOTE_ADDR"],
+        "timestamp" => time(),
     );
     
-    if ($comment) $record["comment"] = array("to" => $comment);
+    if ($comment) $history_record["comment"] = $comment;
     
     $changes_from = $changes_to = array();
-    foreach($changes as $k=>$v){
-        if ( ! isset($v["from"]) ){ // action == add
-            $v["from"] = null;
+    foreach($changes->to as $key=>$v_to){
+        if ( empty($changes->from[$key]) ){ // action == add
+            $v_from = null;
+        }else{
+            $v_from = $changes->from["key"];
         };
-        if ($v["from"] != $v["to"]){
-            $changes_from[] = $k." = ".json_encode_array($v["from"]);
-            if ( db_get_field_type($db_table, $k) == "password" ){
-                $changes_to[]   = $k." = ".json_encode_array(db_prepare_value($v["to"]));
+        if ($v_from != $v_to){
+            $changes_from[] = $key." = ".json_encode_array($v_from);
+            if ( db_get_field_type($db_table, $key) == "password" ){
+                $changes_to[]   = $key." = ".json_encode_array(db_prepare_value($v_to));
             }else{
-                $changes_to[]   = $k." = ".json_encode_array($v["to"]);
+                $changes_to[]   = $key." = ".json_encode_array($v_to);
             };
         };
     };
-    $record["changes_from"] = array("to" => implode("\n",$changes_from) );
-    $record["changes_to"]   = array("to" => implode("\n",$changes_to) );
+    $history_record["changes_from"] = implode("\n",$changes_from);
+    $history_record["changes_to"]   = implode("\n",$changes_to);
         
         
-    if (!db_add($db_name . ".history", $record)){
+    if (!db_add($db_name . ".history", new ChangesSet($history_record))){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add history record into '".$db_name."' db.");
         $res = false;
     };
@@ -309,6 +301,64 @@ function db_check_schema($db_table){ // проверяет схему табли
 	
 	
 };
+function db_create_insert_query($db_table, array $keys){
+	
+    $table_name = db_get_table($db_table);
+    
+    $query_base = "INSERT INTO ".$table_name." (" . implode(", ", $keys) . ") VALUES ";
+    $query = "";
+            
+    $timestamp = time();
+        
+    $placeholders = array_fill(0, count($keys), "?");
+    $query .= $query_base . " (" . implode(", ", $placeholders) . ");\n";
+        
+    return $query;
+
+}
+function db_create_table_query($db_table){
+    
+    global $CFG;
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");   
+
+    $dbh = new PDO("sqlite::memory:");
+    
+    $table = db_get_table_schema($db_table);
+    
+    if (empty($table)){
+        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not get table '".$db_table."' from XML.");
+        die("platform_db:create-table-1");
+    };
+    
+    $table_name = db_get_table($db_table);
+    
+    $query = "CREATE TABLE ".$dbh->quote($table_name);
+    
+    $aTmp = array();
+    foreach($table as $field){
+        $tmp = (string) $field["name"];
+        $type = ! empty($field["type"]) ? (string) $field["type"] : "string";
+        $unique = ! empty($field["unique"]);
+        switch ($type){
+            case "autoincrement": $tmp .= " INTEGER PRIMARY KEY"; break;
+            case "number":        $tmp .= " NUMERIC"; break;
+            case "timestamp":     $tmp .= " NUMERIC"; break;
+            case "string":        $tmp .= " TEXT"; break;
+            case "json": $tmp .=" TEXT"; break;
+        };
+        
+        if ($unique) $tmp .= " UNIQUE";
+        
+        
+        $aTmp[] = $tmp;
+    };
+    $query .= " (" . implode(", ",$aTmp).")";
+    
+    $dbh = null;
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    return $query;
+}; 
 function db_create_update_query($db_table, $keys){
     
     $table_name = db_get_table($db_table);
@@ -402,25 +452,30 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
         return array(false, "wrong_id");
     };
     
+    // dump($changes,"changes_1");
   
     // Check that the changes are really change something.
-    foreach ($changes["to"] as $key=>$value){
-        if (isset($changes["from"][$key]) && ($changes["from"][$key] === $changes["to"][$key]) ){
-            unset($changes["to"][$key]);
-            unset($changes["from"][$key]);
+    foreach ($changes->to as $key=>$value){
+        if (isset($changes->from[$key]) && ($changes->from[$key] === $changes->to[$key]) ){
+            unset($changes->to[$key]);
+            unset($changes->from[$key]);
         };
     };
     unset($key, $value);
     
-    if (empty($changes["to"])){
+    
+    $changes_arr = (array) $changes->to;
+    if (empty($changes_arr)){
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " No changes.");
         return array(true, "no_changes");
     };
     
+  
+    
     // Check if object is in state it supposed to be in.
     $conflicted = array(); // список полей, у которых состояние from не совпадает с текущим состоянием в БД.
     $not_existed = array(); // поля, которые отсутствуют у объекта, взятого из БД.
-    foreach ($changes["to"] as $key=>$value){
+    foreach ($changes->to as $key=>$value){
         if ( ! array_key_exists($key, $object) ){
             $not_existed[] = $key;
             continue;
@@ -430,7 +485,7 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
             continue;
         }
         
-        if ($changes["from"][$key] != $object[$key]){ 
+        if ($changes->from[$key] != $object[$key]){ 
             // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
             if (preg_replace('~\R~u', "\n", $changes["from"][$key]) == preg_replace('~\R~u', "\n", $object[$key])){
                 // Это не конфликт.
@@ -451,10 +506,11 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
     
     
        
-    $query = db_create_update_query($db_table, array_keys($changes["to"]) );
-    $update_data = db_prepare_record($db_table, array_values($changes["to"]));
+    $query = db_create_update_query($db_table, array_keys($changes->to) );
+    $update_data = array_values(db_prepare_record($db_table, $changes->to));
     $update_data[] = $id;
-       
+    
+// dump($update_data,"update_data");die(__FUNCTION__);    
     
     
     $statement = db_prepare_query($db_table, $query);
@@ -465,6 +521,8 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
         $res = false;
     };
     $update_data = db_prepare_record($db_table, $update_data);
+    
+    // dump($update_data,"update_data");die(__FUNCTION__);
        
     if (!$res){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'.");
@@ -765,38 +823,11 @@ function db_insert($db_table, ChangesSet $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = false;
     
-    if (empty($data[0])){
-        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: data should be array of records. data[0] is empty.");
-        die("Code: db-".__LINE__);
-    };
-    
     $dbh = db_set($db_table);
 
-    
-    
-    // Преобразование $data от формата
-    //   [$field=>["to"=>$value]]
-    // к формату
-    //   [$field=>$value]
-    
     $timestamp = time();
    
-    $data = array_map(
-        function($record) use ($timestamp) {
-            dump($record,"record");
-            $res = array();
-            foreach($record as $k=>$v){
-                $res[$k] = $v["to"];
-            };
-            $res["created"] = $timestamp;
-            $res = array_filter($res); // get rid of empty fields
-            return $res;
-        },
-        $data
-    );
-    
-    
-    
+       
     $schema = db_get_table_schema($db_table);
     $fields = array();
     foreach($schema as $f){
@@ -804,7 +835,7 @@ function db_insert($db_table, ChangesSet $data){
     };
     unset($schema, $f);
         
-    $keys = array_keys($data[0]);
+    $keys = array_keys($data->to);
     $keys = array_filter($keys, function($k) use ($fields, $db_table){
         if ( ! isset($fields[$k]) ){
             dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Field '".$k."' does not exist in table '".$db_table."'.");
@@ -813,24 +844,18 @@ function db_insert($db_table, ChangesSet $data){
         return ( isset($fields[$k]) && ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
     });
     
-    $query = db_create_insert_query($db_table, $keys, count($data));
-    
-    
-    
+    $query = db_create_insert_query($db_table, $keys);
+        
     $statement = db_prepare_query($db_table, $query);
     
     
     $insert_data = array();
-    foreach($data as $record){
-        $record = db_prepare_record($db_table, $record);
-        foreach($keys as $k){
-            $insert_data[] = $record[$k];
-        };
+    $record = db_prepare_record($db_table, $data->to);
+    foreach($keys as $k){
+        $insert_data[] = $record[$k];
     };
         
-        // dump($query,"query");
-        // dump(implode(", ",$insert_data), "data");
-        // die();
+
     if ( $statement ){    
         $res = $statement->execute($insert_data);
     }else{
@@ -982,66 +1007,6 @@ function db_select($db_table, $select_query, $flags=0){
     
     return $result;
 };
-function db_create_insert_query($db_table, array $keys, $nRecords){
-	
-    $table_name = db_get_table($db_table);
-    
-    $query_base = "INSERT INTO ".$table_name." (" . implode(", ", $keys) . ") VALUES ";
-    $query = "";
-            
-    $timestamp = time();
-        
-    for($i=0; $i<$nRecords; $i++){
-        $placeholders = array_fill(0, count($keys), "?");
-        $query .= $query_base . " (" . implode(", ", $placeholders) . ");\n";
-    };
-        
-    return $query;
-
-}
-function db_create_table_query($db_table){
-    
-    global $CFG;
-    
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");   
-
-    $dbh = new PDO("sqlite::memory:");
-    
-    $table = db_get_table_schema($db_table);
-    
-    if (empty($table)){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not get table '".$db_table."' from XML.");
-        die("platform_db:create-table-1");
-    };
-    
-    $table_name = db_get_table($db_table);
-    
-    $query = "CREATE TABLE ".$dbh->quote($table_name);
-    
-    $aTmp = array();
-    foreach($table as $field){
-        $tmp = (string) $field["name"];
-        $type = ! empty($field["type"]) ? (string) $field["type"] : "string";
-        $unique = ! empty($field["unique"]);
-        switch ($type){
-            case "autoincrement": $tmp .= " INTEGER PRIMARY KEY"; break;
-            case "number":        $tmp .= " NUMERIC"; break;
-            case "timestamp":     $tmp .= " NUMERIC"; break;
-            case "string":        $tmp .= " TEXT"; break;
-            case "json": $tmp .=" TEXT"; break;
-        };
-        
-        if ($unique) $tmp .= " UNIQUE";
-        
-        
-        $aTmp[] = $tmp;
-    };
-    $query .= " (" . implode(", ",$aTmp).")";
-    
-    $dbh = null;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    return $query;
-}; 
 function db_get_table_schema($db_table){
     
     global $CFG;

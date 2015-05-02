@@ -98,15 +98,15 @@ class FormData{
         $this->errors = array();
         
         $fields_form = form_prepare($this->db_table, $this->form_name,$this->id);
-        $changes = $this->changes;
+        $changes_to = $this->changes->to;
                 
         foreach($fields_form as $field){
             $name = $field["name"];
             
-            if ( ! isset($changes[$name]) ) continue;
+            if ( ! isset($changes_to[$name]) ) continue;
             
             // required
-            if ( $field["required"] && empty($changes[$name]["to"]) ){
+            if ( $field["required"] && empty($changes_to[$name]) ){
                 $this->is_valid = false;
                 $this->errors[] = array($name => array("rule" => "required", "msg" => "Поле '" . ($field["label"] ? $field["label"] : $field["name"]) . "' обязательно для заполнения."));
             };
@@ -123,7 +123,7 @@ class FormData{
                     };
                     
                     if (function_exists("validate_".$rule)){
-                        list($$this->is_valid, $rule_errors) = call_user_func_array("validate_".$rule, $name, $changes[$name], $params);
+                        list($$this->is_valid, $rule_errors) = call_user_func_array("validate_".$rule, $name, $changes_to[$name], $params);
                     }else{
                         dosyslog(__METHOD__.get_callee().": ERROR: Validate function for rule '".$rule."' on field '".$name."' on form '".$this->form_name."' is not defined.");
                         $this->is_valid = false;
