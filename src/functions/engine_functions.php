@@ -9,12 +9,9 @@ define("SHOW_DATE_AGO", 8);
 function add_data(FormData $data, $comment = null){
             
     // Validate
-    list($is_valid, $errors) = validate_formdata($data);
     
-    if ($is_valid){
-        
-        $data = upload_files($data);
-        
+    
+    if ($data->is_valid){
         
         $added_id = db_add($data->db_table, $data->changes, $comment);
         if ( ! $added_id ){
