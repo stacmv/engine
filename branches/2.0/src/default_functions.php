@@ -788,6 +788,19 @@ if (!function_exists("userHasRight")){
         $user = array();
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
+        // проверка комбинации прав
+          // ИЛИ - |
+        if (strpos($right,"|") > 0){
+            $OR_rights = explode("|", $right, 2);
+            return userHasRight($OR_rights[0], $login) || userHasRight($OR_rights[1], $login);
+          // И - , 
+        }elseif(strpos($right,",") > 0){
+            $AND_rights = explode(",", $right, 2);
+            return userHasRight($AND_rights[0], $login) && userHasRight($AND_rights[1], $login);
+        };
+        
+        $right = trim($right);
+        
         
         if ( ! $login ){
             if ( empty($_USER["profile"]["acl"]) ){

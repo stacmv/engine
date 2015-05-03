@@ -9,7 +9,7 @@
 			"form_name": {"type": "string", "source": "post"}
         },
         "actions":[ "add_data" ],
-        "acl": [ "access","manager" ]
+        "acl": [ "access" ]
 	},
 	{
 		"uri": "pub/add",
