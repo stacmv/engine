@@ -94,6 +94,12 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, Cha
      
     $db_name =  db_get_name($db_table);
     $table_name = db_get_table($db_table);
+    
+    // Есть ли таблица history в БД
+    $tables_list = db_get_tables_list_from_xml($db_name);
+    if ( ! in_array("history", $tables_list) ){
+        return true; // не нужно писать историю для это БД
+    };
 
     db_set($db_name . ".history");
     
