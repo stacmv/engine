@@ -42,7 +42,9 @@ function dosyslog_data_changes($data_before){
 function edit_data(FormData $data, $id="", $comment = null){
 	global $CFG;
     
-    if ( ! $id) $id = ! empty($data->id) ? $data->id : null;
+    if ( ! $id){
+        $id = ! empty($data->id) ? $data->id : null;
+    };
         
     
     if (!$id){
@@ -55,7 +57,7 @@ function edit_data(FormData $data, $id="", $comment = null){
         
         // dump($data->changes,"changes");die(__FUNCTION__);
         
-        list($res, $reason) = db_edit($data->db_table, $data->id, $data->changes, $comment);
+        list($res, $reason) = db_edit($data->db_table, $id, $data->changes, $comment);
     }else{
         dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Данные не валидны.");
         $res = false;
