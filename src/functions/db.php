@@ -120,12 +120,13 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, Cha
         if ( empty($changes->from[$key]) ){ // action == add
             $v_from = null;
         }else{
-            $v_from = $changes->from["key"];
+            $v_from = $changes->from[$key];
         };
         if ($v_from != $v_to){
             $changes_from[] = $key." = ".json_encode_array($v_from);
-            if ( db_get_field_type($db_table, $key) == "password" ){
-                $changes_to[]   = $key." = ".json_encode_array(db_prepare_value($v_to));
+            $field_type = db_get_field_type($db_table, $key);
+            if ( $field_type == "password" ){
+                $changes_to[]   = $key." = ".json_encode_array(db_prepare_value($v_to, $field_type));
             }else{
                 $changes_to[]   = $key." = ".json_encode_array($v_to);
             };
@@ -421,7 +422,7 @@ function db_delete($db_table, $id, $comment=""){
     }else{  
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Update db (delete): '".$query."'");
         
-        if (!db_add_history($db_table, $id, $_USER["profile"]["id"], "db_delete", $comment, array())){
+        if (!db_add_history($db_table, $id, $_USER["profile"]["id"], "db_delete", $comment, new ChangesSet)){
             // ДОРАБОТАТЬ: реализовать откат операции UPDATE
             
             dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table od db '".$db_table."'.");
@@ -487,10 +488,10 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
         
         if ($changes->from[$key] != $object[$key]){ 
             // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
-            if (preg_replace('~\R~u', "\n", $changes["from"][$key]) == preg_replace('~\R~u', "\n", $object[$key])){
+            if (preg_replace('~\R~u', "\n", $changes->from[$key]) == preg_replace('~\R~u', "\n", $object[$key])){
                 // Это не конфликт.
             }else{
-                $conflicted[] = $key . "(passed 'from': '".$changes["from"][$key]."', in db: '".$object[$key]."')";
+                $conflicted[] = $key . "(passed 'from': '".$changes->from[$key]."', in db: '".$object[$key]."')";
             };
         };
     };
@@ -819,6 +820,119 @@ function db_get_list($db_table, array $fields = array("id"), $limit=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $result;
 }
+function db_get_table_schema($db_table){
+    
+    global $CFG;
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    $db = false;
+    $table = false;
+    
+    $db_name = db_get_name($db_table);
+    $db_table = db_get_table($db_table);
+    
+    $db_files = get_db_files();
+    $isFound = false;
+    foreach($db_files as $db_file){
+        $xml = xml_load_file($db_file);
+        if ($xml){
+            foreach($xml->db as $xmldb){
+                if ($db_name == (string) $xmldb["name"]){
+                    $db = $xmldb;
+                    $isFound = true;
+                    break;
+                };
+            }; //foreach xml
+        };
+    };
+   
+    if (!$isFound){
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
+        return false;
+    };
+    
+    if (!empty($db->table)){
+        foreach($db->table as $xmltable){
+            if ($db_table == $xmltable["name"]){
+                $table = $xmltable;
+                $table = xml_to_array($table);
+                break;
+            };
+        };
+    };
+    if (empty($table)){
+        dosyslog(__FUNCTION__.": WARNING: " . get_callee() . " Can not find table '".$db_table."' definition in db '".$db_name."' XML.");
+        return false;
+    };
+    
+     //
+    $tmp = $table["field"];
+    $table = array();
+    foreach($tmp as $v){
+        $table[] = $v["@attributes"];
+    };
+    unset($v, $tmp);
+    //
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    return $table;
+};
+function db_get_tables_list_from_xml($db_name=""){
+    
+    global $CFG;
+	if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");   
+	
+    
+    $dbs = array();
+    $table = false;
+    $tables_list = array();
+    
+    $db_name = db_get_name($db_name);
+    
+    $db_files = get_db_files();
+    
+    $isFound=false;
+    foreach ($db_files as $k=>$xmlfile){
+        $xml = xml_load_file($xmlfile);
+        if ($xml){
+            
+            foreach($xml->db as $xmldb){
+                if ($db_name){
+                    if ($db_name == (string) $xmldb["name"]){
+                        $dbs[] = $xmldb;
+                        $isFound = true;
+                        break;
+                    };
+                }else{  // вернуть все таблицы
+                    $dbs[] = $xmldb;
+                }
+            }; //foreach xml
+            
+        };
+        if (!empty($db)) break;
+    };
+    if ($db_name && !$isFound){
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
+        return array();
+    };
+        
+    foreach($dbs as $db){
+        if (!empty($db->table)){
+            foreach($db->table as $xmltable){
+                
+                $cur_db_name = (string)$db["name"];
+            
+                if (empty($tables_list[ $cur_db_name ])) $tables_list[ $cur_db_name ] = array();
+                $tables_list[ $cur_db_name ][] = (string) $xmltable["name"];
+            };
+        };
+    };
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    if ($db_name) return $tables_list[$db_name];
+    else return $tables_list;
+};
 function db_insert($db_table, ChangesSet $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = false;
@@ -848,7 +962,6 @@ function db_insert($db_table, ChangesSet $data){
         };
         return ( isset($fields[$k]) && ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
     });
-    
     
     $query = db_create_insert_query($db_table, $keys);
         
@@ -1012,119 +1125,6 @@ function db_select($db_table, $select_query, $flags=0){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     return $result;
-};
-function db_get_table_schema($db_table){
-    
-    global $CFG;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
-    $db = false;
-    $table = false;
-    
-    $db_name = db_get_name($db_table);
-    $db_table = db_get_table($db_table);
-    
-    $db_files = get_db_files();
-    $isFound = false;
-    foreach($db_files as $db_file){
-        $xml = xml_load_file($db_file);
-        if ($xml){
-            foreach($xml->db as $xmldb){
-                if ($db_name == (string) $xmldb["name"]){
-                    $db = $xmldb;
-                    $isFound = true;
-                    break;
-                };
-            }; //foreach xml
-        };
-    };
-   
-    if (!$isFound){
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
-        return false;
-    };
-    
-    if (!empty($db->table)){
-        foreach($db->table as $xmltable){
-            if ($db_table == $xmltable["name"]){
-                $table = $xmltable;
-                $table = xml_to_array($table);
-                break;
-            };
-        };
-    };
-    if (empty($table)){
-        dosyslog(__FUNCTION__.": WARNING: " . get_callee() . " Can not find table '".$db_table."' definition in db '".$db_name."' XML.");
-        return false;
-    };
-    
-     //
-    $tmp = $table["field"];
-    $table = array();
-    foreach($tmp as $v){
-        $table[] = $v["@attributes"];
-    };
-    unset($v, $tmp);
-    //
-    
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    return $table;
-};
-function db_get_tables_list_from_xml($db_name=""){
-    
-    global $CFG;
-	if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");   
-	
-    
-    $dbs = array();
-    $table = false;
-    $tables_list = array();
-    
-    $db_name = db_get_name($db_name);
-    
-    $db_files = get_db_files();
-    
-    $isFound=false;
-    foreach ($db_files as $k=>$xmlfile){
-        $xml = xml_load_file($xmlfile);
-        if ($xml){
-            
-            foreach($xml->db as $xmldb){
-                if ($db_name){
-                    if ($db_name == (string) $xmldb["name"]){
-                        $dbs[] = $xmldb;
-                        $isFound = true;
-                        break;
-                    };
-                }else{  // вернуть все таблицы
-                    $dbs[] = $xmldb;
-                }
-            }; //foreach xml
-            
-        };
-        if (!empty($db)) break;
-    };
-    if ($db_name && !$isFound){
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Db '".$db_name."' is not found in any db XML files.");
-        return array();
-    };
-        
-    foreach($dbs as $db){
-        if (!empty($db->table)){
-            foreach($db->table as $xmltable){
-                
-                $cur_db_name = (string)$db["name"];
-            
-                if (empty($tables_list[ $cur_db_name ])) $tables_list[ $cur_db_name ] = array();
-                $tables_list[ $cur_db_name ][] = (string) $xmltable["name"];
-            };
-        };
-    };
-    
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
-    if ($db_name) return $tables_list[$db_name];
-    else return $tables_list;
 };
 function db_parse_result($db_table, $result){
 
