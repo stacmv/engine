@@ -834,6 +834,11 @@ function db_insert($db_table, ChangesSet $data){
         $fields[$f["name"]] = $f;
     };
     unset($schema, $f);
+    
+    if ( isset($fields["created"]) && ! isset($data->to["created"]) ){
+        $data->to["created"] = $timestamp;
+    };
+    
         
     $keys = array_keys($data->to);
     $keys = array_filter($keys, function($k) use ($fields, $db_table){
@@ -843,6 +848,7 @@ function db_insert($db_table, ChangesSet $data){
         };
         return ( isset($fields[$k]) && ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "isDeleted") );
     });
+    
     
     $query = db_create_insert_query($db_table, $keys);
         
