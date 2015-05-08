@@ -25,7 +25,7 @@ if (!function_exists("cfg_get_filename")){
             $path[] = APP_DIR;
             $path[] = ENGINE_DIR;
         }else{
-            $pah[] = APP_DIR;
+            $path[] = APP_DIR;
         };
         
         if (count($path) == 1){
