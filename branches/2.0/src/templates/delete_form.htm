@@ -1,0 +1,60 @@
+<?php
+foreach(@array(
+    $CFG["URL"]["base"],
+    $CFG["URL"]["ext"],
+    $CFG["GENERAL"]["app_name"],
+    $action,
+	$db_table,
+	$object_name,
+	$object,
+	$_PAGE["header"],
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+?>
+<style type="text/css">
+	.v-divider{
+		border-right:1px solid #ccc;
+	}
+</style>
+
+<?if (!empty($object)):?>
+<article class="app_content">
+	<div class="page-header">
+		<h1><?=$_PAGE["header"];?></h1>
+	</div>
+	<div class="row">
+		<div class="span12">
+			<form action="delete/<?=$object_name;?>.html" method="post">
+				<input type="hidden" name="confirm" value="1">
+				<input type="hidden" name="id" value="<?=$object["id"];?>">
+				<p class="alert alert-warning">Объект будет удален.</p>
+				<div class="control-group">
+					<label class="control-label" for="comment">
+							Причина удаления:
+					</label>
+					<div class="controls">
+						<textarea rows="5" cols="20" name="comment" id="comment" class="input-xxlarge"></textarea>
+						<span class="help-block"></span>
+					</div>
+				</div>
+				
+				<div class="form-actions">
+					<input class="btn btn-danger" type="submit" value="Удалить">
+					<a class="btn btn-default" href="<?=( !empty($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : $db_table . $CFG["URL"]["ext"] );?>">Отменить</a>
+				</div>
+			</form>
+		</div>
+	</div> <!-- /.row -->
+</article>
+<?else:?>
+<article class="app_content">
+	<div class="page-header">
+		<h1>Удаление</h1>
+	</div>
+	<div class="alert-message error">Ошибка: не выбран объект или объект не существует.</p>
+</article>
+<?endif;?>
+
+<?php
+	unset($_SESSION["msg"]);
+	unset($_SESSION["to"]);
+?>

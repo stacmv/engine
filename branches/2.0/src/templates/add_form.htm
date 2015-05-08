@@ -11,12 +11,12 @@ foreach(@array(
 ?>
 <article class="app_content">
 	<div class="row">
-		<div class="col-md-12">
+		<div class="col-md-12 span12">
 			<h1><?=unescape_template_data($_PAGE["header"]);?></h1>
 		</div>
 	</div>
 	<div class="row">
-				<div class="col-md-6 col-md-offset-3">
+				<div class="col-md-6 col-md-offset-3 span6 offset3">
 					<form class="form-horizontal" action="<?=$action;?>/<?=$object_name;?><?=$CFG["URL"]["ext"];?>" method="post" enctype="multipart/form-data">
 						
 						%%form_generate%%

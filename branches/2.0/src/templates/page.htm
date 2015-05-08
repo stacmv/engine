@@ -20,19 +20,12 @@ foreach(@array(
 
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css">
 	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css">
-	<link rel="stylesheet" href="assets/jquery-ui/jquery-ui.min.css" type="text/css" />
-	<link rel="stylesheet" href="assets/css/chosen.css" type="text/css" />
 	<link rel="stylesheet" href="assets/css/multiple-select.css" type="text/css" />
 	<link rel="stylesheet" href="assets/css/custom.css">
 
 	<script src="assets/js/jquery.js"></script>
-	<script src="assets/jquery-ui/jquery-ui.js"></script>
-	<script src="assets/js/chosen.jquery.min.js"></script>
 	<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
 	<script src="assets/js/jquery.maskedinput.js"></script>
-	<script src="assets/js/jquery.hotkeys.js"></script>
-	<script src="assets/js/whizzywig2011.js"></script>
-
 </head>
 <body>
 <div class="navbar navbar-fixed-top">
@@ -95,9 +88,8 @@ foreach(@array(
 		$(".displayOnload").removeClass("displayOnload");
 		
 		$(".date").mask("99.99.9999");
-		$("#date").datepicker({
-			dateFormat: "yy-mm-dd"
-		})
+		$(".phone").mask("(999)999-99-99");
+		
 
 	});
 </script>
