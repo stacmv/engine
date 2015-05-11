@@ -65,7 +65,7 @@ foreach(@array(
 		var http = getHTTPObject();
 		var username = document.getElementById("UserEmail").value;
 		var pass = document.getElementById("pass").value;
-		debugger;
+		
 		http.open("get", this.action, false, username, pass);
 		http.send("");
 		if (http.status == 200) {
