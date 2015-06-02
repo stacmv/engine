@@ -32,7 +32,7 @@ function APPLYPAGETEMPLATE(){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 };
-function AUTENTICATE(){
+function AUTHENTICATE(){
     global $_USER;
     
     $_USER["authenticated"]  = false;
@@ -160,7 +160,9 @@ function IDENTICATE(){
     
     $preffered_auth_type = "http_basic";
     if ( ! empty($_COOKIE[ $preffered_auth_type_cookie_name ]) ){
-        $preffered_auth_type = $_COOKIE[ $preffered_auth_type_cookie_name ];
+        if ( in_array($_COOKIE[ $preffered_auth_type_cookie_name ], $auth_types) ){
+            $preffered_auth_type = $_COOKIE[ $preffered_auth_type_cookie_name ];
+        };
     };
     if ( ! empty($_SESSION["auth_type"]) ){
         $preffered_auth_type = $_SESSION["auth_type"];
@@ -204,9 +206,7 @@ function IDENTICATE(){
     }else{  // пользователь не прошел процедуру логина
     
         if ( ! empty($_PAGE["acl"]) ){  // страница с контролем доступа, требуется идентификация
-
-            
-            
+  
             
             $login_function = "auth_".$preffered_auth_type."_login";
             if (function_exists($login_function)){
@@ -567,7 +567,7 @@ $IS_IFRAME_MODE = ! empty($_GET["i"]) ? true : false;
 GETURI();
 GETPAGE(); // поиск и получение объекта текущей страницы
 IDENTICATE(); // идентификация - пользователь или гость
-AUTENTICATE(); // аутентификация пользователя (проверка пароля)
+AUTHENTICATE(); // аутентификация пользователя (проверка пароля)
 AUTHORIZE(); // авторизация пользователя (создание спиcка разрешений ACL)
 SETACTIONLIST();
 SETPARAMS();

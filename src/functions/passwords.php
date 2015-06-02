@@ -37,6 +37,6 @@ function password_test(){
     $valid = passwords_verify($pass, $hash);
     $invalid = passwords_verify("wq4344", $hash);
     
-    dump($valid,"should be TRUE");
-    dump($invalid,"should be FALSE");
+    echo $valid,": should be TRUE<br>";
+    echo $invalid,": should be FALSE<br>";
 }

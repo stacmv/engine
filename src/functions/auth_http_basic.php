@@ -12,12 +12,15 @@ function login_http_basic_action(){
         dosyslog(__FUNCTION__.": NOTICE: Send authorization request to ". (! empty($_SERVER["PHP_AUTH_USER"]) ? $_SERVER["PHP_AUTH_USER"] : "visitor.") );
         
         $headers["WWW-Authenticate"] = 'Basic realm="' . ucfirst($CFG["GENERAL"]["codename"]) . ' - ' . date("M Y") . '"';
-        $headers["HTTP"] = "HTTP/1.0 401 Unauthorized";
+        // $headers["HTTP"] = "HTTP/1.0 401 Unauthorized";
+        $headers["HTTP"] = "Status: 401 Unauthorized";
         $_RESPONSE["headers"] = $headers;
         if (isset($_SESSION["http_basic"]["logged_out"])) unset($_SESSION["http_basic"]["logged_out"]);
         SENDHEADERS();
-        if ( file_exists(TEMPLATES_DIR . "not_logged_http_basic.htm") ){
-            include(TEMPLATES_DIR . "not_logged_http_basic.htm");
+        
+        $not_logged_template = cfg_get_filename("templates", "not_logged_http_basic.htm");
+        if ( file_exists($not_logged_template) ) {
+            include $not_logged_template;
         };
         exit;
     }

@@ -88,6 +88,16 @@
 		"acl":[]
 	},
 	{
+		"uri":"signin",
+		"title":"Вход в систему",
+		"actions": ["login_auth_simple"],
+		"templates": {
+			"content":"signin.htm",
+			"page":"page.htm"
+		},
+		"acl":[]
+	},
+	{
 		"uri": "ulogin",
 		"title": "Авторизация через соц. сети с помощью Ulogin",
 		"params":{
