@@ -73,7 +73,7 @@ function get_auth_types(){
     if ( ! empty($CFG["AUTH"]["auth_types"]) ){
         $auth_types = explode(" ", $CFG["AUTH"]["auth_types"]); foreach($auth_types as $k=>$v) $auth_types[$k] = trim($v);
     }else{
-        $auth_types = array("http_basic");
+        $auth_types = array("simple");
     };
     dosyslog(__FUNCTION__.": DEBUG: Auth_types: ".implode(", ",$auth_types));
     

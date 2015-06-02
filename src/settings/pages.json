@@ -90,7 +90,18 @@
 	{
 		"uri":"signin",
 		"title":"Вход в систему",
-		"actions": ["login_auth_simple"],
+		"params": {
+			"login": {"type":"string", "source":"post"},
+			"pass":  {"type":"string", "source":"post"},
+			"return_url":  {"type":"string", "source":"post"}
+		},
+		"actions": ["auth_simple"],
+		"acl":[]
+	},
+	{
+		"uri":"form/signin",
+		"title":"Вход в систему",
+		"actions": [],
 		"templates": {
 			"content":"signin.htm",
 			"page":"page.htm"
