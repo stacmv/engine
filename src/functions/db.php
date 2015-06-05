@@ -1101,7 +1101,7 @@ function db_select($db_table, $select_query, $flags=0){
         die();
     };
     
-    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$select_query."'.");
+    
     $res = $dbh->query($select_query);
     
     if ($res){
@@ -1123,7 +1123,9 @@ function db_select($db_table, $select_query, $flags=0){
             };
             $result = $tmp;
             unset($tmp, $k, $v);
-        };        
+        };
+        
+        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$select_query."'. Fetched: ".count($result)." rows.");
         
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  '".db_error($dbh)."'. Query: '".$select_query."'.");
