@@ -290,17 +290,19 @@ function not_auth_action(){
 }
 function not_logged_action(){
     global $CFG;
-    global $_USER;
+    global $_DATA;
     
-    $auth_type = !empty($_SESSION["auth_type"]) ? $_SESSION["auth_type"] : "http_basic";
+    $auth_types = get_auth_types();
+    $auth_type = !empty($_SESSION["auth_type"]) ? $_SESSION["auth_type"] : $auth_types[0];
     
     $not_logged_template_file = "not_logged_" . $auth_type . ".htm";
-    
-    if (file_exists(TEMPLATES_DIR . $not_logged_template_file)){
+    if (file_exists( cfg_get_filename("templates", $not_logged_template_file) )){
         set_template_file("content", $not_logged_template_file);
     }else{
         set_content("content", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
     };
+
+    $_DATA["auth_type"] = $auth_type;
     
     logout();
 }

@@ -158,13 +158,13 @@ function IDENTICATE(){
     
     $auth_types = get_auth_types();
     
-    $preffered_auth_type = "http_basic";
+    $preffered_auth_type = $auth_types[0];
     if ( ! empty($_COOKIE[ $preffered_auth_type_cookie_name ]) ){
         if ( in_array($_COOKIE[ $preffered_auth_type_cookie_name ], $auth_types) ){
             $preffered_auth_type = $_COOKIE[ $preffered_auth_type_cookie_name ];
         };
     };
-    if ( ! empty($_SESSION["auth_type"]) ){
+    if ( ! empty($_SESSION["auth_type"]) && in_array($_SESSION["auth_type"], $auth_types) ){
         $preffered_auth_type = $_SESSION["auth_type"];
     };
     
