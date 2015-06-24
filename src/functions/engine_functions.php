@@ -12,14 +12,25 @@ function add_data(FormData $data, $comment = null){
     
     
     if ($data->is_valid){
-        
+    
         $added_id = db_add($data->db_table, $data->changes, $comment);
+        
         if ( ! $added_id ){
-                dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Ошибка db_add().");
+            $dbh = db_set($data->db_table);
+            $error = $dbh->errorInfo();
+            if ($error[1] == 19){
+                set_session_msg($error[2],"error");
             };
+            dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Ошибка db_add().");
+        };
     }else{
+        
         dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Данные не валидны.");
-    }
+        foreach($data->errors as $field_name => $err){
+            set_session_msg($err["msg"], "error");
+        };
+        
+    };
    
     if ( $added_id ) return array(true, $added_id);
     else return array(false, "fail");

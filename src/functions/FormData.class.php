@@ -144,5 +144,10 @@ class FormData{
             };
             
         };
+        
+        if ( ! empty($this->errors) ){
+            dosyslog(__METHOD__.get_callee().": WARNING: Form '".$this->form_name."' validation errors: '".json_encode_array($this->errors)."', form data: '". json_encode_array($this->changes)."'.");
+        };
+        
     }
 }
