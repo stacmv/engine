@@ -203,7 +203,7 @@ function form_action(){
     $form_name   = ! empty($_PARAMS["form_name"]) ? $_PARAMS["form_name"] : $action."_".$object_name;
 
     // 
-    if ( empty($_PAGE["title"]) ) $_PAGE["title"] = _(ucfirst($action) . " " . $object_name);
+    if ( empty($_PAGE["title"]) ) $_PAGE["title"] = _t(ucfirst($action) . " " . $object_name);
     if ( empty($_PAGE["header"])) $_PAGE["header"] = $_PAGE["title"];
     
     
@@ -211,8 +211,24 @@ function form_action(){
     $_DATA["db_table"]    = $db_table;
     $_DATA["object_name"] = $object_name;
     
-    form_prepare($db_table, $form_name, $id);
+    if ($id && ($action != "add") ){
+        $object = db_get($db_table, $id, DB_RETURN_DELETED);
+    }else{
+        $object = array();
+    };
+    
+    $fields = form_prepare($db_table, $form_name, $object);
           
+    // Подготовка дополнительных данных для формы
+    if ( function_exists("form_prepare_" . $form_name) ){
+        $fields = call_user_func("form_prepare_" . $form_name, $fields, $id);
+    }
+    //
+    
+    $_DATA["object"]      = $object;
+    $_DATA["fields_form"] = $fields;
+    $_DATA["fields_form"][] = form_prepare_field( array("type"=>"string", "form_template"=>"hidden", "name"=>"form_name"), true, $form_name);
+    
     
     $form_template = !empty($_PAGE["templates"][$form_name]) ? $_PAGE["templates"][$form_name] : null;
     if ( ! $form_template && (file_exists( cfg_get_filename("templates", $form_name . "_form.htm"))) ){

@@ -1,17 +1,11 @@
 <?php
 define ("FORM_PASS_SUBSTITUTION", "--cut--");
 
-function form_prepare($db_table, $form_name, $object_id=""){
+function form_prepare($db_table, $form_name, $object=""){
     global $_DATA;
     
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . ").");
-    
-    if ($object_id){
-        $object = db_get($db_table, $object_id, DB_RETURN_DELETED);
-    }else{
-        $object = array();
-    };
-        
+            
     // Подготовка данных для полей формы
     $fields = array();
     $table = form_get_fields($db_table, $form_name);
@@ -25,10 +19,6 @@ function form_prepare($db_table, $form_name, $object_id=""){
     unset($v);
         
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){ return $i["name"];}, $fields)) );
-    
-    $_DATA["object"]      = $object;
-    $_DATA["fields_form"] = $fields;
-    $_DATA["fields_form"][] = form_prepare_field( array("type"=>"string", "form_template"=>"hidden", "name"=>"form_name"), true, $form_name);
     
     return $fields;
 }

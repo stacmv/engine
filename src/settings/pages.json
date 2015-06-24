@@ -72,6 +72,7 @@
 		"title":"Выход из системы",
 		"actions": ["logout"],
 		"templates":{
+			"msg": "message.block.htm",
 			"content": "logout.htm",
 			"page":"page.htm"
 		}

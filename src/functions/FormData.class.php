@@ -32,12 +32,13 @@ class FormData{
         
         // Обработка загружаемых файлов
         $files = upload_files($this);
+
         if ( $files ){
             dosyslog(__METHOD__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".implode(", ",$files)."'.");
             foreach($files as $field_name => $uploaded_file_name){
                 $this->files[ $field_name ] = $uploaded_file_name;
                 
-                $this->changes->from[ $field_name ] = $params["from"][ $field_name ];
+                $this->changes->from[ $field_name ] = isset($params["from"][ $field_name ]) ? $params["from"][ $field_name ] : null;
                 $this->changes->to[ $field_name ] = $uploaded_file_name;
             };
         };
@@ -65,6 +66,7 @@ class FormData{
             
         };
         
+        
         if (isset($params["from"]["created"])) unset($params["from"]["created"]);
         if (isset($params["to"]["created"])) unset($params["to"]["created"]);
         if (isset($params["from"]["modified"])) unset($params["from"]["modified"]);
@@ -74,16 +76,19 @@ class FormData{
         //   Для многострочных текстовых строк - заменить конец строки на \n;
         
         foreach($params["to"] as $what=>$v){
-            $this->changes->to[$what] = ( $v && is_string($v) ) ? preg_replace('~\R~u', "\n", $v) : $v;
-            if ( isset($params["from"][$what]) ){
-                $this->changes->from[$what] = ( $params["from"][$what] && is_string($params["from"][$what]) ) ? preg_replace('~\R~u', "\n", $params["from"][$what]) : $params["from"][$what];
+            if ( $v && is_string($v) ){
+                $this->changes->to[$what] = preg_replace('~\R~u', "\n", $v);
+            
+                if ( isset($params["from"][$what]) ){
+                    $this->changes->from[$what] = ( $params["from"][$what] && is_string($params["from"][$what]) ) ? preg_replace('~\R~u', "\n", $params["from"][$what]) : $params["from"][$what];
+                };
             };
         };
 
        
         // Валидация
         $this->validate();
-
+        
         dosyslog(__METHOD__.": DEBUG: ". get_callee().": Оставлены поля [to] '".implode(", ",array_keys($this->changes->to))."'.");
        
     }
@@ -97,7 +102,9 @@ class FormData{
         $this->is_valid = true;
         $this->errors = array();
         
-        $fields_form = form_prepare($this->db_table, $this->form_name,$this->id);
+        
+        $object = $this->id  ? db_get($this->db_table, $this->id) : null;
+        $fields_form = form_prepare($this->db_table, $this->form_name, $object);
         $changes_to = $this->changes->to;
                 
         foreach($fields_form as $field){
