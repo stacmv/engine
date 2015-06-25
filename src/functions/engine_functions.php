@@ -168,16 +168,13 @@ function edit_data($db_table, $data, $id="", array $err_msg=array()){
                 };
             };
         }else{;
-
-            if (function_exists("validate_data")){
-                $validate_result = validate_data($field, $data["to"][$name], "edit", $db_table, isset($data["from"][$name]) ? $data["from"][$name] : "");
-               
-                $res = $validate_result[0];
-                $msg = $validate_result[1];
-                $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
-            }else{
-                $res = true;
-            }
+        
+            $validate_result = validate_data($field, $data["to"][$name], "edit", $db_table, isset($data["from"][$name]) ? $data["from"][$name] : "");
+           
+            $res = $validate_result[0];
+            $msg = $validate_result[1];
+            $proposed_value = isset($validate_result[2]) ? $validate_result[2] : null;
+           
            
             if ($res){
                 if (!empty($msg)) {
