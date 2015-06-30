@@ -293,14 +293,18 @@ if (!function_exists("get_page_by_uri")){
 };
 if (!function_exists("get_page_files")){
     function get_page_files(){
-        // Если в разных файлах определены одинаковые страницы, то используеьтся те, что определены (в pages_files) ПОЗЖЕ
+        // Если в разных файлах определены одинаковые страницы, то используется те, что определены (в pages_files) ПОЗЖЕ
         
         $pages_files = array(
-            "engine" => cfg_get_filename("settings", "pages.json", true),
-            "app"    => cfg_get_filename("settings", "pages.json"),
+            "engine_json" => cfg_get_filename("settings", "pages.json", true),
+            "engine_xml"  => cfg_get_filename("settings", "pages.xml", true),
+            "app_json"    => cfg_get_filename("settings", "pages.json"),
+            "app_xml"     => cfg_get_filename("settings", "pages.xml"),
         );
         
-        $extra_pages = glob(APP_DIR . "settings/*.pages.json");
+        $pages_files = array_filter($pages_files, function($file){ return file_exists($file);});
+        
+        $extra_pages = glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE);
         if ( ! empty($extra_pages) ){
             foreach($extra_pages as $file){
                 $start = strlen(APP_DIR . "settings/");
@@ -312,6 +316,8 @@ if (!function_exists("get_page_files")){
         }
         
         return $pages_files;
+        
+        
         
     }
 }
@@ -327,32 +333,68 @@ if (!function_exists("get_pages")){
         
         $pages = array();
         foreach($pages_files as $app=>$file){
-            $str = glog_file_read($file);
-            if ($str){
-                $arr = json_decode_array($str, false); // false means "do not urldecode output";
-                if ( ! $arr ){
-                    dosyslog(__FUNCTION__.": FATAL ERROR: Can not decode JSON file '".$file."'.");
-                    die("Code: df-".__LINE__."-".$app."_pages_json");
-                }
-            }else{
-                $arr = array();
-                dosyslog(__FUNCTION__.": FATAL ERROR: Can not read file '".$file."'.");
-                die("Code: df-".__LINE__);
-            }
             
-            $pages_tmp  = array();
-            if ( !empty($arr["pages"]) ){
-                foreach($arr["pages"] as $k=>$v){
-                    $pages_tmp[ $v["uri"] ] = $v;
+            if (pathinfo($file, PATHINFO_EXTENSION) == "json" ){
+            
+                $str = glog_file_read($file);
+                if ($str){
+                    $arr = json_decode_array($str, false); // false means "do not urldecode output";
+                    if ( ! $arr ){
+                        dosyslog(__FUNCTION__.": FATAL ERROR: Can not decode JSON file '".$file."'.");
+                        die("Code: df-".__LINE__."-".$app."_pages_json");
+                    }
+                }else{
+                    $arr = array();
+                    dosyslog(__FUNCTION__.": FATAL ERROR: Can not read file '".$file."'.");
+                    die("Code: df-".__LINE__."-".$file);
+                }
+                
+                $pages_tmp  = array();
+                if ( !empty($arr["pages"]) ){
+                    foreach($arr["pages"] as $k=>$v){
+                        $pages_tmp[ $v["uri"] ] = $v;
+                    };
+                    unset($k,$v);
                 };
-                unset($k,$v);
+                if ( $pages_tmp ) $pages = array_merge($pages, $pages_tmp);
+                unset($pages_tmp);
+            
+            }elseif(pathinfo($file, PATHINFO_EXTENSION) == "xml" ){
+              
+                $arr = xml_to_array( xml_load_file($file) );
+                $pages_tmp = array();
+                
+                
+                if ( ! empty($arr["page"]) ){
+                    if ( ! isset($arr["page"][0]) ) $arr["page"] = array($arr["page"]);
+                    
+                    foreach($arr["page"] as $page){
+                        // Атрибуты
+                        foreach($page["@attributes"] as $k=>$v){
+                            $page[$k] = $v;
+                        };
+                        unset($k,$v);
+                        unset($page["@attributes"]);
+                        
+                        foreach(array("params","actions","templates","acl") as $node){
+                            if ( isset($page[$node]) && ! is_array($page[$node]) ) $page[$node] = array($page[$node]);
+                        };
+                        unset($node);
+                        
+                        $pages_tmp[ $page["uri"] ] = $page;
+                    };
+                    unset($page);
+                   
+                    
+                }
+                if ( $pages_tmp ) $pages = array_merge($pages, $pages_tmp);
+                unset($pages_tmp);
+                
+                
+                
             };
-            if ( $pages_tmp ) $pages = array_merge($pages, $pages_tmp);
-            unset($pages_tmp);
         }
         unset($app,$file);
-                
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
      
         return $pages;
     };

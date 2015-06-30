@@ -9,13 +9,14 @@ function APPLYPAGETEMPLATE(){
     global $CFG;
     global $IS_IFRAME_MODE;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-
     if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
-
     
     if (! empty($_PAGE["templates"]["page"]) ){
-        if (empty($_PAGE["templates"]["content"]) ) set_template_for_user();
+        if (empty($_PAGE["templates"]["content"]) ){
+            if ( ! empty($_PAGE["templates"]["guest"]) ){
+                set_template_for_user();
+            };
+        };
         if ($IS_IFRAME_MODE){
             if ( ! empty($_PAGE["templates"]["iframe"]) ){
                 $_RESPONSE["body"] = get_content("iframe");
@@ -27,10 +28,11 @@ function APPLYPAGETEMPLATE(){
             $_RESPONSE["body"] = get_content("page");
         };
     }else{
+        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: 'Page' templates is not set for page '".$_PAGE["uri"]."'. Check pages config.");
         die("Code: e-".__LINE__."-page_tmpl");
     };
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function AUTHENTICATE(){
     global $_USER;
@@ -141,7 +143,7 @@ function DOACTION(){
         die("Code: e-".__LINE__."-".$function);
     };
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function IDENTICATE(){
 	global $_USER;
@@ -151,6 +153,10 @@ function IDENTICATE(){
     global $_RESPONSE;
     
     $_USER = array();
+    
+    if ( ! db_get_table_schema("users") ){ // на сайте нет пользовательских аккаунтов
+        return $_USER;
+    };
     
     $preffered_auth_type_cookie_name   = "pat";
     $preffered_auth_type_cookie_period = 7*24*60*60; // in seconds
@@ -235,7 +241,7 @@ function GETPAGE(){  // поиск страницы, соответствующ�
     global $_PAGE;
     global $_URI;
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     
 
     $_PAGE = find_page($_URI);
@@ -251,13 +257,13 @@ function GETPAGE(){  // поиск страницы, соответствующ�
     
     dosyslog(__FUNCTION__.": INFO: ".$_PAGE["uri"]);
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function GETURI(){
     global $CFG;
     global $_URI;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     $uri = @$_GET["uri"];
     
     
@@ -269,12 +275,12 @@ function GETURI(){
     
     dosyslog(__FUNCTION__.": INFO: ".$_URI);
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function HASNEXTACTION(){
     global $_ACTIONS;
     global $S;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     
     if (isset($_ACTIONS)){
         if (isset($_ACTIONS[0])){
@@ -287,13 +293,13 @@ function HASNEXTACTION(){
         dosyslog(__FUNCTION__.": FATAL ERROR: _ACTIONS list is not set. SETDEFAULTACTIONS() have to be called before HASNEXTACTION().");
         die("Code: e-".__LINE__);
     };
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     return $res;
 };
 function SENDHEADERS(){
     
     global $_RESPONSE;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
        
     if (isset($_RESPONSE["headers"])){
         $headers = (array) $_RESPONSE["headers"];
@@ -311,16 +317,16 @@ function SENDHEADERS(){
             setcookie($name,$cookie["value"],$cookie["expire"], $cookie["path"], $cookie["domain"]);
         };
     };
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function SENDHTML(){
     global $_RESPONSE;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     
     if (isset($_RESPONSE["body"])) echo $_RESPONSE["body"];
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function SETACTIONLIST(){
     global $_PAGE;
@@ -328,7 +334,7 @@ function SETACTIONLIST(){
     global $_DEFAULT_ACTIONS;
     
      
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb."); 
+     
     // $_DEFAULT_ACTIONS - action-функции, которые должны выполняться для каждой страницы. См. register_default_action() из engine_functions.php, коорая может вызываться из actions.php.
     
     $_ACTIONS = ! empty($_DEFAULT_ACTIONS) ? $_DEFAULT_ACTIONS : array(); 
@@ -351,15 +357,15 @@ function SETACTIONLIST(){
         };
     };        
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function SETPARAMS(){
     global $_URI;
     global $_PAGE;
     global $CFG;
     global $_PARAMS;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
+        
     dosyslog(__FUNCTION__.": NOTICE: Start setting parameters for page: '" . $_PAGE["uri"] . "'.");
        
     if ( ! empty($_PAGE["params"]) ) {
@@ -548,7 +554,7 @@ function SETPARAMS(){
         dosyslog(__FUNCTION__.": DEBUG: No params are set for page '".$_PAGE["uri"]."'.");
     }
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     return $_PARAMS;
 };
 
