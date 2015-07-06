@@ -597,7 +597,7 @@ if (!function_exists("send_message")){
         
         
         
-        dosyslog(__FUNCTION__."\t".$message_id."\t".@$template."\t".@$emailOrUserId."\t".$email."\t".($res? "success" : "fail")."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
+        dosyslog(__FUNCTION__.get_callee() . ": INFO: ".$message_id."\t".@$template."\t".@$emailOrUserId."\t".$email."\t".($res? "success" : "fail")."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"]);
          
         return $res;
     };

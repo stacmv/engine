@@ -198,6 +198,12 @@ function form_action(){
     
     $action      = ! empty($_PARAMS["action"])   ? $_PARAMS["action"]     : null;
     $object_name = ! empty($_PARAMS["object"])   ? $_PARAMS["object"]     : null;
+    
+    if ( ! $action || ! $object_name ) {
+        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Mandatory parameter 'action', 'object_name' or both is not set. Check pages config for '".$_PAGE["uri"]."' or correcponding action.");
+        die("Code: ea-".__LINE__);
+    };
+    
     $db_table    = db_get_db_table($object_name);
     $id          = ! empty($_PARAMS["id"])       ? $_PARAMS["id"]         : null;
     $form_name   = ! empty($_PARAMS["form_name"]) ? $_PARAMS["form_name"] : $action."_".$object_name;

@@ -23,9 +23,15 @@ function form_prepare($db_table, $form_name, $object=""){
     return $fields;
 }
 function form_prepare_field($field, $is_stand_alone = false, $value = "", $value_from = ""){
-                
+        
+        if ( empty($field["form_template"]) ){
+            dosyslog(__FUNCTION__.": FATAL ERROR: Template for field '".$field["name"]."' is not found. Check DB config.");
+            die("Code: efrm-".__LINE__."-".$field["name"]);
+        };
+        
         $type     = $field["type"]; // тип поля в БД
         $template = $field["template"] = $field["form_template"]; 
+        
         
         // Label
         if ($template == "hidden"){

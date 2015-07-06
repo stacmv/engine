@@ -698,7 +698,7 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
     
     // Where
     if ( ! ($flags & DB_RETURN_DELETED) ){
-        $query .= ($get_all || $get_random ? " WHERE" : " AND") . " isDeleted IS NULL OR isDeleted = ''";
+        $query .= ($get_all || $get_random ? " WHERE" : " AND") . " (isDeleted IS NULL OR isDeleted = '')";
     };
     
     // Order by
