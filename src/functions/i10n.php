@@ -6,8 +6,10 @@ function _t($msg){
         $tmp = import_tsv(cfg_get_filename("settings", "messages_comments.tsv"));
         
         $tsv = array();
-        foreach($tmp as $row){
-            $tsv[ $row["name"] ] = $row;
+        if ( ! empty($tmp)) {
+            foreach($tmp as $row){
+                $tsv[ $row["name"] ] = $row;
+            };
         };
     };
     
