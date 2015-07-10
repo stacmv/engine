@@ -2,7 +2,7 @@
 
 	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
 	<?if (isset($field["id"])):?>id="<?=$field["id"];?>"<?endif;?> 
-	class="input-xxlarge <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
+	class="form-control input-xxlarge <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
 	<?if (isset($field["placeholder"])):?>placeholder="<?=$field["placeholder"];?>"<?endif;?> 
 	<?if ($field["required"]):?>required<?endif;?>
 ><?if (isset($field["value"])):?><?=$field["value"];?><?endif;?></textarea> <?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>

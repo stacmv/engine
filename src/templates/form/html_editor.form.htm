@@ -1,0 +1,18 @@
+<div style="border:1px solid #369">
+	<textarea rows="5" cols="80" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>"
+		<?if ($field["required"]):?>required<?endif;?>
+	><?if (isset($field["value"])):?><?=$field["value"];?><?endif;?></textarea> <?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
+
+	<?if(!empty($field["hint"])):?>
+		<span class="help-block"><?=$field["hint"];?></span>
+	<?endif;?>
+</div>
+
+<script>
+$(function(){
+	var editor = new Editor({
+	  element: document.getElementById('<?=$field["name"];?>'),
+	});
+	editor.render();
+})
+</script>

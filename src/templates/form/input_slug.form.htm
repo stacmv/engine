@@ -12,6 +12,24 @@
 	<?if ($field["required"]):?>required<?endif;?>
 	<?if (!empty($field["readonly"])):?>readonly<?endif;?>
 ><?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
+<button class="btn cmdCreateSlug">Сгенерировать</button>
+
 <?if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
 <?endif;?>
+
+<script>
+$(function(){
+	$(".cmdCreateSlug").on("click", function(e){
+		e.preventDefault;
+		
+		var str = $("#name").val() || $("#title").val();
+		if (str){
+			$.get("api/create_slug.html", {str:str}, function(data){
+				$("#slug").val(data);
+			});
+		};
+		return false;
+	});
+});
+</script>

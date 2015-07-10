@@ -1,7 +1,7 @@
 <select 
 	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
 	<?if (isset($field["name"])):?>id="<?=$field["name"];?>"<?endif;?> 
-	<?if (isset($field["class"])):?>class="<?=$field["class"];?>"<?endif;?> 
+	class="form-control <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
 >
 	<?if ( empty($field["readonly"])):?>
 		<option></option>
