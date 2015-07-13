@@ -39,7 +39,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     
     if ($res){
         if ( ! is_null($redirect_on_success) ){
-           $redirect_uri = $redirect_on_success ? $redirect_on_success : (!empty($CFG["URL"]["redirect_on_success_default"]) ? $CFG["URL"]["redirect_on_success_default"] : $db_table);
+           $redirect_uri = $redirect_on_success ? $redirect_on_success : (!empty($CFG["URL"]["redirect_on_success_default"]) ? $CFG["URL"]["redirect_on_success_default"] : str_replace(".","__", $db_table) );
            redirect($redirect_uri);
         };
     }else{
@@ -106,7 +106,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 
     if ($res){
         if ( ! is_null($redirect_on_success) ){
-            $redirect_uri = $redirect_on_success ? $redirect_on_success : (!empty($CFG["URL"]["redirect_on_success_default"]) ? $CFG["URL"]["redirect_on_success_default"] : $db_table);
+            $redirect_uri = $redirect_on_success ? $redirect_on_success : (!empty($CFG["URL"]["redirect_on_success_default"]) ? $CFG["URL"]["redirect_on_success_default"] : str_replace(".","__", $db_table));
             redirect($redirect_uri);
         };
     }else{
@@ -180,7 +180,7 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     if ($res){
-        redirect($redirect_on_success ? $redirect_on_success : $db_table);
+        redirect($redirect_on_success ? $redirect_on_success : str_replace(".","__", $db_table) );
     }else{
         redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"]."/".$id);
     };
