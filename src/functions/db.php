@@ -3,7 +3,8 @@
 if (!defined("TEST_MODE")) define ("TEST_MODE", false);
 define("DB_NOTICE_QUERY",true); // писать запросы в лог
 define("DB_LIST_DELIMITER", "||"); // разделитель элементов в полях типа list
-define("DB_PREPARE_VALUE", 1); // флаг для db_get(), что надо вернуть поля типа list, json и др. в виде готовом для записи в БД, т.е. в виде строки, возвращаемой db_prepare_value()
+define("DB_PREPARE_VALUE", 32); // флаг для db_get(), что надо вернуть поля типа list, json и др. в виде готовом для записи в БД, т.е. в виде строки, возвращаемой db_prepare_value()
+define("DB_DONT_PARSE", 64); //  флаг для db_get() и db_select(), что надо вернуть данные как есть, не выполняя db_parse_result()
 define("DB_RETURN_ID", 1);  // флаг для db_find() и db_select(), что надо вернуть только ID
 define("DB_RETURN_ROW",2);  // флаг для db_find() и db_select(), что надо вернуть всю запись
 define("DB_RETURN_ONE",4);  // флаг для db_find(), что надо вернуть только одну запись, а не список
@@ -450,7 +451,7 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
     
     //dump($comment,"comment");
     $dbh = db_set($db_table);
-    $object = db_get($db_table, $id, DB_PREPARE_VALUE | DB_RETURN_DELETED);
+    $object = db_get($db_table, $id, DB_DONT_PARSE | DB_RETURN_DELETED);
     
     $table_name = db_get_table($db_table);
     
@@ -742,7 +743,9 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
             };
             
             foreach($result as $k=>$v){
-                $result[$k] = db_parse_result($db_table, $result[$k]);
+                if ( ! ($flags & DB_DONT_PARSE) ){
+                    $result[$k] = db_parse_result($db_table, $result[$k]);
+                };
                 if ( $flags & DB_PREPARE_VALUE ){
                     $result[$k] = db_prepare_record($db_table,$result[$k]);
                 };
@@ -1111,7 +1114,9 @@ function db_select($db_table, $select_query, $flags=0){
                 $result[] = $row["id"];
             }elseif ( $flags & DB_PREPARE_VALUE ){
                 $result[] = db_prepare_record(db_parse_result($db_table, $row));
-            }else{
+            }elseif ( $flags & DB_DONT_PARSE ){
+                $result[] = $row;
+            }else{                
                 $result[] = db_parse_result($db_table, $row);
             };
         };
@@ -1267,6 +1272,19 @@ function db_prepare_value($value, $field_type){
             if ($value === "") $res = null;
             elseif ( ! is_null($value) ){
                 $res = glog_isodate($value);
+            };
+            break;
+        case "timestamp":
+            if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
+                $res = time();
+            }elseif(in_array( $value, array("0", "no", "n", "N", "off", "false") )){
+                $res = null;
+            }else{   // Check if value is valid timestamp, if not (i.e it's string "yes", "on", ... ) generate current timestamp
+                list($month, $day, $year) = explode("/", date("m/d/Y", $value));
+                if ( ! checkdate($month, $day, $year) ){
+                    dosyslog(__FUNCTION__.get_callee().": ERROR: Invalid timestamp: '".$value."'.");
+                    $res = time();
+                };
             };
             break;
         case "password":

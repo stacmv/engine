@@ -1,0 +1,15 @@
+<label class="checkbox-inline" style="height:22px">
+	<input type="hidden" name="<?=$field["name_to"];?>" value="false">
+	<input
+		type="checkbox"
+		name="<?=$field["name_to"];?>"
+		<?if (isset($field["id"])):?>id="<?=$field["id"];?>"<?endif;?> 
+		class="<?if (isset($field["class"])):?><?=$field["class"];?><?endif;?> <?if($field["required"]):?><?endif;?>"
+		<?if (!empty($field["value"])):?>
+			value="<?=$field["value"];?>" checked
+		<?else:?>
+			value="1"
+		<?endif;?>"
+		<?if ($field["required"]):?>required<?endif;?>
+	>
+</label>

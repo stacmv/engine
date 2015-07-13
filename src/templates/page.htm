@@ -26,6 +26,11 @@ foreach(@array(
 	<script src="assets/js/jquery.js"></script>
 	<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
 	<script src="assets/js/jquery.maskedinput.js"></script>
+	
+	<!-- Editor -->
+	<link rel="stylesheet" href="//cdn.jsdelivr.net/editor/0.1.0/editor.css">
+	<script src="//cdn.jsdelivr.net/editor/0.1.0/editor.js"></script>
+	<script src="//cdn.jsdelivr.net/editor/0.1.0/marked.js"></script>
 </head>
 <body>
 <div class="navbar navbar-fixed-top">
@@ -56,16 +61,17 @@ foreach(@array(
 </div>
 
 
-	<div class="container">
-    
+<div class="container">
+
 	<?if (!empty($_SESSION["msg"])):?>
-        <?=get_content("msg");?>
+		<?=get_content("msg");?>
 	<?endif;?>
 	
 	<?=get_content("content");?>
 	   
-	</div>
+</div>
 
+<div style="height:100px">&nbsp;</div>
 
 <div class="navbar navbar-fixed-bottom">
 	<div class="navbar-inner">

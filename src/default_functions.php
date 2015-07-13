@@ -298,6 +298,7 @@ if (!function_exists("get_page_files")){
         $pages_files = array(
             "engine_json" => cfg_get_filename("settings", "pages.json", true),
             "engine_xml"  => cfg_get_filename("settings", "pages.xml", true),
+            "engine_api"  => cfg_get_filename("settings", "api.pages.xml", true),
             "app_json"    => cfg_get_filename("settings", "pages.json"),
             "app_xml"     => cfg_get_filename("settings", "pages.xml"),
         );

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pages>
+	<page uri="engine_api/create_slug" title="API: Сгенерировать ссылку (uri)">
+		<params><str><type>string</type><source>request</source></str></params>
+		<actions>engine_api_create_slug</actions>
+		<templates><content>empty.htm</content><page>html.htm</page></templates>
+		<acl>access</acl>
+	</page>
+</pages>
+		

@@ -128,6 +128,7 @@ function render_template($template_file, $data = array() ){
     global $CFG;
     global $_SITE;
     global $_PAGE;
+    global $_URI;
     global $_USER;
     global $IS_IFRAME_MODE;
     

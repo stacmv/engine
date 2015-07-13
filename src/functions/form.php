@@ -70,6 +70,8 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         if ($value_from){
             if ($type == "password") {
                 $field["value_from"] = FORM_PASS_SUBSTITUTION;
+            }elseif($type == "timestamp"){
+                $field["value_from"] = $value_from;
             }else{
                 $field["value_from"] = db_prepare_value($value_from, $type);
             };
