@@ -17,6 +17,7 @@ function auth_simple_action(){
         
     }else{
         unset($_SESSION["auth_simple"]);
+        unset($_SESSION["simple"]);
     }
     
     
@@ -106,6 +107,7 @@ function auth_simple_login(){
 function auth_simple_logout(){
     
     unset($_SESSION["auth_simple"]);
+    unset($_SESSION["simple"]);
     
     dosyslog(__FUNCTION__.": NOTICE: User logged out.");
     

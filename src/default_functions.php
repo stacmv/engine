@@ -829,8 +829,7 @@ if (!function_exists("userHasRight")){
     function userHasRight($right,$login=""){
         global $_USER;
         $user = array();
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        
+       
         // проверка комбинации прав
           // ИЛИ - |
         if (strpos($right,"|") > 0){
@@ -854,7 +853,7 @@ if (!function_exists("userHasRight")){
             };
             
             $login = $_USER["profile"]["login"];
-            $user_rights = $_USER["profile"]["acl"];
+            $user_rights = $_USER["authenticated"] ? $_USER["profile"]["acl"] : array();
         }else {
             $users_ids = db_find("users", "login", $login);
             if (count($users_ids)==0){
@@ -869,8 +868,6 @@ if (!function_exists("userHasRight")){
             };
         };
         $res = !empty($user_rights) && in_array($right, $user_rights);
-        
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
         // dosyslog(__FUNCTION__.": DEBUG: ".$login." ".($res?"имеет право " : "не имеет права "). $right);
         

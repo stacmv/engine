@@ -50,6 +50,7 @@ function AUTHENTICATE(){
        
                 $authenticate_function = "auth_" . $auth_type . "_authenticate";
                 if ( function_exists($authenticate_function) ){
+                    dosyslog(__FUNCTION__.": INFO: Authenticating via " . $auth_type . ".");
                     $_SESSION[$auth_type]["authenticated"] = call_user_func($authenticate_function);
                     if ($_SESSION[$auth_type]["authenticated"]){
                         $_USER["authenticated"] = time();
@@ -62,7 +63,9 @@ function AUTHENTICATE(){
                 $_USER["authenticated"] = time();
             }
             
-            dosyslog(__FUNCTION__.": INFO: User '".$_USER["profile"]["login"]." (user_id:".$_USER["profile"]["id"].") athenticated via '".$auth_type."' since ".date("c",$_SESSION[$auth_type]["authenticated"]).".");
+            if ( ! empty($_SESSION[$auth_type]["authenticated"]) ){
+                dosyslog(__FUNCTION__.": INFO: User '".$_USER["profile"]["login"]." (user_id:".$_USER["profile"]["id"].") athenticated via '".$auth_type."' since ".date("c",$_SESSION[$auth_type]["authenticated"]).".");
+            };
         };
             
     }else{
