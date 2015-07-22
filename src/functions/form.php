@@ -2,7 +2,6 @@
 define ("FORM_PASS_SUBSTITUTION", "--cut--");
 
 function form_prepare($db_table, $form_name, $object=""){
-    global $_DATA;
     
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . ").");
             
