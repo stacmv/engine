@@ -68,6 +68,22 @@
         "acl": ["access"]
 	},
 	{
+		"uri": "pub/form",
+        "title": "",
+        "params": {
+            "action": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/", "pos": 1},
+            "object": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/" , "pos": 2},
+            "id": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/" , "pos": 3},
+			"msg": {"type": "json", "source": "session"}
+        },
+		"templates": {
+			"msg": "message.block.htm",
+			"page": "page.htm"
+		},
+        "actions":[ "form" ],
+        "acl": []
+	},
+	{
 		"uri": "logout",
 		"title":"Выход из системы",
 		"actions": ["logout"],
