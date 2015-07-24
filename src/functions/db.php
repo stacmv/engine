@@ -10,6 +10,7 @@ define("DB_RETURN_ROW",2);  // флаг для db_find() и db_select(), что 
 define("DB_RETURN_ONE",4);  // флаг для db_find(), что надо вернуть только одну запись, а не список
 define("DB_RETURN_DELETED",8);  // флаг для db_get() и db_find(), что надо вернуть и удаленные записи тоже
 define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get() и db_select(), что надо вернуть записи с ключами, равными id, а не порядковым номрам
+define("DB_RETURN_NEW_FIRST", 128); // флаг для db_get() и db_select(), что надо вернуть записи в порядке убывания created
 
 $_DB = array();
 
@@ -600,10 +601,15 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
         }
         $where_clause .= ( ! ($returnOptions & DB_RETURN_DELETED) ? " AND (isDeleted IS NULL OR isDeleted = '')" : "");
         
+        // ORDER BY
         $order_by_clause = "";
+        if ($returnOptions & DB_RETURN_NEW_FIRST){
+            if (!is_array($order_by)) $order_by = array($order_by);
+            $order_by[] = array("created"=>"DESC");
+        };
         if ( ! empty($order_by) ){
             if (!is_array($order_by)) $order_by = array($order_by);
-            
+                        
             $order_by_clause = " ORDER BY ";
             $i = 0;
             foreach($order_by as $k=>$v){
@@ -611,8 +617,7 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
             };
         };
         
-        
-        
+        // LIMIT
         $limit_clause = "";
         if ((int)$limit > 0){
             $limit_clause = " LIMIT ".(int) $limit;
@@ -703,7 +708,9 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
     };
     
     // Order by
-    if ($get_random){
+    if ($flags & DB_RETURN_NEW_FIRST){
+        $query .= " ORDER BY created DESC";
+    }elseif ($get_random){
         $query .= " ORDER BY RANDOM()";
         
     }
