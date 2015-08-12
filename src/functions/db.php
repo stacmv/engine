@@ -73,7 +73,7 @@ function db_add($db_table, ChangesSet $data, $comment=""){
 
             $changes = $data;
 
-            if ( ! db_add_history($db_table, $added_id, @$_USER["profile"]["id"], "db_add", $comment, $changes)){
+            if ( ! db_add_history($db_table, $added_id, (!empty($_USER["profile"]["id"]) ? $_USER["profile"]["id"] : 0), "db_add", $comment, $changes)){
                 // ДОРАБОТАТЬ: реализовать откат операции INSERT
                 
                 dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add record to history table of db '".$db_table."'.");
@@ -117,7 +117,7 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, Cha
         "action"    => $action,
         "objectId"  => (int) $objectId,
         "subjectId" => (int) $subjectId,
-        "subjectIP" => @$_SERVER["REMOTE_ADDR"],
+        "subjectIP" => ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : null,
         "timestamp" => time(),
     );
     

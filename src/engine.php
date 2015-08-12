@@ -267,10 +267,8 @@ function GETURI(){
     global $_URI;
     
     
-    $uri = @$_GET["uri"];
+    $uri = ! empty($_GET["uri"]) ? $_GET["uri"] : "/";
     
-    
-    if (!$uri) $uri = "/";
     if ("index"==$uri) $uri = "/";
     if ( ("/"!=$uri) && ("/" == $uri{0}) ) $uri = substr($uri,1);
 
@@ -454,7 +452,7 @@ function SETPARAMS(){
                     case "number":
                         $tmp = is_numeric($tmp) ? $tmp : NULL;
                         if ($tmp == "0") $tmp = (int) 0;
-                        if ($tmp === NULL) dosyslog(__FUNCTION__.": ERROR: Parameter '".@$fparam_name."' of type '".@$fparam["type"]."' does not satisfy to type requirements. Discarded. URI: '" . $_URI . "'.");
+                        if ($tmp === NULL) dosyslog(__FUNCTION__.": ERROR: Parameter '".(!empty($fparam_name) ? $fparam_name : "_undefined_")."' of type '".(!empty($fparam["type"]) ? $fparam["type"] : "_undefined_")."' does not satisfy to type requirements. Discarded. URI: '" . $_URI . "'.");
                         break;
                     case "file": //  here $tmp supposed to be file name.
                         list($res, $dest_file) = upload_file($tmp, FILES_DIR);
