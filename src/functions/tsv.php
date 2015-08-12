@@ -68,7 +68,7 @@ class CsvImporter
 function import_tsv($filename, $convertToUTF8=false, $returnHeaderOnly = false){
     
 
-    $file = glog_read_file_as_array($filename);
+    $file = glog_file_read_as_array($filename);
  
     $res = false;
     if (!$file){
