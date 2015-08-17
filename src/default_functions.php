@@ -654,9 +654,13 @@ if (!function_exists("set_topmenu")){
         $topmenu = array();
        
         foreach($menu as $menuItem){
-            $rights = isset($menuItem["rights"]) ? explode(",",$menuItem["rights"]) : array();
-            $isOk = false;
-            if (!empty($rights)) foreach($rights as $right) $isOk = userHasRight( trim($right) );
+            $rights = ! empty($menuItem["rights"]) ? explode(",",$menuItem["rights"]) : array();
+            if ( $rights ) {
+                $isOk = false;
+                if (!empty($rights)) foreach($rights as $right) $isOk = userHasRight( trim($right) );
+            }else{
+                $isOk = true;
+            };
             
             if ($isOk) $topmenu[] = $menuItem;
         };
