@@ -14,7 +14,7 @@ function login_http_basic_action(){
         $headers["WWW-Authenticate"] = 'Basic realm="' . ucfirst($CFG["GENERAL"]["codename"]) . ' - ' . date("M Y") . '"';
         $headers["HTTP"] = "HTTP/1.0 401 Unauthorized";
         $_RESPONSE["headers"] = $headers;
-        if (isset($_SESSION["http_basic"]["logged_out"])) unset($_SESSION["http_basic"]["logged_out"]);
+        if (isset($_SESSION["http_basic"])) unset($_SESSION["http_basic"]);
         SENDHEADERS();
         if ( file_exists(TEMPLATES_DIR . "not_logged_http_basic.htm") ){
             include(TEMPLATES_DIR . "not_logged_http_basic.htm");

@@ -482,12 +482,19 @@ if (!function_exists("register_user_ip")) {
 }
 if (!function_exists("register_message_opened")){
     function register_message_opened($message_id){
-        dosyslog(__FUNCTION__."\t".$message_id."\t".@$template."\t".@$emailOrUserId."\t".@$email."\t"."opened"."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
+        $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "_unknown_";
+        $qs = ! empty($_SERVER["QUERY_STRING"]) ? $_SERVER["QUERY_STRING"] : "";
+        
+        dosyslog(__FUNCTION__.get_callee().": INFO: Email with message_id:".$message_id." was opened by user at ip:".$ip.". Query string: '".$qs."'.");
     };
 };
 if (!function_exists("send_message")){
     function send_message($emailOrUserId, $template, $data, $options=""){
         global $CFG;
+        
+        $http_host = ! empty($_SERVER["HTTP_HOST"]) ? $_SERVER["HTTP_HOST"] : "";
+        $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "_unknown_";
+        $qs = ! empty($_SERVER["QUERY_STRING"]) ? $_SERVER["QUERY_STRING"] : "";
         
         if (! defined("EMAIL_TEMPLATES_DIR") ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Email templates dir is not defined. Emails could not be sent.");
@@ -498,13 +505,13 @@ if (!function_exists("send_message")){
             
             $user = db_get("users", $emailOrUserId, DB_RETURN_DELETED);
             if (empty($user) ){
-                dosyslog(__FUNCTION__.": User width id '".@$emailOrUserId."' is not found. Message could not be sent.");
+                dosyslog(__FUNCTION__.": User width id '".$emailOrUserId."' is not found. Message could not be sent.");
                 return false;
             }elseif( empty($user["email"]) ){
-                dosyslog(__FUNCTION__.": Email for user width id '".@$emailOrUserId."' is not set.");
+                dosyslog(__FUNCTION__.": Email for user width id '".$emailOrUserId."' is not set.");
                 return false;
             }elseif( ! filter_var($user["email"], FILTER_VALIDATE_EMAIL) ){
-                dosyslog(__FUNCTION__.": Email for user width id '".@$emailOrUserId."' is invalid: '".$user["email"]."'.");
+                dosyslog(__FUNCTION__.": Email for user width id '".$emailOrUserId."' is invalid: '".$user["email"]."'.");
                 return false;
             };
             $email = $user["email"];
@@ -529,13 +536,13 @@ if (!function_exists("send_message")){
         };
                 
         $tmp = @explode("\n\n",$t,2);
-        $subject = @$tmp[0];
-        $message = @$tmp[1];
+        $subject = isset($tmp[0]) ? $tmp[0] : "";
+        $message = isset($tmp[1]) ? $tmp[1] : "";
         
                 
         if (!$subject){
             dosyslog(__FUNCTION__.": WARNING: Subject is not set in email template '".$template."'.");
-            $subject = "Email from ".@$_SERVER["HTTP_HOST"];
+            $subject = "Email from " . $http_host;
         };
         if (!$message) dosyslog(__FUNCTION__.": WARNING: Empty message body in template '".$template."'.");
         
@@ -543,7 +550,7 @@ if (!function_exists("send_message")){
         
         
         
-        dosyslog(__FUNCTION__."\t".$message_id."\t".@$template."\t".@$emailOrUserId."\t".$email."\t".($res? "success" : "fail")."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
+        dosyslog(__FUNCTION__.get_callee() . ": INFO: ".$template." e-mail with message_id:".$message_id." sent to user ".$emailOrUserId. " for " .$email." ... ".($res? "success" : "fail").". IP:".$ip.". Qusery string:'".$qs."'.");
          
         return $res;
     };

@@ -162,7 +162,7 @@ function IDENTICATE(){
     if ( ! empty($_COOKIE[ $preffered_auth_type_cookie_name ]) ){
         $preffered_auth_type = $_COOKIE[ $preffered_auth_type_cookie_name ];
     };
-    if ( ! empty($_SESSION["auth_type"]) ){
+    if ( ! empty($_SESSION["auth_type"]) && in_array($_SESSION["auth_type"], $auth_types) ){
         $preffered_auth_type = $_SESSION["auth_type"];
     };
     
