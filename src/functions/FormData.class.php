@@ -76,7 +76,7 @@ class FormData{
         //   Для многострочных текстовых строк - заменить конец строки на \n;
         
         foreach($params["to"] as $what=>$v){
-            if ( $v ){
+            if ( $v !== "" ){
                 if ( is_string($v) ){
                     $this->changes->to[$what] = preg_replace('~\R~u', "\n", $v);
                 }else{
