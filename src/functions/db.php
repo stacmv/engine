@@ -1239,6 +1239,10 @@ function db_prepare_value($value, $field_type){
                 $res = null;
                 break;
             };
+            if ($value == "null"){
+                $res = null;
+                break;
+            };
             // dump($value,"value");
             if ( ! is_array($value)){
                 $res = db_parse_value($value, $field_type);

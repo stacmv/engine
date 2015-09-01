@@ -32,18 +32,17 @@ class FormData{
         
         // Обработка загружаемых файлов
         $files = upload_files($this);
+        
 
         if ( $files ){
-            dosyslog(__METHOD__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".implode(", ",$files)."'.");
+            dosyslog(__METHOD__.": DEBUG: ". get_callee().": Обнаружены загруженные файлы: '".json_encode_array($files)."'.");
             foreach($files as $field_name => $uploaded_file_name){
-                $this->files[ $field_name ] = $uploaded_file_name;
+                $this->files[ $field_name ] = $uploaded_file_name; // string or array of strings
                 
                 $this->changes->from[ $field_name ] = isset($params["from"][ $field_name ]) ? $params["from"][ $field_name ] : null;
                 $this->changes->to[ $field_name ] = $uploaded_file_name;
             };
         };
-        
-        
 
         if ( ! empty($params["from"]) ){
             $diff1 = array_diff(array_keys($params["to"]), array_keys($params["from"]));
@@ -76,6 +75,8 @@ class FormData{
         //   Для многострочных текстовых строк - заменить конец строки на \n;
         
         foreach($params["to"] as $what=>$v){
+            if ( ! empty($this->changes->to[$what])) continue; //  don't touch data about uploaded files
+            
             if ( $v !== "" ){
                 if ( is_string($v) ){
                     $this->changes->to[$what] = preg_replace('~\R~u', "\n", $v);
@@ -88,7 +89,7 @@ class FormData{
                 };
             };
         };
-
+       
        
         // Валидация
         $this->validate();
