@@ -7,5 +7,7 @@
             "email": "stacmv@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+		"optimit/libglog":"~0.18"
+	}
 }
