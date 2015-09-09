@@ -561,6 +561,8 @@ function SETPARAMS(){
 
 
 
+$start_microtime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
+
 // register_shutdown_function("shutdown");
 session_start();
 
@@ -595,5 +597,4 @@ if ( ! $ISREDIRECT && ! $IS_API_CALL){
 SENDHEADERS();
 SENDHTML();
 
-if (TEST_MODE) dosyslog("End script: NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-//if (TEST_MODE) echo "<br>\n Script done.";
+dosyslog("ENGINE: INFO: Request processed within " . round(microtime(true) - $start_microtime, 4) ."s, memory used in peak: ".glog_convert_size(memory_get_peak_usage(true)).".");
