@@ -9,6 +9,6 @@
     ],
     "require": {
 		"php": ">=5.3",
-		"optimit/glog_util"
+		"optimit/glog_util": "~0.18"
 	}
 }
