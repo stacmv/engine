@@ -1,0 +1,29 @@
+<select 
+	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
+	<?if (isset($field["name"])):?>id="<?=$field["name"];?>"<?endif;?> 
+	class="form-control <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
+>
+	<?if ( empty($field["readonly"])):?>
+		<option></option>
+		<?foreach($field["values"] as $caption=>$value):?>
+			<?if ( ! is_int($caption) ):?>
+				<option value="<?=$value;?>" <?if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
+			<?else:?>
+				<option <?if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
+			<?endif;?>
+		<?endforeach;?>
+	<?else:?>
+		<?if (!empty($field["value"])):?>
+			<?if (is_array($field["value"])):?>
+				<option value="<?=current($field["value"]);?>"><?=key($field["value"]);?></option>
+			<?else:?>
+				<option><?=$field["value"];?></option>
+			<?endif;?>
+		<?else:?>
+			<option></option>
+		<?endif;?>
+	<?endif;?>
+</select><?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
+<?if(!empty($field["hint"])):?>
+	<span class="help-block"><?=unescape_template_data($field["hint"]);?></span>
+<?endif;?>

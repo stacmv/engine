@@ -47,7 +47,7 @@ class CsvImporter
             { 
                 foreach ($this->header as $i => $heading_i) 
                 { 
-                    $row_new[$heading_i] = @$row[$i]; 
+                    $row_new[$heading_i] = isset($row[$i]) ? $row[$i] : ""; 
                 } 
                 $data[] = $row_new; 
             } 
@@ -68,7 +68,7 @@ class CsvImporter
 function import_tsv($filename, $convertToUTF8=false, $returnHeaderOnly = false){
     
 
-    $file = @file($filename);
+    $file = glog_file_read_as_array($filename);
  
     $res = false;
     if (!$file){

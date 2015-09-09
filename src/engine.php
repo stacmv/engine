@@ -9,13 +9,14 @@ function APPLYPAGETEMPLATE(){
     global $CFG;
     global $IS_IFRAME_MODE;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-
     if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
-
     
     if (! empty($_PAGE["templates"]["page"]) ){
-        if (empty($_PAGE["templates"]["content"]) ) set_template_for_user();
+        if (empty($_PAGE["templates"]["content"]) ){
+            if ( ! empty($_PAGE["templates"]["guest"]) ){
+                set_template_for_user();
+            };
+        };
         if ($IS_IFRAME_MODE){
             if ( ! empty($_PAGE["templates"]["iframe"]) ){
                 $_RESPONSE["body"] = get_content("iframe");
@@ -27,12 +28,13 @@ function APPLYPAGETEMPLATE(){
             $_RESPONSE["body"] = get_content("page");
         };
     }else{
+        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: 'Page' templates is not set for page '".$_PAGE["uri"]."'. Check pages config.");
         die("Code: e-".__LINE__."-page_tmpl");
     };
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
-function AUTENTICATE(){
+function AUTHENTICATE(){
     global $_USER;
     
     $_USER["authenticated"]  = false;
@@ -48,6 +50,7 @@ function AUTENTICATE(){
        
                 $authenticate_function = "auth_" . $auth_type . "_authenticate";
                 if ( function_exists($authenticate_function) ){
+                    dosyslog(__FUNCTION__.": INFO: Authenticating via " . $auth_type . ".");
                     $_SESSION[$auth_type]["authenticated"] = call_user_func($authenticate_function);
                     if ($_SESSION[$auth_type]["authenticated"]){
                         $_USER["authenticated"] = time();
@@ -60,7 +63,9 @@ function AUTENTICATE(){
                 $_USER["authenticated"] = time();
             }
             
-            dosyslog(__FUNCTION__.": INFO: User '".$_USER["profile"]["login"]." (user_id:".$_USER["profile"]["id"].") athenticated via '".$auth_type."' since ".date("c",$_SESSION[$auth_type]["authenticated"]).".");
+            if ( ! empty($_SESSION[$auth_type]["authenticated"]) ){
+                dosyslog(__FUNCTION__.": INFO: User '".$_USER["profile"]["login"]." (user_id:".$_USER["profile"]["id"].") athenticated via '".$auth_type."' since ".date("c",$_SESSION[$auth_type]["authenticated"]).".");
+            };
         };
             
     }else{
@@ -141,7 +146,7 @@ function DOACTION(){
         die("Code: e-".__LINE__."-".$function);
     };
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function IDENTICATE(){
 	global $_USER;
@@ -152,17 +157,23 @@ function IDENTICATE(){
     
     $_USER = array();
     
+    if ( ! db_get_table_schema("users") ){ // на сайте нет пользовательских аккаунтов
+        return $_USER;
+    };
+    
     $preffered_auth_type_cookie_name   = "pat";
     $preffered_auth_type_cookie_period = 7*24*60*60; // in seconds
     
     
     $auth_types = get_auth_types();
     
-    $preffered_auth_type = "http_basic";
+    $preffered_auth_type = $auth_types[0];
     if ( ! empty($_COOKIE[ $preffered_auth_type_cookie_name ]) ){
-        $preffered_auth_type = $_COOKIE[ $preffered_auth_type_cookie_name ];
+        if ( in_array($_COOKIE[ $preffered_auth_type_cookie_name ], $auth_types) ){
+            $preffered_auth_type = $_COOKIE[ $preffered_auth_type_cookie_name ];
+        };
     };
-    if ( ! empty($_SESSION["auth_type"]) ){
+    if ( ! empty($_SESSION["auth_type"]) && in_array($_SESSION["auth_type"], $auth_types) ){
         $preffered_auth_type = $_SESSION["auth_type"];
     };
     
@@ -204,9 +215,7 @@ function IDENTICATE(){
     }else{  // пользователь не прошел процедуру логина
     
         if ( ! empty($_PAGE["acl"]) ){  // страница с контролем доступа, требуется идентификация
-
-            
-            
+  
             
             $login_function = "auth_".$preffered_auth_type."_login";
             if (function_exists($login_function)){
@@ -235,7 +244,7 @@ function GETPAGE(){  // поиск страницы, соответствующ�
     global $_PAGE;
     global $_URI;
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     
 
     $_PAGE = find_page($_URI);
@@ -251,17 +260,15 @@ function GETPAGE(){  // поиск страницы, соответствующ�
     
     dosyslog(__FUNCTION__.": INFO: ".$_PAGE["uri"]);
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function GETURI(){
     global $CFG;
     global $_URI;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    $uri = @$_GET["uri"];
     
+    $uri = ! empty($_GET["uri"]) ? $_GET["uri"] : "/";
     
-    if (!$uri) $uri = "/";
     if ("index"==$uri) $uri = "/";
     if ( ("/"!=$uri) && ("/" == $uri{0}) ) $uri = substr($uri,1);
 
@@ -269,12 +276,12 @@ function GETURI(){
     
     dosyslog(__FUNCTION__.": INFO: ".$_URI);
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function HASNEXTACTION(){
     global $_ACTIONS;
     global $S;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     
     if (isset($_ACTIONS)){
         if (isset($_ACTIONS[0])){
@@ -287,13 +294,13 @@ function HASNEXTACTION(){
         dosyslog(__FUNCTION__.": FATAL ERROR: _ACTIONS list is not set. SETDEFAULTACTIONS() have to be called before HASNEXTACTION().");
         die("Code: e-".__LINE__);
     };
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     return $res;
 };
 function SENDHEADERS(){
     
     global $_RESPONSE;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
        
     if (isset($_RESPONSE["headers"])){
         $headers = (array) $_RESPONSE["headers"];
@@ -311,24 +318,27 @@ function SENDHEADERS(){
             setcookie($name,$cookie["value"],$cookie["expire"], $cookie["path"], $cookie["domain"]);
         };
     };
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function SENDHTML(){
     global $_RESPONSE;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     
     if (isset($_RESPONSE["body"])) echo $_RESPONSE["body"];
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function SETACTIONLIST(){
     global $_PAGE;
     global $_ACTIONS;
+    global $_DEFAULT_ACTIONS;
     
      
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb."); 
-    $_ACTIONS = array();
+     
+    // $_DEFAULT_ACTIONS - action-функции, которые должны выполняться для каждой страницы. См. register_default_action() из engine_functions.php, коорая может вызываться из actions.php.
+    
+    $_ACTIONS = ! empty($_DEFAULT_ACTIONS) ? $_DEFAULT_ACTIONS : array(); 
       
         
     if (empty($_PAGE["actions"])) {
@@ -348,15 +358,15 @@ function SETACTIONLIST(){
         };
     };        
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function SETPARAMS(){
     global $_URI;
     global $_PAGE;
     global $CFG;
     global $_PARAMS;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
+        
     dosyslog(__FUNCTION__.": NOTICE: Start setting parameters for page: '" . $_PAGE["uri"] . "'.");
        
     if ( ! empty($_PAGE["params"]) ) {
@@ -442,9 +452,12 @@ function SETPARAMS(){
                     case "number":
                         $tmp = is_numeric($tmp) ? $tmp : NULL;
                         if ($tmp == "0") $tmp = (int) 0;
-                        if ($tmp === NULL) dosyslog(__FUNCTION__.": ERROR: Parameter '".@$fparam_name."' of type '".@$fparam["type"]."' does not satisfy to type requirements. Discarded. URI: '" . $_URI . "'.");
+                        if ($tmp === NULL) dosyslog(__FUNCTION__.": ERROR: Parameter '".(!empty($fparam_name) ? $fparam_name : "_undefined_")."' of type '".(!empty($fparam["type"]) ? $fparam["type"] : "_undefined_")."' does not satisfy to type requirements. Discarded. URI: '" . $_URI . "'.");
                         break;
                     case "file": //  here $tmp supposed to be file name.
+                        list($res, $dest_file) = upload_file($tmp, FILES_DIR);
+                        if ($res) $tmp = $dest_file;
+                        break;
                     case "string":
                     case "text":
                         $tmp = is_string($tmp) ? $tmp : NULL;
@@ -542,11 +555,13 @@ function SETPARAMS(){
         dosyslog(__FUNCTION__.": DEBUG: No params are set for page '".$_PAGE["uri"]."'.");
     }
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     return $_PARAMS;
 };
 
 
+
+$start_microtime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
 
 // register_shutdown_function("shutdown");
 session_start();
@@ -561,7 +576,7 @@ $IS_IFRAME_MODE = ! empty($_GET["i"]) ? true : false;
 GETURI();
 GETPAGE(); // поиск и получение объекта текущей страницы
 IDENTICATE(); // идентификация - пользователь или гость
-AUTENTICATE(); // аутентификация пользователя (проверка пароля)
+AUTHENTICATE(); // аутентификация пользователя (проверка пароля)
 AUTHORIZE(); // авторизация пользователя (создание спиcка разрешений ACL)
 SETACTIONLIST();
 SETPARAMS();
@@ -582,5 +597,4 @@ if ( ! $ISREDIRECT && ! $IS_API_CALL){
 SENDHEADERS();
 SENDHTML();
 
-if (TEST_MODE) dosyslog("End script: NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-//if (TEST_MODE) echo "<br>\n Script done.";
+dosyslog("ENGINE: INFO: Request processed within " . round(microtime(true) - $start_microtime, 4) ."s, memory used in peak: ".glog_convert_size(memory_get_peak_usage(true)).".");

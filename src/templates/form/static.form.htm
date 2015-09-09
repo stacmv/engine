@@ -1,0 +1,8 @@
+<p
+	<?if (isset($field["name"])):?>data-name="<?=$field["name_to"];?>"<?endif;?>
+	<?if (isset($field["id"])):?>id="<?=$field["id"];?>"<?endif;?> 
+	class="form-control-static <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>" 
+><?if (isset($field["value"])):?><?=$field["value"];?><?endif;?></p>
+<?if(!empty($field["hint"])):?>
+	<span class="help-block"><?=$field["hint"];?></span>
+<?endif;?>

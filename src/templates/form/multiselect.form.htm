@@ -1,0 +1,41 @@
+<select multiple data-placeholder="-"
+	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
+	id="<?=$field["name"];?>"
+	class="form-control input-xxlarge <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
+>
+
+	<?$in_group = false;?>
+	<?foreach($field["values"] as $caption=>$value):?>
+		<?if ($value == "optgroup"):?>
+			<?if ($in_group):?>
+				</optgroup>
+			<?endif;?>
+			<optgroup label="<?=$caption;?>">
+			<?$in_group = true;?>
+		<?else:?>
+				
+			<?if ( ! is_int($caption) ):?>
+				<option value="<?=$value;?>" <?if ( ! empty($field["value"]) && ( in_array($value, $field["value"]) ) ):?> selected<?endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
+			<?else:?>
+				<option <?if ( ! empty($field["value"]) && ( in_array($value, $field["value"]) ) ):?> selected<?endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
+			<?endif;?>
+			
+		<?endif;?>
+	<?endforeach;?>
+
+</select><?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
+<?if(!empty($field["hint"])):?>
+	<span class="help-block"><?=unescape_template_data($field["hint"]);?></span>
+<?endif;?>
+<script>
+$(function(){
+	$("#<?=$field["name"];?>").multipleSelect(
+		{
+		filter:true,
+		selectAllText: "Выбрать все",
+		allSelected: "Выбраны все",
+		countSelected: "Выбрано #",
+		position: "top"
+		});
+})
+</script>

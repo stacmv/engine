@@ -38,7 +38,7 @@ function json_array_urlencode($arr){
         
             if (is_array($v)){
                 $arr[$k] = json_array_urlencode($v);
-            }else{
+            }elseif( ! is_numeric($v) ){
                 $arr[$k] = urlencode($v);
             };
         };

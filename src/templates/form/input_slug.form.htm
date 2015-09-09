@@ -1,0 +1,35 @@
+<input
+	<?if (isset($field["name"]) && ($field["name"] == "email") ):?>
+		type="email"
+	<?else:?>
+		type="text"
+	<?endif;?>
+	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
+	<?if (isset($field["id"])):?>id="<?=$field["id"];?>"<?endif;?> 
+	class="form-control <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>" 
+	<?if (isset($field["value"])):?>value="<?=$field["value"];?>"<?endif;?> 
+	<?if (isset($field["placeholder"])):?>placeholder="<?=$field["placeholder"];?>"<?endif;?> 
+	<?if ($field["required"]):?>required<?endif;?>
+	<?if (!empty($field["readonly"])):?>readonly<?endif;?>
+><?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
+<button class="btn cmdCreateSlug">Сгенерировать</button>
+
+<?if(!empty($field["hint"])):?>
+	<span class="help-block"><?=$field["hint"];?></span>
+<?endif;?>
+
+<script>
+$(function(){
+	$(".cmdCreateSlug").on("click", function(e){
+		e.preventDefault;
+		
+		var str = $("#name").val() || $("#title").val();
+		if (str){
+			$.get("engine_api/create_slug.html", {str:str}, function(data){
+				$("#<?=$field["id"];?>").val(data);
+			});
+		};
+		return false;
+	});
+});
+</script>

@@ -9,7 +9,7 @@
 			"form_name": {"type": "string", "source": "post"}
         },
         "actions":[ "add_data" ],
-        "acl": [ "access","manager" ]
+        "acl": [ "access" ]
 	},
 	{
 		"uri": "pub/add",
@@ -68,10 +68,27 @@
         "acl": ["access"]
 	},
 	{
+		"uri": "pub/form",
+        "title": "",
+        "params": {
+            "action": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/", "pos": 1},
+            "object": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/" , "pos": 2},
+            "id": {"type": "string", "source": "get",  "regexp":"/form\\/([^\\/]+)\\/([^\\/]+)\\/?([^\\/]*)/" , "pos": 3},
+			"msg": {"type": "json", "source": "session"}
+        },
+		"templates": {
+			"msg": "message.block.htm",
+			"page": "page.htm"
+		},
+        "actions":[ "form" ],
+        "acl": []
+	},
+	{
 		"uri": "logout",
 		"title":"Выход из системы",
 		"actions": ["logout"],
 		"templates":{
+			"msg": "message.block.htm",
 			"content": "logout.htm",
 			"page":"page.htm"
 		}
@@ -84,6 +101,27 @@
 			"content":"login.htm",
 			"page":"page.htm",
 			"login_form":"login_form.block.htm"
+		},
+		"acl":[]
+	},
+	{
+		"uri":"signin",
+		"title":"Вход в систему",
+		"params": {
+			"login": {"type":"string", "source":"post"},
+			"pass":  {"type":"string", "source":"post"},
+			"return_url":  {"type":"string", "source":"post"}
+		},
+		"actions": ["auth_simple"],
+		"acl":[]
+	},
+	{
+		"uri":"form/signin",
+		"title":"Вход в систему",
+		"actions": [],
+		"templates": {
+			"content":"signin.htm",
+			"page":"page.htm"
 		},
 		"acl":[]
 	},

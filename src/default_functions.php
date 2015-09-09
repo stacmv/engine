@@ -4,27 +4,39 @@
 **
 ** ******************************************************** */
 if (!function_exists("cfg_get_filename")){
-    function cfg_get_filename($type, $filename, $engine=false){
+    function cfg_get_filename($type, $filename, $engine=null){
+        // engine == true - get file from engine
+        // engine == false - get file from app
+        // engine == null - get file from app then if not found get it from engine
         
-        switch($type){
-        case "templates/form":
-            $filename = TEMPLATES_DIR . "/form/" . $filename;
-            break;
-        case "settings": // no break;
-        case "templates": // no break;
-        case "email_templates": 
-            if ($engine){
-                $filename = ENGINE_DIR . $type . "/" . $filename;
-            }else{
-                $filename = APP_DIR . $type . "/" . $filename;
-            };
-            break;
-        default:
+        // Type whitelist
+        $types = array("templates/form", "templates", "settings", "email_templates", "sms_templates" );
+        if ( ! in_array($type, $types) ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Unknown type '".$type."' for file '".$filename."'.");
             die("Code: df-".__LINE__);
         };
         
-        return $filename;
+        
+        
+        $path = array();
+        if ($engine){
+            $path[] = ENGINE_DIR;
+        }elseif( is_null($engine) ){
+            $path[] = APP_DIR;
+            $path[] = ENGINE_DIR;
+        }else{
+            $path[] = APP_DIR;
+        };
+        
+        if (count($path) == 1){
+            return $path[0] . $type . "/" . $filename;
+        }else{
+            do {
+                $test_filename = array_shift($path) . $type . "/" . $filename;
+            } while ( ! file_exists($test_filename) && ( count($path) > 0) );
+                        
+            return $test_filename;
+        }
     }
 }
 if (!function_exists("check_application_already_in_db")){
@@ -172,7 +184,7 @@ if (!function_exists("find_page")){
                             $uri = implode("/",$tmp);
                             $page = get_page_by_uri($pages,$uri);
                         }else{
-                           $page = get_page_by_uri($pages,"/");
+                           break;
                         };
 
                     };
@@ -281,14 +293,19 @@ if (!function_exists("get_page_by_uri")){
 };
 if (!function_exists("get_page_files")){
     function get_page_files(){
-        // Если в разных файлах определены одинаковые страницы, то используеьтся те, что определены (в pages_files) ПОЗЖЕ
+        // Если в разных файлах определены одинаковые страницы, то используется те, что определены (в pages_files) ПОЗЖЕ
         
         $pages_files = array(
-            "engine" => cfg_get_filename("settings", "pages.json", true),
-            "app"    => cfg_get_filename("settings", "pages.json"),
+            "engine_json" => cfg_get_filename("settings", "pages.json", true),
+            "engine_xml"  => cfg_get_filename("settings", "pages.xml", true),
+            "engine_api"  => cfg_get_filename("settings", "api.pages.xml", true),
+            "app_json"    => cfg_get_filename("settings", "pages.json"),
+            "app_xml"     => cfg_get_filename("settings", "pages.xml"),
         );
         
-        $extra_pages = glob(APP_DIR . "settings/*.pages.json");
+        $pages_files = array_filter($pages_files, function($file){ return file_exists($file);});
+        
+        $extra_pages = glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE);
         if ( ! empty($extra_pages) ){
             foreach($extra_pages as $file){
                 $start = strlen(APP_DIR . "settings/");
@@ -300,6 +317,8 @@ if (!function_exists("get_page_files")){
         }
         
         return $pages_files;
+        
+        
         
     }
 }
@@ -315,32 +334,68 @@ if (!function_exists("get_pages")){
         
         $pages = array();
         foreach($pages_files as $app=>$file){
-            $str = glog_file_read($file);
-            if ($str){
-                $arr = json_decode_array($str, false); // false means "do not urldecode output";
-                if ( ! $arr ){
-                    dosyslog(__FUNCTION__.": FATAL ERROR: Can not decode JSON file '".$file."'.");
-                    die("Code: df-".__LINE__."-".$app."_pages_json");
-                }
-            }else{
-                $arr = array();
-                dosyslog(__FUNCTION__.": FATAL ERROR: Can not read file '".$file."'.");
-                die("Code: df-".__LINE__);
-            }
             
-            $pages_tmp  = array();
-            if ( !empty($arr["pages"]) ){
-                foreach($arr["pages"] as $k=>$v){
-                    $pages_tmp[ $v["uri"] ] = $v;
+            if (pathinfo($file, PATHINFO_EXTENSION) == "json" ){
+            
+                $str = glog_file_read($file);
+                if ($str){
+                    $arr = json_decode_array($str, false); // false means "do not urldecode output";
+                    if ( ! $arr ){
+                        dosyslog(__FUNCTION__.": FATAL ERROR: Can not decode JSON file '".$file."'.");
+                        die("Code: df-".__LINE__."-".$app."_pages_json");
+                    }
+                }else{
+                    $arr = array();
+                    dosyslog(__FUNCTION__.": FATAL ERROR: Can not read file '".$file."'.");
+                    die("Code: df-".__LINE__."-".$file);
+                }
+                
+                $pages_tmp  = array();
+                if ( !empty($arr["pages"]) ){
+                    foreach($arr["pages"] as $k=>$v){
+                        $pages_tmp[ $v["uri"] ] = $v;
+                    };
+                    unset($k,$v);
                 };
-                unset($k,$v);
+                if ( $pages_tmp ) $pages = array_merge($pages, $pages_tmp);
+                unset($pages_tmp);
+            
+            }elseif(pathinfo($file, PATHINFO_EXTENSION) == "xml" ){
+              
+                $arr = xml_to_array( xml_load_file($file) );
+                $pages_tmp = array();
+                
+                
+                if ( ! empty($arr["page"]) ){
+                    if ( ! isset($arr["page"][0]) ) $arr["page"] = array($arr["page"]);
+                    
+                    foreach($arr["page"] as $page){
+                        // Атрибуты
+                        foreach($page["@attributes"] as $k=>$v){
+                            $page[$k] = $v;
+                        };
+                        unset($k,$v);
+                        unset($page["@attributes"]);
+                        
+                        foreach(array("params","actions","templates","acl") as $node){
+                            if ( isset($page[$node]) && ! is_array($page[$node]) ) $page[$node] = array($page[$node]);
+                        };
+                        unset($node);
+                        
+                        $pages_tmp[ $page["uri"] ] = $page;
+                    };
+                    unset($page);
+                   
+                    
+                }
+                if ( $pages_tmp ) $pages = array_merge($pages, $pages_tmp);
+                unset($pages_tmp);
+                
+                
+                
             };
-            if ( $pages_tmp ) $pages = array_merge($pages, $pages_tmp);
-            unset($pages_tmp);
         }
         unset($app,$file);
-                
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
      
         return $pages;
     };
@@ -482,12 +537,19 @@ if (!function_exists("register_user_ip")) {
 }
 if (!function_exists("register_message_opened")){
     function register_message_opened($message_id){
-        dosyslog(__FUNCTION__."\t".$message_id."\t".@$template."\t".@$emailOrUserId."\t".@$email."\t"."opened"."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
+        $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "_unknown_";
+        $qs = ! empty($_SERVER["QUERY_STRING"]) ? $_SERVER["QUERY_STRING"] : "";
+        
+        dosyslog(__FUNCTION__.get_callee().": INFO: Email with message_id:".$message_id." was opened by user at ip:".$ip.". Query string: '".$qs."'.");
     };
 };
 if (!function_exists("send_message")){
     function send_message($emailOrUserId, $template, $data, $options=""){
         global $CFG;
+        
+        $http_host = ! empty($_SERVER["HTTP_HOST"]) ? $_SERVER["HTTP_HOST"] : "";
+        $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "_unknown_";
+        $qs = ! empty($_SERVER["QUERY_STRING"]) ? $_SERVER["QUERY_STRING"] : "";
         
         if (! defined("EMAIL_TEMPLATES_DIR") ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Email templates dir is not defined. Emails could not be sent.");
@@ -498,13 +560,13 @@ if (!function_exists("send_message")){
             
             $user = db_get("users", $emailOrUserId, DB_RETURN_DELETED);
             if (empty($user) ){
-                dosyslog(__FUNCTION__.": User width id '".@$emailOrUserId."' is not found. Message could not be sent.");
+                dosyslog(__FUNCTION__.": User width id '".$emailOrUserId."' is not found. Message could not be sent.");
                 return false;
             }elseif( empty($user["email"]) ){
-                dosyslog(__FUNCTION__.": Email for user width id '".@$emailOrUserId."' is not set.");
+                dosyslog(__FUNCTION__.": Email for user width id '".$emailOrUserId."' is not set.");
                 return false;
             }elseif( ! filter_var($user["email"], FILTER_VALIDATE_EMAIL) ){
-                dosyslog(__FUNCTION__.": Email for user width id '".@$emailOrUserId."' is invalid: '".$user["email"]."'.");
+                dosyslog(__FUNCTION__.": Email for user width id '".$emailOrUserId."' is invalid: '".$user["email"]."'.");
                 return false;
             };
             $email = $user["email"];
@@ -529,13 +591,13 @@ if (!function_exists("send_message")){
         };
                 
         $tmp = @explode("\n\n",$t,2);
-        $subject = @$tmp[0];
-        $message = @$tmp[1];
+        $subject = isset($tmp[0]) ? $tmp[0] : "";
+        $message = isset($tmp[1]) ? $tmp[1] : "";
         
                 
         if (!$subject){
             dosyslog(__FUNCTION__.": WARNING: Subject is not set in email template '".$template."'.");
-            $subject = "Email from ".@$_SERVER["HTTP_HOST"];
+            $subject = "Email from " . $http_host;
         };
         if (!$message) dosyslog(__FUNCTION__.": WARNING: Empty message body in template '".$template."'.");
         
@@ -543,7 +605,7 @@ if (!function_exists("send_message")){
         
         
         
-        dosyslog(__FUNCTION__."\t".$message_id."\t".@$template."\t".@$emailOrUserId."\t".$email."\t".($res? "success" : "fail")."\t".@$_SERVER["REMOTE_ADDR"]."\t".@$_SERVER["QUERY_STRING"], @LOGS_DIR."send_message.".date("Y-m-d").".log.txt");
+        dosyslog(__FUNCTION__.get_callee() . ": INFO: ".$template." e-mail with message_id:".$message_id." sent to user ".$emailOrUserId. " for " .$email." ... ".($res? "success" : "fail").". IP:".$ip.". Qusery string:'".$qs."'.");
          
         return $res;
     };
@@ -587,14 +649,15 @@ if (!function_exists("set_topmenu")){
         };
         $menu = $tmp;
        
+            
         // формирование topmenu для конкретного пользователя
         $topmenu = array();
        
         foreach($menu as $menuItem){
-            if ( ! empty($menuItem["rights"]) ){
-                $rights = array_map( "trim", explode(",",$menuItem["rights"]) );
+            $rights = ! empty($menuItem["rights"]) ? explode(",",$menuItem["rights"]) : array();
+            if ( $rights ) {
                 $isOk = false;
-                if ( ! empty($rights)) foreach($rights as $right) $isOk = userHasRight( trim($right) );
+                if (!empty($rights)) foreach($rights as $right) $isOk = userHasRight( trim($right) );
             }else{
                 $isOk = true;
             };
@@ -777,7 +840,19 @@ if (!function_exists("userHasRight")){
     function userHasRight($right,$login=""){
         global $_USER;
         $user = array();
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+       
+        // проверка комбинации прав
+          // ИЛИ - |
+        if (strpos($right,"|") > 0){
+            $OR_rights = explode("|", $right, 2);
+            return userHasRight($OR_rights[0], $login) || userHasRight($OR_rights[1], $login);
+          // И - , 
+        }elseif(strpos($right,",") > 0){
+            $AND_rights = explode(",", $right, 2);
+            return userHasRight($AND_rights[0], $login) && userHasRight($AND_rights[1], $login);
+        };
+        
+        $right = trim($right);
         
         
         if ( ! $login ){
@@ -789,7 +864,7 @@ if (!function_exists("userHasRight")){
             };
             
             $login = $_USER["profile"]["login"];
-            $user_rights = $_USER["profile"]["acl"];
+            $user_rights = $_USER["authenticated"] ? $_USER["profile"]["acl"] : array();
         }else {
             $users_ids = db_find("users", "login", $login);
             if (count($users_ids)==0){
@@ -804,8 +879,6 @@ if (!function_exists("userHasRight")){
             };
         };
         $res = !empty($user_rights) && in_array($right, $user_rights);
-        
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
         
         // dosyslog(__FUNCTION__.": DEBUG: ".$login." ".($res?"имеет право " : "не имеет права "). $right);
         
@@ -822,7 +895,7 @@ if (!function_exists("user_has_access_by_ip")){
         
         if ( userHasRight("account") || $_USER["isGuest"] || ! isset($_USER )) return true; // Не ограничивать доступ партнееров, гостей и при вызове из "неинтернактивных" сценариев (lead.php, ...)
         
-        if ( ! $ip ) $ip = @$_SERVER["REMOTE_ADDR"];
+        if ( ! $ip ) $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "";
         
         if ( ! $user_id && ! $login ){
             $user_id = $_USER["profile"]["id"];

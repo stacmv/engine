@@ -1,17 +1,10 @@
 <?php
 define ("FORM_PASS_SUBSTITUTION", "--cut--");
 
-function form_prepare($db_table, $form_name, $object_id=""){
-    global $_DATA;
+function form_prepare($db_table, $form_name, $object=""){
     
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . ").");
-    
-    if ($object_id){
-        $object = db_get($db_table, $object_id, DB_RETURN_DELETED);
-    }else{
-        $object = array();
-    };
-        
+            
     // Подготовка данных для полей формы
     $fields = array();
     $table = form_get_fields($db_table, $form_name);
@@ -26,14 +19,18 @@ function form_prepare($db_table, $form_name, $object_id=""){
         
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){ return $i["name"];}, $fields)) );
     
-    $_DATA["object"]      = $object;
-    $_DATA["fields_form"] = $fields;
-    $_DATA["fields_form"][] = form_prepare_field( array("type"=>"string", "form_template"=>"hidden", "name"=>"form_name"), true, $form_name);
+    return $fields;
 }
 function form_prepare_field($field, $is_stand_alone = false, $value = "", $value_from = ""){
-                
+        
+        if ( empty($field["form_template"]) ){
+            dosyslog(__FUNCTION__.": FATAL ERROR: Template for field '".$field["name"]."' is not found. Check DB config.");
+            die("Code: efrm-".__LINE__."-".$field["name"]);
+        };
+        
         $type     = $field["type"]; // тип поля в БД
         $template = $field["template"] = $field["form_template"]; 
+        
         
         // Label
         if ($template == "hidden"){
@@ -72,6 +69,8 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         if ($value_from){
             if ($type == "password") {
                 $field["value_from"] = FORM_PASS_SUBSTITUTION;
+            }elseif($type == "timestamp"){
+                $field["value_from"] = $value_from;
             }else{
                 $field["value_from"] = db_prepare_value($value_from, $type);
             };
@@ -264,50 +263,4 @@ function form_get_action_link($form_name, $is_public=false){
     
     
     return ($is_public ? "pub/" : "") . $form_uri . $CFG["URL"]["ext"] . ($IS_IFRAME_MODE ? "?i=1" : "");
-}
-function form_validate($db_table, $form_name, $object){
-    
-    $res = true;
-    $invalid_fields = array();
-    
-    $fields_form = form_prepare($db_table, $form_name,$object);
-    
-    foreach($fields_form as $field){
-        $name = $field["name"];
-        
-        // required
-        if ( $field["required"] && empty($object[$name]) ){
-            $res = false;
-            $invalid_fields[] = array($name => "required");
-        };
-		
-		// field specific validation rules
-		if ( ! empty($field["validate"]) ){
-			$rules = explode("|", $field["validate"]);
-		
-			foreach($rules as $rule){
-				$params = array();
-				if (strpos($rule, ":") > 0){
-					$params = explode(":",$rule);
-					$rule = array_shift($params);
-				};
-				
-				if (function_exists("validate_".$rule)){
-					$res = call_user_func_array("validate_".$rule, $params);
-				}else{
-					dosyslog(__FUNCTION__.get_callee().": ERROR: Validate function for rule '".$rule."' on field '".$name."' on form '".$form_name."' is not defined.");
-					$res = false;
-				};
-				
-				if ( ! $res){
-					$invalid_fields[] = array($name => $rule);
-				};
-				
-			};
-		};
-		
-    };
-        
-    
-    return array($res, $invalid_fields);
 }
