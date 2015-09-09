@@ -1,0 +1,14 @@
+{
+    "name": "optimit/engine",
+    "description": "Optimit framework for general PHP websites.",
+    "authors": [
+        {
+            "name": "Vyacheslav Matsnev",
+            "email": "stacmv@goptimit.ru"
+        }
+    ],
+    "require": {
+		"php": ">=5.3",
+		"optimit/glog_util"
+	}
+}
