@@ -640,10 +640,11 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
             $res = $statement->execute($ids);
         };
     }else{
+        $err = $dbh->errorInfo();
+        dosyslog(__FUNCTION__.get_callee().": ERROR: PDO Error: ".$err[2]);
         $res = false;
     };
-    
-    
+        
     if ($res){
         $result = $statement->fetchAll(PDO::FETCH_ASSOC); 
         if ( ! empty($result) ){
