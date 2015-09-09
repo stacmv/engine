@@ -8,6 +8,7 @@
         }
     ],
     "require": {
+		"optimit/libglog": "~0.18",
 		"erusev/parsedown": "dev-master"
 	}
 }
