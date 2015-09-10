@@ -20,10 +20,10 @@ class FormData{
         $this->db_table = $db_table;
         if ( ! empty($params["form_name"]) ){
             $this->form_name = $params["form_name"];
-        }elseif( ! empty($params["object_name"]) && ! empty($params["action"]) ){
-            $this->form_name = db_get_db_table($params["object_name"]) . "_" . $params["action"];
+        }elseif( ! empty($params["action"]) ){
+            $this->form_name = $db_table . "_" . $params["action"];
         }else{
-            dosyslog(__METHOD__.get_callee().": FATAL ERROR: Could not determine form_name. There are 'form_name' or 'object_name' & 'action' fields must be defined in params.");
+            dosyslog(__METHOD__.get_callee().": FATAL ERROR: Could not determine form_name. There are 'form_name' or 'action' fields must be defined in 'params'.");
             die("Code: ".__CLASS__ . "-".__LINE__);
         };
         
