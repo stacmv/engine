@@ -15,11 +15,6 @@ function apply_template($template_name, $content_block = ""){
     
     $HTML = "";
     
-    if ( ! defined("TEMPLATES_DIR") ){
-        dosyslog(__FUNCTION__.": FATAL ERROR: Templates directory is not set. Check define file.");
-        die("Code: et-".__LINE__);
-    };
-    
     if ( empty($_PAGE["templates"]) ){
         dosyslog(__FUNCTION__.": FATAL ERROR: There no templates defined for page '".$_PAGE["uri"]."'. Check pages file.");
         die("Code: et-".__LINE__);

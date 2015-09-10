@@ -304,7 +304,7 @@ function logout_action(){
 function not_auth_action(){
     $forbidden_template_file = "forbidden.htm";
     
-    if (file_exists(TEMPLATES_DIR . $forbidden_template_file)){
+    if (file_exists(cfg_get_filename("templates", $forbidden_template_file))){
         set_template_file("content", $forbidden_template_file);
     }else{
         set_content("content", "<h1>Доступ запрещен</h1>");
