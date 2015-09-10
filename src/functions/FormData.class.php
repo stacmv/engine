@@ -9,7 +9,7 @@ class FormData{
     private $errors;
     
     
-    public function __construct($db_table, array $params){
+    public function __construct($db_table, array $params, $action = ""){
         
         $this->changes = new ChangesSet;
         
@@ -20,11 +20,13 @@ class FormData{
         $this->db_table = $db_table;
         if ( ! empty($params["form_name"]) ){
             $this->form_name = $params["form_name"];
+        }elseif( ! $action ){
+            $this->form_name = $db_table . "_" . $action;
         }elseif( ! empty($params["action"]) ){
             $this->form_name = $db_table . "_" . $params["action"];
         }else{
-            dosyslog(__METHOD__.get_callee().": FATAL ERROR: Could not determine form_name. There are 'form_name' or 'action' fields must be defined in 'params'.");
-            die("Code: ".__CLASS__ . "-".__LINE__);
+            $action = "edit";
+            $this->form_name = $db_table . "_" . $action;
         };
         
         

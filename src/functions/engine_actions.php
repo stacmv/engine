@@ -229,6 +229,9 @@ function form_action(){
     if ( function_exists("form_prepare_" . $form_name) ){
         $fields = call_user_func("form_prepare_" . $form_name, $fields, $id);
     }
+    if (function_exists("set_objects_action")){
+        set_objects_action($form_name);
+    }
     //
     
     $_DATA["object"]      = $object;

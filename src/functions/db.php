@@ -452,7 +452,7 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
     
     //dump($comment,"comment");
     $dbh = db_set($db_table);
-    $object = db_get($db_table, $id, DB_DONT_PARSE | DB_RETURN_DELETED);
+    $object = db_get($db_table, $id, DB_RETURN_DELETED);
     
     $table_name = db_get_table($db_table);
     
@@ -490,11 +490,13 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
             continue;
         };
         
-        if ( (db_get_field_type($db_table, $key) == "password") ) { // при смене пароля оригинальный пароль (или хэш) на сервер от клиента не приходит, только новый.
+        $field_type = db_get_field_type($db_table, $key);
+        
+        if ( ($field_type == "password") ) { // при смене пароля оригинальный пароль (или хэш) на сервер от клиента не приходит, только новый.
             continue;
         }
         
-        if ($changes->from[$key] != $object[$key]){ 
+        if (isset($changes->from[$key]) &&  ($changes->from[$key] != db_prepare_value($object[$key], $field_type))){ 
             // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
             if (preg_replace('~\R~u', "\n", $changes->from[$key]) == preg_replace('~\R~u', "\n", $object[$key])){
                 // Это не конфликт.
@@ -506,7 +508,7 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
     unset($key, $value);
    
     if ( ! empty($not_existed) ){
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Theese fields are not exist in [".$db_table."]: ". implode(", ", $not_existed).".");
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " These fields are not exist in [".$db_table."]: ". implode(", ", $not_existed).".");
     };
     if ( ! empty($conflicted) ){
         dosyslog(__FUNCTION__.": WARNING " . get_callee() . " Changes conflict: object state changed during editing time: ". implode(",", $conflicted) . ".");

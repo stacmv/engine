@@ -98,8 +98,8 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         }
         
         if ($template == "hidden"){
-            if (empty($field["value"]) && !empty($vlues)){
-                $field["value"] = form_get_field_values($v);
+            if (empty($field["value"]) && !empty($field["values"])){
+                $field["value"] = form_get_field_values($field);
             };
         }
         
