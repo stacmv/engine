@@ -8,6 +8,6 @@
         }
     ],
     "require": {
-		"optimit/libglog":"~0.18"
+		"optimit/glog_util": "dev-master"
 	}
 }
