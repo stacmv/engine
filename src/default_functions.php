@@ -256,6 +256,12 @@ if (!function_exists("get_db_files")){
         $db_files["site"]   = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_SITE);
         $db_files["app"]    = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_APP);
         $db_files["engine"] = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_ENGINE);
+        
+        $db_files = array_filter($db_files, function($file){
+            return file_exists($file);
+        });
+        
+        dosyslog(__FUNCTION__.get_callee().": DEBUG: Db_files: ".implode(", ", array_values($db_files)));
      
         return $db_files;
         
@@ -307,20 +313,19 @@ if (!function_exists("get_page_files")){
         // Если в разных файлах определены одинаковые страницы, то используется те, что определены (в pages_files) ПОЗЖЕ
         
         $pages_files = array(
-            "engine_json" => cfg_get_filename("settings", "pages.json", true),
-            "engine_xml"  => cfg_get_filename("settings", "pages.xml", true),
-            "engine_api"  => cfg_get_filename("settings", "api.pages.xml", true),
-            "app_json"    => cfg_get_filename("settings", "pages.json"),
-            "app_xml"     => cfg_get_filename("settings", "pages.xml"),
+            "engine_json" => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_ENGINE),
+            "engine_xml"  => cfg_get_filename("settings", "pages.xml", ENGINE_SCOPE_ENGINE),
+            "engine_api"  => cfg_get_filename("settings", "api.pages.xml", ENGINE_SCOPE_ENGINE),
+            "app_json"    => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_APP),
+            "app_xml"     => cfg_get_filename("settings", "pages.xml", ENGINE_SCOPE_APP),
+            "site_json"    => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_SITE),
+            "site_xml"     => cfg_get_filename("settings", "pages.xml", ENGINE_SCOPE_SITE),
         );
-        if ( ! empty($_SITE["codename"])) {
-            $pages_files[ $_SITE["codename"] . "_json"] = cfg_get_filename("settings", "pages.json");
-            $pages_files[ $_SITE["codename"] . "_xml"] = cfg_get_filename("settings", "pages.xml");
-        };
+        
         
         $pages_files = array_filter($pages_files, function($file){ return file_exists($file);});
         
-        $extra_pages = glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE);
+        $extra_pages = array_merge( glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE), glob(SITE_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE) );
         if ( ! empty($extra_pages) ){
             foreach($extra_pages as $file){
                 $start = strlen(APP_DIR . "settings/");
@@ -330,6 +335,8 @@ if (!function_exists("get_page_files")){
             };
             unset($file, $start,$length, $key);
         }
+        
+         dosyslog(__FUNCTION__.get_callee().": DEBUG: Pages_files: ".implode(", ", array_values($pages_files)));
         
         return $pages_files;
         
