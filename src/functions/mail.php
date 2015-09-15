@@ -9,7 +9,7 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     $qs = ! empty($_SERVER["QUERY_STRING"]) ? $_SERVER["QUERY_STRING"] : "";
     
     
-    $log_msg_prolog = __FUNCTION__.get_callee() . ": INFO: ".$template." e-mail for user ".$emailOrUserId " ... ";
+    $log_msg_prolog = __FUNCTION__.get_callee() . ": INFO: ".$template." e-mail for user ".$emailOrUserId . " ... ";
     
     // Check site settings
     if (isset($_SITE["site_notifications_to_send"])){ // site has any notification settings
