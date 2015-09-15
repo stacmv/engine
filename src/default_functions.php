@@ -567,68 +567,6 @@ if (!function_exists("register_message_opened")){
         dosyslog(__FUNCTION__.get_callee().": INFO: Email with message_id:".$message_id." was opened by user at ip:".$ip.". Query string: '".$qs."'.");
     };
 };
-if (!function_exists("send_message")){
-    function send_message($emailOrUserId, $template, $data, $options=""){
-        global $CFG;
-        
-        $http_host = ! empty($_SERVER["HTTP_HOST"]) ? $_SERVER["HTTP_HOST"] : "";
-        $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "_unknown_";
-        $qs = ! empty($_SERVER["QUERY_STRING"]) ? $_SERVER["QUERY_STRING"] : "";
-                
-        if (is_numeric($emailOrUserId)){
-            
-            $user = db_get("users", $emailOrUserId, DB_RETURN_DELETED);
-            if (empty($user) ){
-                dosyslog(__FUNCTION__.": User width id '".$emailOrUserId."' is not found. Message could not be sent.");
-                return false;
-            }elseif( empty($user["email"]) ){
-                dosyslog(__FUNCTION__.": Email for user width id '".$emailOrUserId."' is not set.");
-                return false;
-            }elseif( ! filter_var($user["email"], FILTER_VALIDATE_EMAIL) ){
-                dosyslog(__FUNCTION__.": Email for user width id '".$emailOrUserId."' is invalid: '".$user["email"]."'.");
-                return false;
-            };
-            $email = $user["email"];
-        }else{
-            $email = $emailOrUserId;
-            if( ! filter_var($email, FILTER_VALIDATE_EMAIL) ){
-                dosyslog(__FUNCTION__.": Spicified email is invalid: '".$user["email"]."'.");
-                return false;
-            };
-        };
-        
-        
-        $message_id = md5($email . $template . serialize($data));
-        $data["tracking_pixel_url"] = $CFG["URL"]["base"] . "/reg_msg_opened/" . $message_id . $CFG["URL"]["ext"];
-        
-        // parse template.
-        $t = glog_render( cfg_get_filename("email_templates", $template.".htm"), $data );
-        if (empty($t)){
-            dosyslog(__FUNCTION__.": ERROR: Email template is empty.");
-            if ($t == "") die("Code: df-".__LINE__); // убиваемся при ошибке конфигурирования (пустой шаблон), но работаем, если произошла ошибка чтения в продакшене
-            return false;
-        };
-                
-        $tmp = @explode("\n\n",$t,2);
-        $subject = isset($tmp[0]) ? $tmp[0] : "";
-        $message = isset($tmp[1]) ? $tmp[1] : "";
-        
-                
-        if (!$subject){
-            dosyslog(__FUNCTION__.": WARNING: Subject is not set in email template '".$template."'.");
-            $subject = "Email from " . $http_host;
-        };
-        if (!$message) dosyslog(__FUNCTION__.": WARNING: Empty message body in template '".$template."'.");
-        
-        $res = @mail($email, $subject, $message, "FROM:".$CFG["GENERAL"]["system_email"]."\nREPLY-TO:".$CFG["GENERAL"]["admin_email"]."\ncontent-type: text/html; charset=UTF-8");
-        
-        
-        
-        dosyslog(__FUNCTION__.get_callee() . ": INFO: ".$template." e-mail with message_id:".$message_id." sent to user ".$emailOrUserId. " for " .$email." ... ".($res? "success" : "fail").". IP:".$ip.". Qusery string:'".$qs."'.");
-         
-        return $res;
-    };
-};
 if (!function_exists("set_template_for_user")){
     function set_template_for_user(){
         global $_USER;
