@@ -157,13 +157,16 @@ function form_get_fields($db_table, $form_name){
         // Parse some data
         foreach($v as $prop_key=>$prop_value){
             if (substr($prop_key, 0, 5) == "form_"){
-                // ////
-                if ($prop_key == "form_value_default"){
-                    $tmp_marker = "_".uniqid()."_";
-                    $prop_value = str_replace("||", $tmp_marker, $prop_value); // экранируем ||, на случай когда значение типа list
-                }
-                // ////
+              
                 if ( strpos($prop_value, "|") !== false ){
+                    
+                    // ////
+                    if ($prop_key == "form_value_default"){
+                        $tmp_marker = "_".uniqid()."_";
+                        $prop_value = str_replace("||", $tmp_marker, $prop_value); // экранируем ||, на случай когда значение типа list
+                    }
+                    // ////
+                    
                     $tmp = explode("|", $prop_value);
                     if ( isset($tmp[$form_index]) ){
                         $v[$prop_key] = $tmp[$form_index];
@@ -174,12 +177,14 @@ function form_get_fields($db_table, $form_name){
                         
                     }
                     unset($tmp);
+                    
+                    // ////
+                    if ($prop_key == "form_value_default"){
+                        $v[$prop_key] = str_replace($tmp_marker, "||", $v[$prop_key]); // снимаем экран ||
+                    }
+                    // ////
                 };
-                // ////
-                if ($prop_key == "form_value_default"){
-                    $prop_value = str_replace($tmp_marker, "||", $prop_value); // снимаем экран ||
-                }
-                // ////
+                
             }
         }
         unset($prop_key, $prop_value);
