@@ -5,7 +5,7 @@
 	class="form-control input-xxlarge <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
 >
 	
-	<?if (empty($field["value"] && !empty($filed["form_value_default"]))):?>
+	<?if (empty($field["value"]) && !empty($filed["form_value_default"])):?>
 		<?$field["value"] = db_parse_value($field["form_value_default"], "list");?>
 	<?endif;?>
 
