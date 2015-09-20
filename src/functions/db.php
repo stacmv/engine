@@ -599,7 +599,13 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
             $where_clause = $field." LIKE ".$dbh->quote("%".DB_LIST_DELIMITER.$value.DB_LIST_DELIMITER."%");
             break;
         default:
-            $where_clause = $field."=".$dbh->quote($value);
+            if (is_array($value)){
+                $where_clause = $field." IN (".implode(", ", array_map(function($v)use($dbh){
+                    return $dbh->quote($v);
+                }, $value) ) . ")";
+            }else{
+                $where_clause = $field."=".$dbh->quote($value);
+            };
         }
         $where_clause .= ( ! ($returnOptions & DB_RETURN_DELETED) ? " AND (isDeleted IS NULL OR isDeleted = '')" : "");
         
