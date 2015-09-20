@@ -240,29 +240,35 @@ if (!function_exists("get_db_files")){
     function get_db_files(){
         // Если в разных файлах определены одинаковые базы, то используется те, что определены (в db_files) РАНЬШЕ
         
-        $db_files = array();
-        $specific_dbs = glob(APP_DIR . "settings/*.db.xml");
-        if ( ! empty($specific_dbs) ){
-            foreach($specific_dbs as $file){
-                $start = strlen(APP_DIR . "settings/");
-                $length  = strlen($file) - strlen(".db.xml") - $start;
-                $key = substr($file, $start, $length);
-                $db_files[$key] = $file;
-            };
-            unset($file, $start,$length, $key);
+        static $db_files = null;
+        
+        if (is_null($db_files)){
+        
+            $db_files = array();
+            $specific_dbs = glob(APP_DIR . "settings/*.db.xml");
+            if ( ! empty($specific_dbs) ){
+                foreach($specific_dbs as $file){
+                    $start = strlen(APP_DIR . "settings/");
+                    $length  = strlen($file) - strlen(".db.xml") - $start;
+                    $key = substr($file, $start, $length);
+                    $db_files[$key] = $file;
+                };
+                unset($file, $start,$length, $key);
+            }
+            
+            
+            $db_files["site"]   = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_SITE);
+            $db_files["app"]    = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_APP);
+            $db_files["engine"] = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_ENGINE);
+            
+            $db_files = array_filter($db_files, function($file){
+                return file_exists($file);
+            });
+            
+            dosyslog(__FUNCTION__.get_callee().": DEBUG: Db_files: ".implode(", ", array_values($db_files)));
+            
         }
-        
-        
-        $db_files["site"]   = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_SITE);
-        $db_files["app"]    = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_APP);
-        $db_files["engine"] = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_ENGINE);
-        
-        $db_files = array_filter($db_files, function($file){
-            return file_exists($file);
-        });
-        
-        dosyslog(__FUNCTION__.get_callee().": DEBUG: Db_files: ".implode(", ", array_values($db_files)));
-     
+         
         return $db_files;
         
     }
