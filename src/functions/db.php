@@ -658,7 +658,7 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
         return $result;
     };
 };
-function db_get($db_table, $ids, $flags=0, $limit=""){
+function db_get($db_table, $ids, $flags=0, $limit="", $offset = 0){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = array();
@@ -728,6 +728,11 @@ function db_get($db_table, $ids, $flags=0, $limit=""){
         $query .= " LIMIT 1";
     }elseif ($limit){
         $query .= " LIMIT ". (int) $limit;
+    };
+    
+    // Offset
+    if ($limit && $offset){
+        $query .= " OFFSET ". (int) $offset;
     };
     
     

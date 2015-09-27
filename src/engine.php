@@ -398,7 +398,9 @@ function SETPARAMS(){
                             if (isset($m[$pos])){
                                 $tmp = $m[$pos];
                             }else{
-                                dosyslog(__FUNCTION__.": WARNING: " . $pos . "th parameter can not be get from _URI (" . $_URI . ") via regexp '" . $regexp . "'. Parameter '" . $fparam_name . "'.");
+                                if ( ! empty($fparam["required"]) && ($fparam["required"] == "required") ){
+                                    dosyslog(__FUNCTION__.": WARNING: " . $pos . "th parameter can not be get from _URI (" . $_URI . ") via regexp '" . $regexp . "'. Parameter '" . $fparam_name . "'.");
+                                };
                             };
                         } else {
                             dosyslog(__FUNCTION__.": WARNING: _URI (".$_URI.") does not match regexp '".$regexp."'. Parameter '" . $fparam_name . "'.");
