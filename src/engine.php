@@ -550,7 +550,7 @@ function SETPARAMS(){
     }; // if
     
     if ( ! empty($_PARAMS) ){
-        dosyslog(__FUNCTION__.": DEBUG: Params set: {". urldecode(http_build_query($_PARAMS)) . "} for page '".$_PAGE["uri"]."'.");
+        dosyslog(__FUNCTION__.": NOTICE: Params set: {". urldecode(http_build_query($_PARAMS)) . "} for page '".$_PAGE["uri"]."'.");
     }else{
         dosyslog(__FUNCTION__.": DEBUG: No params are set for page '".$_PAGE["uri"]."'.");
     }
