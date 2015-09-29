@@ -1041,7 +1041,7 @@ function db_last_modified($db_table){
 	
 	return $last_modified ? $last_modified : null;
 }
-function db_search_substr($db_table, $field, $search_query, $limit=100, $flags = DB_RETURN_ID_INDEXED | DB_RETURN_ROW){
+function db_search_substr($db_table, $field, $search_query, $limit=100, $flags = 18){
     static $lower_custom_function_registered = array();
     
     $dbh = db_set($db_table);
