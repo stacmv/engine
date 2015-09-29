@@ -1041,6 +1041,68 @@ function db_last_modified($db_table){
 	
 	return $last_modified ? $last_modified : null;
 }
+function db_search_substr($db_table, $field, $search_query, $limit=100, $flags = DB_RETURN_ID_INDEXED | DB_RETURN_ROW){
+    static $lower_custom_function_registered = array();
+    
+    $dbh = db_set($db_table);
+    
+    // SQLITE3 specific code
+    $db_name = db_get_name($db_table);
+    if ( ! isset($lower_custom_function_registered[$db_name]))  $lower_custom_function_registered[$db_name] = false;
+        
+    if ( ! $lower_custom_function_registered[$db_name] ) {
+        $lower_custom_function_registered[$db_name] = db_sqlite_register_function($dbh, "lower");
+    };
+    unset($db_name);
+    //
+    
+    
+    $table_name = db_get_table($db_table);
+    
+    $sql_count = "SELECT count(*) FROM ".$table_name." WHERE lower(" . $field . ") LIKE lower(".$dbh->quote("%".$search_query."%").");";
+    $stmt_count = $dbh->query($sql_count);
+    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '" . $sql_count . ".");
+    if (!$stmt_count){
+        dosyslog(__FUNCTION__.get_callee().": SQL ERROR: ".db_error($dbh).".");
+        return array(array(),0);
+    };
+    
+    list($count) = $stmt_count->fetchAll(PDO::FETCH_COLUMN, 0);
+    
+    
+    $sql = "SELECT * FROM ".$table_name." WHERE lower(" . $field . ") LIKE lower(?) LIMIT ?;";
+    $stmt = $dbh->prepare($sql);
+    if (!$stmt){
+        dosyslog(__FUNCTION__.get_callee().": SQL ERROR: ".db_error($dbh).".");
+        return array(array(),0);
+    };
+    
+    $params = array("%".$search_query."%", $limit);
+    $stmt->execute($params);
+    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '" . $sql .", parameters: '" . json_encode_array($params) ."'.");
+    
+    $tmp = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $res = array();
+    
+    foreach($tmp as $rec){
+        if ($flags & DB_RETURN_ROW){
+            if ($flags & DB_RETURN_ID_INDEXED){
+                if ($flags & DB_DONT_PARSE){
+                    $res[ $rec["id"] ] = $rec;
+                }else{
+                    $res[ $rec["id"] ] = db_parse_result($db_table, $rec);                    
+                }
+            }else{
+                $res[] = $rec;
+            }
+        }else{
+            $res[] = $rec["id"];
+        };
+    };
+    
+    return array($res, $count);
+}
 function db_set($db_table){
     global $_DB;
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
@@ -1159,6 +1221,25 @@ function db_select($db_table, $select_query, $flags=0){
     
     return $result;
 };
+function db_sqlite_register_function($dbh, $func_name){
+    
+    switch($func_name){
+    case "lower":
+        if (method_exists($dbh, "sqliteCreateFunction")){ // this is experimental method since PHP 5.1 (http://php.net/manual/ru/pdo.sqlitecreatefunction.php)
+            $dbh->sqliteCreateFunction("lower", function($value){
+                return mb_convert_case($value, MB_CASE_LOWER, "UTF-8");
+            }); 
+            return true;
+        }else{
+            dosyslog(__FUNCTION__.get_callee().": ERROR: It seems that PDO has not method sqliteCreateFunction().");
+            return false;
+        }
+        break;
+    
+    }
+    
+    return false;
+}
 function db_parse_result($db_table, $result){
 
     // Десериализация данных, полученных из БД

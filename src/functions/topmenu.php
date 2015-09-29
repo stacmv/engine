@@ -30,7 +30,14 @@ function get_topmenu(){
             $isOk = true;
         };
         
-        if ($isOk) $topmenu[] = $menuItem;
+        if ($isOk){
+            if ( !empty($menuItem["parent"]) && isset($topmenu[ $menuItem["parent"] ]) ){
+                if (empty($topmenu[ $menuItem["parent"] ]["submenu"])) $topmenu[ $menuItem["parent"] ]["submenu"] = array();
+                $topmenu[ $menuItem["parent"] ]["submenu"][ $menuItem["href"] ] = $menuItem;
+            }else{
+                $topmenu[ $menuItem["href"] ] = $menuItem;
+            };
+        };
     };
     
     return $topmenu;
