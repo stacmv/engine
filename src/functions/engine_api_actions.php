@@ -9,6 +9,9 @@ function engine_api_create_slug_action(){
     $_DATA["html"] = "";
     
     if ($str){
+        if ( (int) $str && strlen( (string) (int) $str) <= 3){
+            $str = glog_str_from_num( (int) $str) . " " .  ltrim(substr($str, strlen( (string) (int) $str)));
+        };
         $_DATA["html"] = glog_codify($str);
     };
     
