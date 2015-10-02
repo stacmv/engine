@@ -135,7 +135,7 @@ function DOACTION(){
     
     $action = array_shift($_ACTIONS);
 
-    dosyslog(__FUNCTION__.": NOTICE: Action: ".$action);
+    dosyslog(__FUNCTION__.": INFO: Action: ".$action);
   
     $function = $action . "_action";
     
