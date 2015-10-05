@@ -322,11 +322,14 @@ function not_logged_action(){
     $auth_types = get_auth_types();
     $auth_type = !empty($_SESSION["auth_type"]) ? $_SESSION["auth_type"] : $auth_types[0];
     
-    $not_logged_template_file = "not_logged_" . $auth_type . ".htm";
-    if (file_exists( cfg_get_filename("templates", $not_logged_template_file) )){
+    $not_logged_page_template  =  "not_logged_" . $auth_type . ".page.htm";
+    $not_logged_block_template = "not_logged_" . $auth_type . ".block.htm";
+    if ( file_exists(cfg_get_filename("templates", $not_logged_page_template)) ){
+        set_template_file("page", $not_logged_page_template);
+    }elseif( file_exists(cfg_get_filename("templates",$not_logged_block_template)) ){
         set_template_file("content", $not_logged_template_file);
     }else{
-        set_content("content", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
+        set_content("page", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
     };
 
     $_DATA["auth_type"] = $auth_type;
