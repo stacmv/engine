@@ -20,13 +20,13 @@ class FormData{
         $this->db_table = $db_table;
         if ( ! empty($params["form_name"]) ){
             $this->form_name = $params["form_name"];
-        }elseif( ! $action ){
-            $this->form_name = $db_table . "_" . $action;
+        }elseif( ! empty($action) ){
+            $this->form_name = $action . "_" . db_get_obj_name($db_table);
         }elseif( ! empty($params["action"]) ){
-            $this->form_name = $db_table . "_" . $params["action"];
+            $this->form_name = $params["action"] . "_" . db_get_obj_name($db_table);
         }else{
             $action = "edit";
-            $this->form_name = $db_table . "_" . $action;
+            $this->form_name = $action . "_" . db_get_obj_name($db_table);
         };
         
         
