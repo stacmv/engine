@@ -327,7 +327,7 @@ function not_logged_action(){
     if ( file_exists(cfg_get_filename("templates", $not_logged_page_template)) ){
         set_template_file("page", $not_logged_page_template);
     }elseif( file_exists(cfg_get_filename("templates",$not_logged_block_template)) ){
-        set_template_file("content", $not_logged_template_file);
+        set_template_file("content", $not_logged_block_template);
     }else{
         set_content("page", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
     };
