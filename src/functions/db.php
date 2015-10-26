@@ -796,6 +796,24 @@ function db_get($db_table, $ids, $flags=0, $limit="", $offset = 0){
 
     return $result;
 };
+function db_get_count($db_table){
+    $dbh = db_set($db_table);
+    
+    $table_name = db_get_table($db_table);
+    
+    $query = "SELECT count(*) as c FROM " . $table_name;
+    $query .= " WHERE (isDeleted = '' OR isDeleted IS NULL)";
+    $query .= ";";
+    
+    $res = db_select($db_table, $query);
+    
+    if (isset($res[0]["c"])){
+        return $res[0]["c"];
+    }else{
+        return 0;
+    };
+    
+}
 function db_get_field_type($db_table, $field_name){
     $schema = db_get_table_schema($db_table);
     
