@@ -409,4 +409,41 @@ function set_topmenu_action(){
     $_DATA["topmenu"] = get_topmenu();
     
 };    
-
+function show_data_action(){
+    global $_PARAMS;
+    global $_DATA;
+    global $_PAGE;
+    
+    $id    = ! empty($_PARAMS["id"]) ? (int) $_PARAMS["id"] : null; 
+    $model = ! empty($_PARAMS["model"]) ? $_PARAMS["model"] : null; 
+    $mode  = $id ? "item" : "list";
+    
+    if ($model){
+        $obj_name = db_get_obj_name($model);
+        $_DATA["fields"] = form_get_fields($model,"add_" . $obj_name);
+        $_DATA["item_name"] = $obj_name;
+        if ($mode == "list"){ // 
+            $get_all_function = "get_".$model;
+            if (function_exists($get_all_function){
+                $_DATA["items"] = call_user_func("get_all_function", "all");
+            }else{
+                $_DATA["items"] = db_get($model, "all");
+            };
+            if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"]["list"]) ){
+                set_template_file("content", $_PAGE["templates"]["list"]);
+            };
+        }else{
+            $get_item_function = "get" . $obj_name;
+            if (function_exists($get_item_function)){
+                $_DATA["item"] = call_user_func($get_item_function, $id);
+            }else{
+                $_DATA["item"] = db_get($model, $id);
+            };
+            if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"]["item"]) ){
+                set_template_file("content", $_PAGE["templates"]["item"]);
+            };
+        }
+    }else{
+        die("Code: ea-".__LINE__."-model");
+    }
+}
