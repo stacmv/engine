@@ -2,6 +2,7 @@
 require ENGINE_DIR . "settings/checks.php";
 require ENGINE_DIR . "settings/version.php";
 
+
 // controller
 function APPLYPAGETEMPLATE(){
     global $_RESPONSE;
@@ -34,69 +35,23 @@ function APPLYPAGETEMPLATE(){
     
     
 };
-function AUTHENTICATE(){
-    global $_USER;
-    
-    $_USER["authenticated"]  = false;
-        
-    if ( !empty($_USER["profile"]["id"]) ) {
-
-        $auth_types = get_auth_types();
-        
-        foreach($auth_types as $auth_type){
-            if ( ! isset($_SESSION[$auth_type]["user_id"]) ) continue;
-        
-            if ( empty($_SESSION[$auth_type]["authenticated"]) ) {
-       
-                $authenticate_function = "auth_" . $auth_type . "_authenticate";
-                if ( function_exists($authenticate_function) ){
-                    dosyslog(__FUNCTION__.": DEBUG: Authenticating via " . $auth_type . ".");
-                    $_SESSION[$auth_type]["authenticated"] = call_user_func($authenticate_function);
-                    if ($_SESSION[$auth_type]["authenticated"]){
-                        $_USER["authenticated"] = time();
-                    }
-                }else{
-                    dosyslog(__FUNCTION__.": FATAL ERROR: Function '".$authenticate_function." is not defined.");
-                    die("Code: e-".__LINE__."-authenticate");
-                };
-            }else{
-                $_USER["authenticated"] = time();
-            }
-            
-            if ( ! empty($_SESSION[$auth_type]["authenticated"]) ){
-                dosyslog(__FUNCTION__.": INFO: User '".$_USER["profile"]["login"]." (user_id:".$_USER["profile"]["id"].") athenticated via '".$auth_type."' since ".date("c",$_SESSION[$auth_type]["authenticated"]).".");
-            };
-        };
-            
-    }else{
-        $_USER["authenticated"] = false;
-        $_SESSION["authenticated"] = false;
-    };
-           
-    if ($_USER["authenticated"]){
-        dosyslog(__FUNCTION__.": DEBUG: User authenticated.");
-    }else{
-        dosyslog(__FUNCTION__.": INFO: User NOT authenticated.");
-    };
-    
-	return $_USER;
-    
-};
 function AUTHORIZE(){
     global $_PAGE;
     global $_USER;
-	  
+    
+    $_USER = new User();
+
     if ( empty($_PAGE["acl"]) ){
         $authorized = true;
     }else{
         
-        if ( ! $_USER["authenticated"]){
+        if ( ! $_USER->is_authenticated()){
             $authorized = false;
         }else{
             $authorized = true;
             foreach($_PAGE["acl"] as $right){
                 if ( ! userHasRight( $right ) ){
-                    dosyslog(__FUNCTION__.": User '".$_USER["profile"]["login"]."' has not right '" . $right. "' for page '" . $_PAGE["uri"]."'.");
+                    dosyslog(__FUNCTION__.": User '".$_USER->get_login()."' has not right '" . $right. "' for page '" . $_PAGE["uri"]."'.");
                     $authorized = false;
                     break;
                 };
@@ -105,24 +60,20 @@ function AUTHORIZE(){
     };
     
     if ( ! $authorized) {
-        if ( ! empty($_USER["profile"])){
-            dosyslog(__FUNCTION__.": WARNING: User '".$_USER["profile"]["login"]."' (user_id:".$_USER["profile"]["id"].") not authorized for page '" . $_PAGE["uri"]."'.");
-        }else{
-            dosyslog(__FUNCTION__.": WARNING: User not authorized for page '" . $_PAGE["uri"]."'.");
-        };
-        
+        dosyslog(__FUNCTION__.": WARNING: User not authorized for page '" . $_PAGE["uri"]."'.");
+
         // ///////////////////////////
-        if ($_USER["authenticated"]) $_PAGE["actions"] = array("NOT_AUTH");
-        else $_PAGE["actions"] = array("NOT_LOGGED");
+        if ($_USER->is_authenticated() ){
+            $_PAGE["actions"] = array("NOT_AUTH");
+        }else{
+            $_PAGE["actions"] = array("NOT_LOGGED");
+        };
         // ///////////////////////////
         
-    }else{
-        if ( ! empty($_USER["profile"])){
-            dosyslog(__FUNCTION__.": INFO: User '".$_USER["profile"]["login"]."' (user_id:".$_USER["profile"]["id"].") authorized for page '" . $_PAGE["uri"]."'.");
-        }else{
-            dosyslog(__FUNCTION__.": INFO: User authorized for page '" . $_PAGE["uri"]."'.");
-        };
-    }
+    }else{   
+        dosyslog(__FUNCTION__.": INFO: User " . $_USER->get_login() . " authorized for page '" . $_PAGE["uri"]."'.");
+    };
+    
     
    return $_USER;
    
@@ -147,98 +98,6 @@ function DOACTION(){
     };
     
     
-};
-function IDENTICATE(){
-	global $_USER;
-    global $_PAGE;
-    global $_URI;
-    global $CFG;
-    global $_RESPONSE;
-    
-    $_USER = array();
-    
-    if ( ! db_get_table_schema("users") ){ // на сайте нет пользовательских аккаунтов
-        return $_USER;
-    };
-    
-    $preffered_auth_type_cookie_name   = "pat";
-    $preffered_auth_type_cookie_period = 7*24*60*60; // in seconds
-    
-    
-    $auth_types = get_auth_types();
-    
-    $preffered_auth_type = $auth_types[0];
-    if ( ! empty($_COOKIE[ $preffered_auth_type_cookie_name ]) ){
-        if ( in_array($_COOKIE[ $preffered_auth_type_cookie_name ], $auth_types) ){
-            $preffered_auth_type = $_COOKIE[ $preffered_auth_type_cookie_name ];
-        };
-    };
-    if ( ! empty($_SESSION["auth_type"]) && in_array($_SESSION["auth_type"], $auth_types) ){
-        $preffered_auth_type = $_SESSION["auth_type"];
-    };
-    
-    $ids =array();
-    foreach($auth_types as $auth_type){
-        $identicate_function = "auth_".$auth_type."_identicate";
-        if (function_exists($identicate_function)){
-            dosyslog(__FUNCTION__.": DEBUG: Identication procedure initiated. Auth_type: ".$auth_type);
-            $_SESSION[$auth_type]["user_id"] = call_user_func($identicate_function); 
-            if (! empty($_SESSION[$auth_type]["user_id"])){
-                $ids[] = $_SESSION[$auth_type]["user_id"];
-                dosyslog(__FUNCTION__.": DEBUG: Identicated user_id:".$_SESSION[$auth_type]["user_id"]." via ".$auth_type.".");
-            };
-        }else{
-            dosyslog(__FUNCTION__.": FATAL ERROR: Identicate function '".$identicate_function."' is not defined.");
-            die("Code: e-".__LINE__."-".$identicate_function);
-        };
-    };
-    
-    $ids = array_unique($ids);
-    
-    if (count($ids)>1){
-        set_session_msg("Multiple logins are not supported.");
-        dosyslog(__FUNCTION__.": ERROR: Multiple logins are not supported. Ids:'".json_encode($ids)."'.");
-        $ids = array();
-    };
-    
-    $user_id = !empty($ids[0]) ? $ids[0] : null;
-        
-    if ( $user_id ){   // пользователь прошел процедуру логина
-        $user = db_get("users", $user_id);
-        if ($user){
-            $_USER["profile"] = $user;
-            dosyslog(__FUNCTION__.": INFO: User identicated as '".$user["login"]."' (id:".$user["id"].") via " . $auth_type . ".");
-        }else{
-            dosyslog(__FUNCTION__.": ERROR: User not identicated. User id '".$user_id."' not found.");
-            $user_id = null;
-        }
-    }else{  // пользователь не прошел процедуру логина
-    
-        if ( ! empty($_PAGE["acl"]) ){  // страница с контролем доступа, требуется идентификация
-  
-            
-            $login_function = "auth_".$preffered_auth_type."_login";
-            if (function_exists($login_function)){
-                dosyslog(__FUNCTION__.": INFO: Login procedure initiated. Auth_type: ".$preffered_auth_type);
-                $_PAGE["actions"] = array( call_user_func($login_function) ); 
-
-            }else{
-                dosyslog(__FUNCTION__.": FATAL ERROR: Function '".$login_function."' is not defined. Could not identicate user for page '".$_PAGE["uri"]."'.");
-                die("Code: e-".__LINE__."-login-".$preffered_auth_type);
-            };
-            
-            $_RESPONSE["cookies"]["pat"] = array(
-                "value"  => $preffered_auth_type,
-                "expire" => time() + $preffered_auth_type_cookie_period,
-                "path"   => "/",
-                "domain" => $_SERVER["HTTP_HOST"],
-            );
-        }else{
-            dosyslog(__FUNCTION__.": INFO: User not identicated. Public page.");
-        };
-    };   
-        
-    return $_USER;
 };
 function GETPAGE(){  // поиск страницы, соответствующей текущему URI
     global $_PAGE;
@@ -320,7 +179,7 @@ function SENDHEADERS(){
     };
     
 };
-function SENDHTML(){
+function SENDBODY(){
     global $_RESPONSE;
     
     
@@ -336,9 +195,9 @@ function SETACTIONLIST(){
     
      
      
-    // $_DEFAULT_ACTIONS - action-функции, которые должны выполняться для каждой страницы. См. register_default_action() из engine_functions.php, коорая может вызываться из actions.php.
+    // $_DEFAULT_ACTIONS - action-функции, которые должны выполняться для каждой страницы. См. register_default_action() из engine_functions.php, которая может вызываться из actions.php.
     
-    $_ACTIONS = ! empty($_DEFAULT_ACTIONS) ? $_DEFAULT_ACTIONS : array(); 
+    $_ACTIONS = array(); 
       
         
     if (empty($_PAGE["actions"])) {
@@ -346,7 +205,7 @@ function SETACTIONLIST(){
         return;
     };
     
-    foreach($_PAGE["actions"] as $action){
+    foreach(array_merge($_PAGE["actions"], $_DEFAULT_ACTIONS) as $action){
         if ($action) {
             if (!in_array($action, $_ACTIONS)) {
                 $_ACTIONS[] = $action;
@@ -576,10 +435,8 @@ $IS_IFRAME_MODE = ! empty($_GET["i"]) ? true : false;
 
 
 GETURI();
-GETPAGE(); // поиск и получение объекта текущей страницы
-IDENTICATE(); // идентификация - пользователь или гость
-AUTHENTICATE(); // аутентификация пользователя (проверка пароля)
-AUTHORIZE(); // авторизация пользователя (создание спиcка разрешений ACL)
+GETPAGE(); 
+AUTHORIZE(); 
 SETACTIONLIST();
 SETPARAMS();
 
@@ -597,6 +454,6 @@ if ( ! $ISREDIRECT && ! $IS_API_CALL){
 
 
 SENDHEADERS();
-SENDHTML();
+SENDBODY();
 
 dosyslog("ENGINE: INFO: Request processed within " . round(microtime(true) - $start_microtime, 4) ."s, memory used in peak: ".glog_convert_size(memory_get_peak_usage(true)).".");

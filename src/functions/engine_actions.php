@@ -289,16 +289,42 @@ function import_first_user_action(){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     die(__FUNCTION__);
 };
-function login_action(){
+function login_simple_action(){
     global $CFG;
-
-    if ( ! empty($CFG["URL"]["dashboard"]) ){
-        $redirect_uri = $CFG["URL"]["dashboard"];
+    global $_PARAMS;
+    
+    $login = ! empty($_PARAMS["login"]) ? $_PARAMS["login"] : null;
+    $pass  = ! empty($_PARAMS["pass"])  ? $_PARAMS["pass"]  : null;
+    
+    // identicate
+    $user = EUsers::find_one("login",$login);
+    
+    if ($user){
+        // authenticate
+        $authenticated = passwords_verify($pass, $user["pass"]);
+        if ( ! $authenticated){
+            dosyslog(__FUNCTION__.": WARNING: Provided wrong password for user with login '".$login."'.");
+        }
     }else{
-        $redirect_uri = "";
+        dosyslog(__FUNCTION__.": WARNING: User with login '".$login."' is not exists.");
     }
+    
+    if ($user && $authenticated){
+        // log in
+        session_regenerate_id();
+        $_SESSION["authenticated"] = $user["id"];
+        dosyslog(__FUNCTION__.": INFO: User with login '".$login."' is logged in.");
+    }else{
+        set_session_msg("login_login_fail","error");
+    }
+    
+    $redirect_uri = return_url_pop();
 
-    redirect($redirect_uri);
+    if (! $redirect_uri && ! empty($CFG["URL"]["dashboard"]) ){
+        $redirect_uri = $CFG["URL"]["dashboard"];
+    };
+
+    redirect($redirect_uri ? $redirect : "index");
 
 }
 function logout_action(){
@@ -319,22 +345,25 @@ function not_logged_action(){
     global $CFG;
     global $_DATA;
     
-    $auth_types = get_auth_types();
-    $auth_type = !empty($_SESSION["auth_type"]) ? $_SESSION["auth_type"] : $auth_types[0];
-    
-    $not_logged_page_template  =  "not_logged_" . $auth_type . ".page.htm";
-    $not_logged_block_template = "not_logged_" . $auth_type . ".block.htm";
-    if ( file_exists(cfg_get_filename("templates", $not_logged_page_template)) ){
-        set_template_file("page", $not_logged_page_template);
-    }elseif( file_exists(cfg_get_filename("templates",$not_logged_block_template)) ){
-        set_template_file("content", $not_logged_block_template);
-    }else{
-        set_content("page", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
-    };
-
-    $_DATA["auth_type"] = $auth_type;
-    
     logout();
+    redirect("form/login");
+    
+    // $auth_types = get_auth_types();
+    // $auth_type = !empty($_SESSION["auth_type"]) ? $_SESSION["auth_type"] : $auth_types[0];
+    
+    // $not_logged_page_template  =  "not_logged_" . $auth_type . ".page.htm";
+    // $not_logged_block_template = "not_logged_" . $auth_type . ".block.htm";
+    // if ( file_exists(cfg_get_filename("templates", $not_logged_page_template)) ){
+        // set_template_file("page", $not_logged_page_template);
+    // }elseif( file_exists(cfg_get_filename("templates",$not_logged_block_template)) ){
+        // set_template_file("content", $not_logged_block_template);
+    // }else{
+        // set_content("page", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
+    // };
+
+    // $_DATA["auth_type"] = $auth_type;
+    
+    
 }
 function redirect_action(){
     global $_REDIRECT_URI;
@@ -424,8 +453,8 @@ function show_data_action(){
         $_DATA["item_name"] = $obj_name;
         if ($mode == "list"){ // 
             $get_all_function = "get_".$model;
-            if (function_exists($get_all_function){
-                $_DATA["items"] = call_user_func("get_all_function", "all");
+            if (function_exists($get_all_function)){
+                $_DATA["items"] = call_user_func($get_all_function, "all");
             }else{
                 $_DATA["items"] = db_get($model, "all");
             };
@@ -446,4 +475,16 @@ function show_data_action(){
     }else{
         die("Code: ea-".__LINE__."-model");
     }
+}
+function show_login_form_action(){
+    global $_DATA;
+    global $CFG;
+    
+    $auth_types = get_auth_types();
+    $_DATA["auth_type"] = isset($auth_types[0]) ? $auth_types[0] : "simple";
+    
+    if ( ! empty($_SERVER["HTTP_REFERER"]) && (strpos($_SERVER["HTTP_REFERER"], $CFG["URL"]["base"]) === 0) && ($_SERVER["HTTP_REFERER"] != $CFG["URL"]["base"] . "form/login" . $CFG["URL"]["ext"]) ){
+        return_url_push($_SERVER["HTTP_REFERER"]);
+    };
+    
 }

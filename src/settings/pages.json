@@ -94,33 +94,21 @@
 		}
 	},
 	{
-		"uri":"login",
-		"title":"Вход в систему",
-		"actions": ["login_http_basic"],
-		"templates": {
-			"content":"login.htm",
-			"page":"page.htm",
-			"login_form":"login_form.block.htm"
-		},
-		"acl":[]
-	},
-	{
-		"uri":"signin",
+		"uri":"login/simple",
 		"title":"Вход в систему",
 		"params": {
 			"login": {"type":"string", "source":"post"},
-			"pass":  {"type":"string", "source":"post"},
-			"return_url":  {"type":"string", "source":"post"}
+			"pass": {"type":"string", "source":"post"}
 		},
-		"actions": ["auth_simple"],
+		"actions": ["login_simple"],
 		"acl":[]
 	},
 	{
-		"uri":"form/signin",
+		"uri":"form/login",
 		"title":"Вход в систему",
-		"actions": [],
+		"actions": [ "show_login_form" ],
 		"templates": {
-			"content":"signin.htm",
+			"content":"login_form.htm",
 			"page":"page.htm"
 		},
 		"acl":[]

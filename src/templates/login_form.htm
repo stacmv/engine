@@ -1,0 +1,88 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["ext"],
+	$CFG["GENERAL"]["app_name"],
+	$CFG["GENERAL"]["app_version"],
+	$_PAGE["title"],
+	$auth_type,
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+
+?>
+<style>
+	#login-form{
+		margin-top: 2em;
+		margin-bottom: 5em;
+	}
+	#UserEmail, #loginButton {
+		margin-bottom: 1.5em;
+	}
+	article {
+		margin-bottom: 10em;
+	}
+</style>
+<article class="app_content">
+	<div class="row">
+		<div class="span6 offset3 col-md-6 col-md-offset-3">
+			
+			<div class="row">
+				<div id="login-form" class="span2 offset2 col-md-2">
+					<form  method="post" action="<?=$CFG["URL"]["base"];?>login/<?=$auth_type;?><?=$CFG["URL"]["ext"];?>">
+						<input name="login" type="text" required class="input span2" value="" id="UserEmail" placeholder="Логин" autofocus/>
+						<input name="pass" type="password" required class="input span2" value="" id="pass" placeholder="Пароль"/>
+						<input type="submit" class="btn btn-primary btn-large btn-block" id="loginButton" value="Войти" />
+						<a href="form/signup<?=$CFG["URL"]["ext"];?>" class="btn btn-block">Регистрация</a>
+					</form>
+				</div>
+			</div>
+			<div class="row">
+				<p class="text-center">
+					Возникли вопросы?<br>
+					<a href="mailto:info@optimit.ru">Обратитесь в службу поддержки</a>
+				</p>
+			</div>
+		</div> 
+	</div> <!-- /.row -->
+</article> <!-- /.app_content -->
+
+<?if ($auth_type == "http_basic"):?>
+	<script>
+		<? // http://www.peej.co.uk/articles/rich-user-experience.html ?>
+		function getHTTPObject() { 
+			if (typeof XMLHttpRequest != 'undefined') {
+				return new XMLHttpRequest();
+			} try {
+				return new ActiveXObject("Msxml2.XMLHTTP");
+			} catch (e) {
+				try {
+					return new ActiveXObject("Microsoft.XMLHTTP");
+				} catch (e) {}
+			}
+			return false;
+		}
+		
+		<? // http://www.peej.co.uk/articles/http-auth-with-html-forms.html ?>
+		function login() {         
+			var http = getHTTPObject();
+			var username = document.getElementById("UserEmail").value;
+			var pass = document.getElementById("pass").value;
+			
+			http.open("get", this.action, false, username, pass);
+			http.send("");
+			if (http.status == 200) {
+				document.location = this.action;
+			} else {
+				alert("Неверный логин или пароль.");
+			}
+			return false;
+		}
+		$(function(){
+			$("#login-form form").submit(login);
+		})
+		
+	</script>
+<?endif;?>
+
+<?php
+	unset($_SESSION["msg"]);
+	unset($_SESSION["to"]);
+?>

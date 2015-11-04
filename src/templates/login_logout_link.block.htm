@@ -7,13 +7,13 @@ foreach(@array(
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 ?>
 <ul class="nav pull-right">
-	<?if ( ($_USER["authenticated"]) ):?>
+	<?if ( ($_USER->is_authenticated()) ):?>
 		<li>
-			<a href="#"><?=EUsers::get_username_by_id($_USER["profile"]["id"]);?></a>
+			<a href="#"><?=$_USER->get_username();?></a>
 		</li>
 		<li><a href="logout<?=$CFG["URL"]["ext"];?>">Выйти</a></li>
 	<?else:?>
 		<!--<li><a href="reg<?=$CFG["URL"]["ext"];?>">Регистрация</a></li>-->
-		<li><a href="login<?=$CFG["URL"]["ext"];?>">Войти</a></li>
+		<li><a href="form/login<?=$CFG["URL"]["ext"];?>">Войти</a></li>
 	<?endif;?>
 </ul>

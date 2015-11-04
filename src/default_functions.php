@@ -273,7 +273,7 @@ if (!function_exists("get_db_files")){
         
     }
 }
-if (!function_exists("get_gravatar")) {
+if (!function_exists("get_gravatar")){
     /**
      * Get either a Gravatar URL or complete image tag for a specified email address.
      *
@@ -443,6 +443,26 @@ if (!function_exists("get_rights_all")){
         return $rights;
     };
 }
+if (!function_exists("get_user_login")){
+    function get_user_login($user_id = ""){
+        global $_USER;
+        
+        if ( ! $user_id ){
+            if ( isset($_USER["profile"]["login"])){
+                $login = $_USER["profile"]["login"];
+            };
+        }else{
+            
+            $user = db_get("users",$user_id);
+            
+            if (!empty($user["login"])){
+                return $user["login"];
+            }
+        }
+        
+        return "";
+    }
+}
 if (!function_exists("get_user_registered_ip")){
     function get_user_registered_ip($user_id="", $login="", $ip="", $register_new_ip = false){
         // $register_new_ip    Регистрировать новые IP, если БД нет записей по (user_id, login, ip)
@@ -525,20 +545,9 @@ if (!function_exists("logout")){
         global $_USER;
         unset($_SESSION["msg"]);
         unset($_SESSION["to"]);
+        unset($_SESSION["authenticated"]);
         
-        $auth_types = get_auth_types();
-        foreach($auth_types as $auth_type){
-            if (!empty($_SESSION[$auth_type])){
-                $logout_function = "auth_".$auth_type."_logout";
-                if (function_exists($logout_function)){
-                    call_user_func($logout_function);
-                }else{
-                    unset($_SESSION[$auth_type]);
-                }
-            };
-        };
-        $_USER["authenticated"] = false;
-        dosyslog(__FUNCTION__.": NOTICE: User logged out.");
+        dosyslog(__FUNCTION__.": INFO: User '".$_USER->get_login()."' logged out.");
         
     };
 };
@@ -796,18 +805,18 @@ if (!function_exists("userHasRight")){
                 return false;
             };
             
-            $login = $_USER["profile"]["login"];
-            $user_rights = $_USER["authenticated"] ? $_USER["profile"]["acl"] : array();
+            $login = $_USER->get_login();
+            $user_rights = $_USER->is_authenticated() ? $_USER["profile"]["acl"] : array();
         }else {
-            $users_ids = db_find("users", "login", $login);
-            if (count($users_ids)==0){
+            $users = EUsers::find("login", $login);
+            if (count($users)==0){
                 dosyslog(__FUNCTION__.": WARNING: User with login '".$login."' is not found in DB.");
                 return false;
-            }elseif(count($users_ids)>1){
+            }elseif(count($users)>1){
                 dosyslog(__FUNCTION__.": ERROR: More than one user with login '".$login."' is found in DB.");
                 return false;
             }else{
-                $user = db_get("users", $users_ids[0]);
+                $user = $users[0];
                 $user_rights = $user["acl"];
             };
         };
