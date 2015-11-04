@@ -6,19 +6,11 @@ function apply_template($template_name, $content_block = ""){
     global $_DATA;
     
     // dump($_DATA,"_DATA");
-        
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
-    dosyslog(__FUNCTION__.": NOTICE: Applying template '".$template_name."'.");
+    dosyslog(__FUNCTION__.": DEBUG: Applying template '".$template_name."'.");
     
     if ( ! $content_block ) $content_block = $template_name;
     
     $HTML = "";
-    
-    if ( ! defined("TEMPLATES_DIR") ){
-        dosyslog(__FUNCTION__.": FATAL ERROR: Templates directory is not set. Check define file.");
-        die("Code: et-".__LINE__);
-    };
     
     if ( empty($_PAGE["templates"]) ){
         dosyslog(__FUNCTION__.": FATAL ERROR: There no templates defined for page '".$_PAGE["uri"]."'. Check pages file.");
@@ -42,7 +34,7 @@ function apply_template($template_name, $content_block = ""){
     $HTML = render_template($template_file, array_map("escape_template_data", (array) $_DATA) );
 
     set_content($content_block, $HTML);  
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     return $HTML;
 };
 function escape_template_data($data_item){
@@ -56,7 +48,12 @@ function escape_template_data($data_item){
 function unescape_template_data($data_item, $mode="html"){
 
     if ( is_array($data_item) ){
-        return array_map("unescape_template_data", $data_item,$mode);
+        return array_map(
+            function($data_item) use ($mode){
+                return unescape_template_data($data_item, $mode);
+            },
+            $data_item
+        );
     }else{
         return htmlspecialchars_decode($data_item, ENT_QUOTES); 
     };
@@ -68,8 +65,7 @@ function get_content($block_name){
     
     static $blocks_chain = array();
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    dosyslog(__FUNCTION__.": NOTICE: Getting content block '".$block_name."'.");
+    dosyslog(__FUNCTION__.": DEBUG: Getting content block '".$block_name."'.");
     
     if (in_array($block_name,$blocks_chain)) {
         return ""; // don't parse block if it contained in itself directly or indirectly.
@@ -118,9 +114,7 @@ function get_content($block_name){
     if (array_pop($blocks_chain) !== $block_name) {
         dosyslog(__FUNCTION__.": ERROR: Logic error in blocks chain.");
     };
-       
-   
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     return $HTML;
 };
 function render_template($template_file, $data = array() ){
@@ -141,7 +135,7 @@ function render_template($template_file, $data = array() ){
     
     if (is_array($data)) extract($data);
     
-    dosyslog(__FUNCTION__.": NOTICE: Rendering template file '".$template_file."'.");
+    dosyslog(__FUNCTION__.": DEBUG: Rendering template file '".$template_file."'.");
     // dosyslog(__FUNCTION__.": NOTICE: Rendering template file '".$template_file."' with data '" . json_encode($data) . "'.");
     
     ob_start();
@@ -152,8 +146,8 @@ function render_template($template_file, $data = array() ){
 }
 function set_content($block_name, $content){
     global $_PAGE;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    dosyslog(__FUNCTION__.": NOTICE: Setting content block '".$block_name."'.");
+    
+    dosyslog(__FUNCTION__.": DEBUG: Setting content block '".$block_name."'.");
     
     if (empty($content)){
         dosyslog(__FUNCTION__.": WARNING: Content for block '".$block_name."' is empty.");
@@ -163,12 +157,12 @@ function set_content($block_name, $content){
     if (empty($_PAGE["content"])) $_PAGE["content"] = array();
     $_PAGE["content"][$block_name] = $content;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function set_template_file($template_name,$template_file){
     global $_PAGE;
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb."); 
+    
     dosyslog(__FUNCTION__.": NOTICE: Setting template '".$template_name."' < '".$template_file."'.");
 
     if ( empty($_PAGE["templates"])) {
@@ -183,7 +177,7 @@ function set_template_file($template_name,$template_file){
     }
     
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 }; // function
 /* *** */
 function expand_youtube_links($data_item){

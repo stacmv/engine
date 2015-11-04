@@ -190,6 +190,8 @@ function response_404_page(){
 }
 function show_date($timestamp, $options=0){
 
+    if ( ! $timestamp ) return "";
+    
     if ( ! is_numeric($timestamp) ){
         $timestamp = strtotime( glog_isodate($timestamp, true) );
     };

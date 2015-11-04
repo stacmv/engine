@@ -1,13 +1,15 @@
 <?php
-/* ***********************************************************
-**  ACTIONS
-**
-** ******************************************************** */
+define("ENGINE_SCOPE_ENGINE", 1);
+define("ENGINE_SCOPE_APP", 2);
+define("ENGINE_SCOPE_SITE", 4);
+define("ENGINE_SCOPE_ALL", null);
+
 if (!function_exists("cfg_get_filename")){
-    function cfg_get_filename($type, $filename, $engine=null){
-        // engine == true - get file from engine
-        // engine == false - get file from app
-        // engine == null - get file from app then if not found get it from engine
+    function cfg_get_filename($type, $filename, $scope = ENGINE_SCOPE_ALL){
+        // scope == ENGINE_SCOPE_ENGINE - get file from engine
+        // scope == ENGINE_SCOPE_APP - get file from app
+        // scope == ENGINE_SCOPE_SITE - get file from app's specific site
+        // scope == ENGINE_SCOPE_ALL - get file from site, then if not found, from app then if not found get it from engine
         
         // Type whitelist
         $types = array("templates/form", "templates", "settings", "email_templates", "sms_templates" );
@@ -19,13 +21,21 @@ if (!function_exists("cfg_get_filename")){
         
         
         $path = array();
-        if ($engine){
+        switch($scope){
+        case ENGINE_SCOPE_ENGINE:
             $path[] = ENGINE_DIR;
-        }elseif( is_null($engine) ){
+            break;
+        case ENGINE_SCOPE_APP:
+            $path[] = APP_DIR;
+            break;
+        case ENGINE_SCOPE_SITE:
+            $path[] = SITE_DIR;
+            break;
+        case ENGINE_SCOPE_ALL:
+        default:
+            $path[] = SITE_DIR;
             $path[] = APP_DIR;
             $path[] = ENGINE_DIR;
-        }else{
-            $path[] = APP_DIR;
         };
         
         if (count($path) == 1){
@@ -212,7 +222,7 @@ if (!function_exists("find_page")){
         };
         
         return $page;
-    }
+    };
 }
 if (!function_exists("get_application_statuses")){
     function get_application_statuses(){
@@ -228,25 +238,37 @@ if (!function_exists("get_application_statuses")){
 };
 if (!function_exists("get_db_files")){
     function get_db_files(){
-        // Если в разных файлах определены одинаковые базы, то используеьтся те, что определены (в db_files) РАНЬШЕ
+        // Если в разных файлах определены одинаковые базы, то используется те, что определены (в db_files) РАНЬШЕ
         
-        $db_files = array();
-        $specific_dbs = glob(APP_DIR . "settings/*.db.xml");
-        if ( ! empty($specific_dbs) ){
-            foreach($specific_dbs as $file){
-                $start = strlen(APP_DIR . "settings/");
-                $length  = strlen($file) - strlen(".db.xml") - $start;
-                $key = substr($file, $start, $length);
-                $db_files[$key] = $file;
-            };
-            unset($file, $start,$length, $key);
+        static $db_files = null;
+        
+        if (is_null($db_files)){
+        
+            $db_files = array();
+            $specific_dbs = glob(APP_DIR . "settings/*.db.xml");
+            if ( ! empty($specific_dbs) ){
+                foreach($specific_dbs as $file){
+                    $start = strlen(APP_DIR . "settings/");
+                    $length  = strlen($file) - strlen(".db.xml") - $start;
+                    $key = substr($file, $start, $length);
+                    $db_files[$key] = $file;
+                };
+                unset($file, $start,$length, $key);
+            }
+            
+            
+            $db_files["site"]   = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_SITE);
+            $db_files["app"]    = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_APP);
+            $db_files["engine"] = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_ENGINE);
+            
+            $db_files = array_filter($db_files, function($file){
+                return file_exists($file);
+            });
+            
+            dosyslog(__FUNCTION__.get_callee().": DEBUG: Db_files: ".implode(", ", array_values($db_files)));
+            
         }
-        
-        
-        $db_files["app"]    = cfg_get_filename("settings", "db.xml");
-        $db_files["engine"] = cfg_get_filename("settings", "db.xml", true);
-     
-        
+         
         return $db_files;
         
     }
@@ -293,19 +315,23 @@ if (!function_exists("get_page_by_uri")){
 };
 if (!function_exists("get_page_files")){
     function get_page_files(){
+        global $_SITE;
         // Если в разных файлах определены одинаковые страницы, то используется те, что определены (в pages_files) ПОЗЖЕ
         
         $pages_files = array(
-            "engine_json" => cfg_get_filename("settings", "pages.json", true),
-            "engine_xml"  => cfg_get_filename("settings", "pages.xml", true),
-            "engine_api"  => cfg_get_filename("settings", "api.pages.xml", true),
-            "app_json"    => cfg_get_filename("settings", "pages.json"),
-            "app_xml"     => cfg_get_filename("settings", "pages.xml"),
+            "engine_json" => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_ENGINE),
+            "engine_xml"  => cfg_get_filename("settings", "pages.xml", ENGINE_SCOPE_ENGINE),
+            "engine_api"  => cfg_get_filename("settings", "api.pages.xml", ENGINE_SCOPE_ENGINE),
+            "app_json"    => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_APP),
+            "app_xml"     => cfg_get_filename("settings", "pages.xml", ENGINE_SCOPE_APP),
+            "site_json"    => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_SITE),
+            "site_xml"     => cfg_get_filename("settings", "pages.xml", ENGINE_SCOPE_SITE),
         );
+        
         
         $pages_files = array_filter($pages_files, function($file){ return file_exists($file);});
         
-        $extra_pages = glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE);
+        $extra_pages = array_merge( glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE), glob(SITE_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE) );
         if ( ! empty($extra_pages) ){
             foreach($extra_pages as $file){
                 $start = strlen(APP_DIR . "settings/");
@@ -316,19 +342,21 @@ if (!function_exists("get_page_files")){
             unset($file, $start,$length, $key);
         }
         
+         dosyslog(__FUNCTION__.get_callee().": DEBUG: Pages_files: ".implode(", ", array_values($pages_files)));
+        
         return $pages_files;
-        
-        
         
     }
 }
 if (!function_exists("get_pages")){
     function get_pages(){
-        
+        static $pages;
         global $CFG;
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        $xml = false;
+
+        if (!empty($pages)) return $pages;
         
+        
+        $xml = false;
 
         $pages_files = get_page_files();
         
@@ -357,7 +385,9 @@ if (!function_exists("get_pages")){
                     };
                     unset($k,$v);
                 };
-                if ( $pages_tmp ) $pages = array_merge($pages, $pages_tmp);
+                if ( $pages_tmp ){
+                    $pages = array_merge($pages, $pages_tmp);
+                };
                 unset($pages_tmp);
             
             }elseif(pathinfo($file, PATHINFO_EXTENSION) == "xml" ){
@@ -543,73 +573,6 @@ if (!function_exists("register_message_opened")){
         dosyslog(__FUNCTION__.get_callee().": INFO: Email with message_id:".$message_id." was opened by user at ip:".$ip.". Query string: '".$qs."'.");
     };
 };
-if (!function_exists("send_message")){
-    function send_message($emailOrUserId, $template, $data, $options=""){
-        global $CFG;
-        
-        $http_host = ! empty($_SERVER["HTTP_HOST"]) ? $_SERVER["HTTP_HOST"] : "";
-        $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "_unknown_";
-        $qs = ! empty($_SERVER["QUERY_STRING"]) ? $_SERVER["QUERY_STRING"] : "";
-        
-        if (! defined("EMAIL_TEMPLATES_DIR") ){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Email templates dir is not defined. Emails could not be sent.");
-            die("Code: df-".__LINE__);
-        };
-        
-        if (is_numeric($emailOrUserId)){
-            
-            $user = db_get("users", $emailOrUserId, DB_RETURN_DELETED);
-            if (empty($user) ){
-                dosyslog(__FUNCTION__.": User width id '".$emailOrUserId."' is not found. Message could not be sent.");
-                return false;
-            }elseif( empty($user["email"]) ){
-                dosyslog(__FUNCTION__.": Email for user width id '".$emailOrUserId."' is not set.");
-                return false;
-            }elseif( ! filter_var($user["email"], FILTER_VALIDATE_EMAIL) ){
-                dosyslog(__FUNCTION__.": Email for user width id '".$emailOrUserId."' is invalid: '".$user["email"]."'.");
-                return false;
-            };
-            $email = $user["email"];
-        }else{
-            $email = $emailOrUserId;
-            if( ! filter_var($email, FILTER_VALIDATE_EMAIL) ){
-                dosyslog(__FUNCTION__.": Spicified email is invalid: '".$user["email"]."'.");
-                return false;
-            };
-        };
-        
-        
-        $message_id = md5($email . $template . serialize($data));
-        $data["tracking_pixel_url"] = $CFG["URL"]["base"] . "/reg_msg_opened/" . $message_id . $CFG["URL"]["ext"];
-        
-        // parse template.
-        $t = glog_render( cfg_get_filename("email_templates", $template.".htm"), $data );
-        if (empty($t)){
-            dosyslog(__FUNCTION__.": ERROR: Email template is empty.");
-            if ($t == "") die("Code: df-".__LINE__); // убиваемся при ошибке конфигурирования (пустой шаблон), но работаем, если произошла ошибка чтения в продакшене
-            return false;
-        };
-                
-        $tmp = @explode("\n\n",$t,2);
-        $subject = isset($tmp[0]) ? $tmp[0] : "";
-        $message = isset($tmp[1]) ? $tmp[1] : "";
-        
-                
-        if (!$subject){
-            dosyslog(__FUNCTION__.": WARNING: Subject is not set in email template '".$template."'.");
-            $subject = "Email from " . $http_host;
-        };
-        if (!$message) dosyslog(__FUNCTION__.": WARNING: Empty message body in template '".$template."'.");
-        
-        $res = @mail($email, $subject, $message, "FROM:".$CFG["GENERAL"]["system_email"]."\nREPLY-TO:".$CFG["GENERAL"]["admin_email"]."\ncontent-type: text/html; charset=UTF-8");
-        
-        
-        
-        dosyslog(__FUNCTION__.get_callee() . ": INFO: ".$template." e-mail with message_id:".$message_id." sent to user ".$emailOrUserId. " for " .$email." ... ".($res? "success" : "fail").". IP:".$ip.". Qusery string:'".$qs."'.");
-         
-        return $res;
-    };
-};
 if (!function_exists("set_template_for_user")){
     function set_template_for_user(){
         global $_USER;
@@ -638,36 +601,6 @@ if (!function_exists("set_template_for_user")){
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     };
 };
-if (!function_exists("set_topmenu")){
-    function set_topmenu(){
-        $menu = array();
-        $menu_file = cfg_get_filename("settings", "menu.tsv");
-        $tmp = import_tsv($menu_file);
-        if (!$tmp){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Can not import menu file.");
-            die("Code: df-".__LINE__."-topmenu");
-        };
-        $menu = $tmp;
-       
-            
-        // формирование topmenu для конкретного пользователя
-        $topmenu = array();
-       
-        foreach($menu as $menuItem){
-            $rights = ! empty($menuItem["rights"]) ? explode(",",$menuItem["rights"]) : array();
-            if ( $rights ) {
-                $isOk = false;
-                if (!empty($rights)) foreach($rights as $right) $isOk = userHasRight( trim($right) );
-            }else{
-                $isOk = true;
-            };
-            
-            if ($isOk) $topmenu[] = $menuItem;
-        };
-        
-        return $topmenu;
-    };
-}
 if (!function_exists("show")){
     function show($var){
         global $CFG;

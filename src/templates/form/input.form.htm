@@ -15,3 +15,18 @@
 <?if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
 <?endif;?>
+
+<?if($field["type"] == "date"):?>
+	<script>
+		$(function(){
+			$("#<?=$field["id"];?>").
+				val( $("#<?=$field["id"];?>").val().split("-").reverse().join(".") )
+				.mask("99.99.9999");
+			$($("#<?=$field["id"];?>")[0].form).on("submit", function(){
+				$("#date").
+					val( $("#date").val().split(".").reverse().join("-") );
+				return true;
+			});
+		});
+	</script>
+<?endif;?>

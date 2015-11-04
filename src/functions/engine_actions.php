@@ -229,6 +229,9 @@ function form_action(){
     if ( function_exists("form_prepare_" . $form_name) ){
         $fields = call_user_func("form_prepare_" . $form_name, $fields, $id);
     }
+    if (function_exists("set_objects_action")){
+        set_objects_action($form_name);
+    }
     //
     
     $_DATA["object"]      = $object;
@@ -304,7 +307,7 @@ function logout_action(){
 function not_auth_action(){
     $forbidden_template_file = "forbidden.htm";
     
-    if (file_exists(TEMPLATES_DIR . $forbidden_template_file)){
+    if (file_exists(cfg_get_filename("templates", $forbidden_template_file))){
         set_template_file("content", $forbidden_template_file);
     }else{
         set_content("content", "<h1>Доступ запрещен</h1>");
@@ -319,11 +322,14 @@ function not_logged_action(){
     $auth_types = get_auth_types();
     $auth_type = !empty($_SESSION["auth_type"]) ? $_SESSION["auth_type"] : $auth_types[0];
     
-    $not_logged_template_file = "not_logged_" . $auth_type . ".htm";
-    if (file_exists( cfg_get_filename("templates", $not_logged_template_file) )){
-        set_template_file("content", $not_logged_template_file);
+    $not_logged_page_template  =  "not_logged_" . $auth_type . ".page.htm";
+    $not_logged_block_template = "not_logged_" . $auth_type . ".block.htm";
+    if ( file_exists(cfg_get_filename("templates", $not_logged_page_template)) ){
+        set_template_file("page", $not_logged_page_template);
+    }elseif( file_exists(cfg_get_filename("templates",$not_logged_block_template)) ){
+        set_template_file("content", $not_logged_block_template);
     }else{
-        set_content("content", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
+        set_content("page", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
     };
 
     $_DATA["auth_type"] = $auth_type;
@@ -400,7 +406,44 @@ function send_registration_repetition_request_action(){
 function set_topmenu_action(){
     global $_DATA;
      
-    $_DATA["topmenu"] = set_topmenu();
+    $_DATA["topmenu"] = get_topmenu();
     
 };    
-
+function show_data_action(){
+    global $_PARAMS;
+    global $_DATA;
+    global $_PAGE;
+    
+    $id    = ! empty($_PARAMS["id"]) ? (int) $_PARAMS["id"] : null; 
+    $model = ! empty($_PARAMS["model"]) ? $_PARAMS["model"] : null; 
+    $mode  = $id ? "item" : "list";
+    
+    if ($model){
+        $obj_name = db_get_obj_name($model);
+        $_DATA["fields"] = form_get_fields($model,"add_" . $obj_name);
+        $_DATA["item_name"] = $obj_name;
+        if ($mode == "list"){ // 
+            $get_all_function = "get_".$model;
+            if (function_exists($get_all_function){
+                $_DATA["items"] = call_user_func("get_all_function", "all");
+            }else{
+                $_DATA["items"] = db_get($model, "all");
+            };
+            if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"]["list"]) ){
+                set_template_file("content", $_PAGE["templates"]["list"]);
+            };
+        }else{
+            $get_item_function = "get" . $obj_name;
+            if (function_exists($get_item_function)){
+                $_DATA["item"] = call_user_func($get_item_function, $id);
+            }else{
+                $_DATA["item"] = db_get($model, $id);
+            };
+            if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"]["item"]) ){
+                set_template_file("content", $_PAGE["templates"]["item"]);
+            };
+        }
+    }else{
+        die("Code: ea-".__LINE__."-model");
+    }
+}

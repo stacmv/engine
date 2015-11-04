@@ -1,8 +1,13 @@
+<input type="hidden" name="to[<?=$field["name"];?>]" value="null">
 <select multiple data-placeholder="-"
 	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
 	id="<?=$field["name"];?>"
 	class="form-control input-xxlarge <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
 >
+	
+	<?if (empty($field["value"]) && !empty($field["form_value_default"])):?>
+		<?$field["value"] = db_parse_value($field["form_value_default"], "list");?>
+	<?endif;?>
 
 	<?$in_group = false;?>
 	<?foreach($field["values"] as $caption=>$value):?>
@@ -34,7 +39,7 @@ $(function(){
 		filter:true,
 		selectAllText: "Выбрать все",
 		allSelected: "Выбраны все",
-		countSelected: "Выбрано #",
+		countSelected: "Выбрано # из %",
 		position: "top"
 		});
 })

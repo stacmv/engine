@@ -102,6 +102,7 @@ function auth_simple_identicate(){
 }
 function auth_simple_login(){
     auth_simple_set_auth_type();
+    session_regenerate_id();
     return "login_auth_simple";
 }
 function auth_simple_logout(){

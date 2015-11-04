@@ -50,7 +50,7 @@ function AUTHENTICATE(){
        
                 $authenticate_function = "auth_" . $auth_type . "_authenticate";
                 if ( function_exists($authenticate_function) ){
-                    dosyslog(__FUNCTION__.": INFO: Authenticating via " . $auth_type . ".");
+                    dosyslog(__FUNCTION__.": DEBUG: Authenticating via " . $auth_type . ".");
                     $_SESSION[$auth_type]["authenticated"] = call_user_func($authenticate_function);
                     if ($_SESSION[$auth_type]["authenticated"]){
                         $_USER["authenticated"] = time();
@@ -64,7 +64,7 @@ function AUTHENTICATE(){
             }
             
             if ( ! empty($_SESSION[$auth_type]["authenticated"]) ){
-                dosyslog(__FUNCTION__.": INFO: User '".$_USER["profile"]["login"]." (user_id:".$_USER["profile"]["id"].") athenticated via '".$auth_type."' since ".date("c",$_SESSION[$auth_type]["authenticated"]).".");
+                dosyslog(__FUNCTION__.": INFO: User '".$_USER["profile"]["login"]." (user_id:".$_USER["profile"]["id"].") authenticated via '".$auth_type."' since ".date("c",$_SESSION[$auth_type]["authenticated"]).".");
             };
         };
             
@@ -74,7 +74,7 @@ function AUTHENTICATE(){
     };
            
     if ($_USER["authenticated"]){
-        dosyslog(__FUNCTION__.": INFO: User authenticated.");
+        dosyslog(__FUNCTION__.": DEBUG: User authenticated.");        
     }else{
         dosyslog(__FUNCTION__.": INFO: User NOT authenticated.");
     };
@@ -135,7 +135,7 @@ function DOACTION(){
     
     $action = array_shift($_ACTIONS);
 
-    dosyslog(__FUNCTION__.": NOTICE: Action: ".$action);
+    dosyslog(__FUNCTION__.": INFO: Action: ".$action);
   
     $function = $action . "_action";
     
@@ -181,11 +181,11 @@ function IDENTICATE(){
     foreach($auth_types as $auth_type){
         $identicate_function = "auth_".$auth_type."_identicate";
         if (function_exists($identicate_function)){
-            dosyslog(__FUNCTION__.": NOTICE: Identication procedure initiated. Auth_type: ".$auth_type);
+            dosyslog(__FUNCTION__.": DEBUG: Identication procedure initiated. Auth_type: ".$auth_type);
             $_SESSION[$auth_type]["user_id"] = call_user_func($identicate_function); 
             if (! empty($_SESSION[$auth_type]["user_id"])){
                 $ids[] = $_SESSION[$auth_type]["user_id"];
-                dosyslog(__FUNCTION__.": INFO: Identicated user_id:".$_SESSION[$auth_type]["user_id"]." via ".$auth_type.".");
+                dosyslog(__FUNCTION__.": DEBUG: Identicated user_id:".$_SESSION[$auth_type]["user_id"]." via ".$auth_type.".");
             };
         }else{
             dosyslog(__FUNCTION__.": FATAL ERROR: Identicate function '".$identicate_function."' is not defined.");
@@ -207,7 +207,7 @@ function IDENTICATE(){
         $user = db_get("users", $user_id);
         if ($user){
             $_USER["profile"] = $user;
-            dosyslog(__FUNCTION__.": INFO: User identicated as '".$user["login"]."' (id:".$user["id"].").");
+            dosyslog(__FUNCTION__.": INFO: User identicated as '".$user["login"]."' (id:".$user["id"].") via " . $auth_type . ".");
         }else{
             dosyslog(__FUNCTION__.": ERROR: User not identicated. User id '".$user_id."' not found.");
             $user_id = null;
@@ -258,7 +258,7 @@ function GETPAGE(){  // поиск страницы, соответствующ�
         die("Code: e-".__LINE__);
     };
     
-    dosyslog(__FUNCTION__.": INFO: ".$_PAGE["uri"]);
+    dosyslog(__FUNCTION__.": INFO: ".$_PAGE["uri"] . " for uri '".$_URI."'.");
     
     
 };
@@ -274,7 +274,7 @@ function GETURI(){
 
     $_URI = $uri;
     
-    dosyslog(__FUNCTION__.": INFO: ".$_URI);
+    dosyslog(__FUNCTION__.": DEBUG: ".$_URI);
     
     
 };
@@ -398,7 +398,9 @@ function SETPARAMS(){
                             if (isset($m[$pos])){
                                 $tmp = $m[$pos];
                             }else{
-                                dosyslog(__FUNCTION__.": WARNING: " . $pos . "th parameter can not be get from _URI (" . $_URI . ") via regexp '" . $regexp . "'. Parameter '" . $fparam_name . "'.");
+                                if ( ! empty($fparam["required"]) && ($fparam["required"] == "required") ){
+                                    dosyslog(__FUNCTION__.": WARNING: " . $pos . "th parameter can not be get from _URI (" . $_URI . ") via regexp '" . $regexp . "'. Parameter '" . $fparam_name . "'.");
+                                };
                             };
                         } else {
                             dosyslog(__FUNCTION__.": WARNING: _URI (".$_URI.") does not match regexp '".$regexp."'. Parameter '" . $fparam_name . "'.");
@@ -550,7 +552,7 @@ function SETPARAMS(){
     }; // if
     
     if ( ! empty($_PARAMS) ){
-        dosyslog(__FUNCTION__.": DEBUG: Params set: {". urldecode(http_build_query($_PARAMS)) . "} for page '".$_PAGE["uri"]."'.");
+        dosyslog(__FUNCTION__.": NOTICE: Params set: {". urldecode(http_build_query($_PARAMS)) . "} for page '".$_PAGE["uri"]."'.");
     }else{
         dosyslog(__FUNCTION__.": DEBUG: No params are set for page '".$_PAGE["uri"]."'.");
     }

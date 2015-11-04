@@ -92,7 +92,9 @@ function upload_file($param_name, $storage_name){
                 };
                 
             }else{
-                dosyslog(__FUNCTION__.get_callee().": DEBUG: File error for '".$v."': ".$_FILES["to"]["error"][$param_name]);
+                if ($_FILES["to"]["error"][$param_name][$k]){
+                    dosyslog(__FUNCTION__.get_callee().": DEBUG: File error for '".$param_name."': ".$_FILES["to"]["error"][$param_name]);
+                };
                 list($res, $dest_name) = upload_move_uploaded_file($_FILES["to"]["tmp_name"][$param_name], $_FILES["to"]["name"][$param_name], $upload_dir);
                 if ($dest_name){
                     dosyslog(__FUNCTION__.": NOTICE: File for '".$param_name."' moved to storage path '".$dest_name."'.");

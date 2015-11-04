@@ -18,19 +18,19 @@ foreach(@array(
 		.app_content {margin-top: 70px;}
 	</style>
 
-	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css">
-	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css">
-	<link rel="stylesheet" href="assets/css/multiple-select.css" type="text/css" />
+	<link rel="stylesheet" href="assets/bs2/css/bootstrap-combined.min.css">
+	<link rel="stylesheet" href="assets/bs2/css/font-awesome.css">
+	<link rel="stylesheet" href="assets/bs2/css/multiple-select.css" type="text/css" />
 	<link rel="stylesheet" href="assets/css/custom.css">
 
-	<script src="assets/js/jquery.js"></script>
-	<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
-	<script src="assets/js/jquery.maskedinput.js"></script>
+	<script src="assets/bs2/js/jquery.js"></script>
+	<script src="assets/bs2/js/bootstrap.min.js"></script>
+	<script src="assets/bs2/js/jquery.maskedinput.js"></script>
 	
 	<!-- Editor -->
-	<link rel="stylesheet" href="//cdn.jsdelivr.net/editor/0.1.0/editor.css">
-	<script src="//cdn.jsdelivr.net/editor/0.1.0/editor.js"></script>
-	<script src="//cdn.jsdelivr.net/editor/0.1.0/marked.js"></script>
+	<link rel="stylesheet" href="assets/bs2/css/editor/editor.css">
+	<script src="assets/bs2/css/editor/editor.js"></script>
+	<script src="assets/bs2/css/editor/marked.js"></script>
 </head>
 <body>
 <div class="navbar navbar-fixed-top">
@@ -41,14 +41,35 @@ foreach(@array(
 			<?if ( ! empty($topmenu) ) :?>
 				<ul class="nav">
 					<?foreach ($topmenu as $menuItem) :?>
-						<li <?if ($_PAGE["uri"] == $menuItem["href"]) :?>class="active"<?endif;?>>
-							<a href="<?=$menuItem["href"].$CFG["URL"]["ext"];?>">
-								<?=$menuItem["caption"];?>
-								<?if (!empty($menuItem["badge"])):?>
-									<span class="badge badge-<?=$menuItem["badge"]["class"];?>" title="<?=$menuItem["badge"]["title"];?>"><?=$menuItem["badge"]["value"];?></span>
-								<?endif;?>
-							</a>
-						</li>
+						<?if(!empty($menuItem["submenu"])):?>
+							<li class="dropdown <?if ($_PAGE["uri"] == $menuItem["href"]) :?>active<?endif;?>">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+									<?=$menuItem["caption"];?>
+									<b class="caret"></b>
+									<ul class="dropdown-menu">
+										<?foreach($menuItem["submenu"] as $subMenuItem):?>
+											<li>
+												<a href="<?=$subMenuItem["href"] . $CFG["URL"]["ext"];?>" title="<?=$subMenuItem["caption"];?>">
+													<?=$subMenuItem["caption"];?>
+													<?if (!empty($subMenuItem["badge"])):?>
+														<span class="badge badge-<?=$subMenuItem["badge"]["class"];?>" title="<?=$subMenuItem["badge"]["title"];?>"><?=$subMenuItem["badge"]["value"];?></span>
+													<?endif;?>
+												</a>
+											</li>
+										<?endforeach;?>
+									</ul>
+								</a>
+							</li>
+						<?else:?>
+							<li <?if ($_PAGE["uri"] == $menuItem["href"]) :?>class="active"<?endif;?>>
+								<a href="<?=$menuItem["href"].$CFG["URL"]["ext"];?>">
+									<?=$menuItem["caption"];?>
+									<?if (!empty($menuItem["badge"])):?>
+										<span class="badge badge-<?=$menuItem["badge"]["class"];?>" title="<?=$menuItem["badge"]["title"];?>"><?=$menuItem["badge"]["value"];?></span>
+									<?endif;?>
+								</a>
+							</li>
+						<?endif;?>
 					<?endforeach;?>
 				</ul>
 			<?endif;?>
@@ -92,8 +113,7 @@ foreach(@array(
 	$(function(){
 		$(".loader").	hide();
 		$(".displayOnload").removeClass("displayOnload");
-		
-		$(".date").mask("99.99.9999");
+
 		$(".phone").mask("(999)999-99-99");
 		
 

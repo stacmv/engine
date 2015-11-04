@@ -98,8 +98,8 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         }
         
         if ($template == "hidden"){
-            if (empty($field["value"]) && !empty($vlues)){
-                $field["value"] = form_get_field_values($v);
+            if (empty($field["value"]) && !empty($field["values"])){
+                $field["value"] = form_get_field_values($field);
             };
         }
         
@@ -157,7 +157,16 @@ function form_get_fields($db_table, $form_name){
         // Parse some data
         foreach($v as $prop_key=>$prop_value){
             if (substr($prop_key, 0, 5) == "form_"){
+              
                 if ( strpos($prop_value, "|") !== false ){
+                    
+                    // ////
+                    if ($prop_key == "form_value_default"){
+                        $tmp_marker = "_".uniqid()."_";
+                        $prop_value = str_replace("||", $tmp_marker, $prop_value); // экранируем ||, на случай когда значение типа list
+                    }
+                    // ////
+                    
                     $tmp = explode("|", $prop_value);
                     if ( isset($tmp[$form_index]) ){
                         $v[$prop_key] = $tmp[$form_index];
@@ -168,7 +177,14 @@ function form_get_fields($db_table, $form_name){
                         
                     }
                     unset($tmp);
+                    
+                    // ////
+                    if ($prop_key == "form_value_default"){
+                        $v[$prop_key] = str_replace($tmp_marker, "||", $v[$prop_key]); // снимаем экран ||
+                    }
+                    // ////
                 };
+                
             }
         }
         unset($prop_key, $prop_value);

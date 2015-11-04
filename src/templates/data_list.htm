@@ -3,26 +3,28 @@ foreach(@array(
 	$CFG["URL"]["base"],
 	$CFG["URL"]["ext"],
 	$CFG["GENERAL"]["app_name"],
-	$users,
+	$items,
+	$fields,
+	$item_name,
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
 ?>
 <article class="app_content">
 	<div class="page-header">
-		<h1>Пользователи</h1>
+		<h1><?$_PAGE["header"];?></h1>
 	</div>
 	
 	<div class="row">
 		<div class="form-actions">
 			<div class="pull-right">
-				<a href="form/add/user<?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> Добавить нового пользователя</a>
+				<a href="form/add/<?=$item_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> Добавить</a>
 			</div>
 		</div>
 	</div>
 	
-	<?if(empty($users)):?>
+	<?if(empty($items)):?>
 		<div class="alert alert-warning">
-			В системе нет зарегистрированных пользователей! <em>Что странно, раз вы видите это.</em>
+			Нет данных.
 		</div>
 	<?else:?>
 			
@@ -31,43 +33,55 @@ foreach(@array(
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th>ID</th>
-							<th>Логин</th>
-							<th>Имя</th>
-							<th>Доступ</th>
-							<th>Операции</th></tr>
+							<?foreach($fields as $field):?>
+								<th title="<?=$field["name"];?>" style="vertical-align:top;text-align:center"><?= ! empty($field["label"]) ? $field["label"] : $field["name"];?></th>
+							<?endforeach;?>
+							<th style="vertical-align:top;text-align:center">Операции</th>
+						</tr>
 					</thead>
 					<tbody>
-						<col style="width:10px">
-						<col style="width:150px">
-						<col style="width:200px">
-						<col style="width:150px">
-						<col style="width:150px">
-					<?foreach ($users as $user):?>
-						<?if ($user["isDeleted"]) continue;?>
+					<?foreach ($items as $item):?>
+						<?if ($item["isDeleted"]) continue;?>
 						<tr>
-							<td><?=$user["id"];?></td>
-							<td>
-								<code>login: <?=$user["login"];?></code>
-							</td>
-							<td><?=$user["name"];?></td>
-							<td>
-								<?if (userHasRight("manager",$user["login"])):?>
-									<span class="label label-info">Менеджер</span>
-								<?endif;?>
-								<?if (userHasRight("editor",$user["login"])):?>
-									<span class="label label-info">Редактор</span>
-								<?endif;?>
-								<?if(userHasRight("access", $user["login"])):?>
-									<span class="label label-success">Есть</span>
-								<?else:?>
-									<span class="label label-important">Нет</span>
-								<?endif;?>
-							</td>
+							<?foreach($fields as $field):?>
+								<td>
+									<?if ($field["type"] == "password"):?>
+										<?if(!empty($item[ $field["name"] ])):?>
+											Ok
+										<?else:?>
+											<span class="label ;abel-danger">NO!<span>
+										<?endif;?>
+									<?elseif ($field["type"] == "list"):?>
+										<?if(!empty($item[ $field["name"] ])):?>
+											<ul>
+												<?foreach($item[ $field["name"] ] as $v):?>
+													<li><?=$v;?></li>
+												<?endforeach;?>
+											</ul>
+										<?endif;?>
+									<?elseif ($field["type"] == "timestamp"):?>
+										<?=show_date($item[ $field["name"] ], SHOW_DATE_TIME_DIFF | SHOW_DATE_AGO);?>
+									<?elseif ($field["type"] == "date"):?>
+										<?=glog_rusdate($item[ $field["name"] ]);?>
+									<?elseif($field["type"] == "file"):?>
+										<?if (!empty($item[ $field["name"] ])):?>
+											<?if(in_array( strtolower(substr($item[ $field["name"] ], -4)), array(".png", ".gif", ".jpg") )):?>
+												<div style='width:64px'>
+													<img class="img-responsive" src="<?=$item[ $field["name"] ];?>">
+												</div>
+											<?else:?>
+												<a href="<?=$item[ $field["name"] ];?>" target="_blank">link</a>
+											<?endif;?>
+										<?endif;?>
+									<?else:?>
+										<?=glog_str_limit( $item[ $field["name"] ], 140);?>
+									<?endif;?>
+								</td>
+							<?endforeach;?>
 							<td>
 								<?if (userHasRight("manager")):?>
-									<a href="form/edit/user/<?=$user["id"].$CFG["URL"]["ext"];?>" class="btn btn-small"><i class="icon-edit"></i>Ред.</a>
-									<a href="form/delete/user/<?=$user["id"].$CFG["URL"]["ext"];?>" class="btn btn-small btn-danger">&times;</a>
+									<a href="form/edit/<?=$item_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small"><i class="icon-edit"></i>Ред.</a>
+									<a href="form/delete/<?=$item_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small btn-danger">&times;</a>
 								<?else:?>
 									&nbsp;
 								<?endif;?>

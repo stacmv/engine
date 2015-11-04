@@ -1,0 +1,17 @@
+<?foreach($field["values"] as $caption=>$value):?>
+	<label>
+		<input
+			type="radio"
+			<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
+			<?if (! empty($value)):?>id="<?=$field["name"]."_".glog_codify($value);?>"<?endif;?> 
+			<?if (isset($field["class"])):?>class="<?=$field["class"];?>"<?endif;?> 
+			value="<?=$value;?>"
+			<?if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> checked<?endif;?>
+		> 
+		<?=is_int($caption) ? $value : $caption;?>
+	</label>
+<?endforeach;?>
+<?if(!empty($field["hint"])):?>
+	<span class="help-block"><?=$field["hint"];?></span>
+<?endif;?>
+<?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">Поле обязательно.</span><?endif;?>
