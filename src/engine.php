@@ -200,12 +200,15 @@ function SETACTIONLIST(){
     $_ACTIONS = array(); 
       
         
-    if (empty($_PAGE["actions"])) {
-        dosyslog(__FUNCTION__.": NOTICE: There are no actions set for page '".$_PAGE["uri"]."' in pages file.");
-        return;
+    if (empty($_PAGE["actions"])){
+        $_PAGE["actions"] = array();
+    };
+    if ( ! empty($_DEFAULT_ACTIONS) ){
+        $_PAGE["actions"] = array_merge($_PAGE["actions"], $_DEFAULT_ACTIONS);
     };
     
-    foreach(array_merge($_PAGE["actions"], $_DEFAULT_ACTIONS) as $action){
+    
+    foreach($_PAGE["actions"] as $action){
         if ($action) {
             if (!in_array($action, $_ACTIONS)) {
                 $_ACTIONS[] = $action;
