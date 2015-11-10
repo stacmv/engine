@@ -1,4 +1,4 @@
-<?
+<?php
 class EUsers{
     const DB_TABLE = "users";
     

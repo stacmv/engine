@@ -34,7 +34,7 @@ class EUser implements ArrayAccess
         if ( isset($this->_user["profile"]["name"]) ){
             $username = $this->_user["profile"]["name"];
         }elseif( isset($this->_user["profile"]["login"]) ){
-            $username = _t("User") . $this->_user["profile"]["login"];
+            $username = _t("User") . " " . $this->_user["profile"]["login"];
         }else{
             $username = _t("Unknown user");
         }

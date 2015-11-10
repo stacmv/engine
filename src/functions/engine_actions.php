@@ -487,4 +487,9 @@ function show_login_form_action(){
         return_url_push($_SERVER["HTTP_REFERER"]);
     };
     
+    // There no users yet -- link to add first user
+    if ( ! db_get_count("users") ){
+        $_DATA["import_first_user"] = true;
+    };
+    
 }

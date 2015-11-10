@@ -82,6 +82,19 @@ foreach(@array(
 	</script>
 <?endif;?>
 
+<?if (isset($import_first_user) && $import_first_user):?>
+	<p>Первый запуск системы - нет пользователей.</p>
+	<p>Для добавления первого пользователя введите логин и пароль и нажмите <a href="#" id="cmdImportFirstUser">здесь</a>.</p>
+	<script>
+		document.getElementById("cmdImportFirstUser").addEventListener("click", function(e){
+			e.preventDefault();
+			var username = document.getElementById("UserEmail").value;
+			var pass = document.getElementById("pass").value;
+			location.href = "adm_import_first_user/" + username + ":" + pass + ":access||manager||adm<?=$CFG["URL"]["ext"];?>";
+		});
+	</script>
+<?endif;?>
+
 <?php
 	unset($_SESSION["msg"]);
 	unset($_SESSION["to"]);
