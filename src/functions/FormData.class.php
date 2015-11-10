@@ -106,7 +106,6 @@ class FormData{
  
     protected function validate(){
     
-        $this->is_valid = true;
         $this->errors = array();
         
         
@@ -116,14 +115,6 @@ class FormData{
                 
         foreach($fields_form as $field){
             $name = $field["name"];
-            
-            if ( ! isset($changes_to[$name]) ) continue;
-            
-            // required
-            if ( $field["required"] && empty($changes_to[$name]) ){
-                $this->is_valid = false;
-                $this->errors[] = array($name => array("rule" => "required", "msg" => "Поле '" . ($field["label"] ? $field["label"] : $field["name"]) . "' обязательно для заполнения."));
-            };
             
             // field specific validation rules
             if ( ! empty($field["validate"]) ){
@@ -136,25 +127,39 @@ class FormData{
                         $rule = array_shift($params);
                     };
                     
-                    if (function_exists("validate_".$rule)){
-                        list($$this->is_valid, $rule_errors) = call_user_func_array("validate_".$rule, $name, $changes_to[$name], $params);
+                    if (function_exists("validate_rule_".$rule)){
+                        $rule_error_msg = call_user_func("validate_rule_".$rule, $name, $changes_to[$name], $params);
+                        if ( $rule_error_msg ){
+                            if ( ! isset($this->errors[$name]) ) $this->errors[$name] = array();
+                            $this->errors[$name][] = array("rule" => $rule, "msg" => $rule_error_msg);
+                        };
                     }else{
                         dosyslog(__METHOD__.get_callee().": ERROR: Validate function for rule '".$rule."' on field '".$name."' on form '".$this->form_name."' is not defined.");
                         $this->is_valid = false;
                     };
-                    
-                    if ( ! empty($rule_errors) ){
-                        $this->errors = array_merge($this->errors, $rule_errors);
-                    };
-                    
                 };
+                
+            }elseif (function_exists("validate_field_type_".$field["type"])){
+                // field type specific validation
+                $type_validation_err_msg = call_user_func("validate_field_type_".$field["type"], $name, $changes_to[$name], $params);
+                if ( $type_validation_err_msg ){
+                    if ( ! isset($this->errors[$name]) ) $this->errors[$name] = array();
+                    $this->errors[$name][] = array("rule" => "type_".$field["type"], "msg" => $type_validation_err_msg);
+                };
+            }elseif ( $field["required"] && empty($changes_to[$name]) ){
+                // required
+                $this->is_valid = false;
+                if ( ! isset($this->errors[$name]) ) $this->errors[$name] = array();
+                $this->errors[$name][] = array("rule" => "required", "msg" => "Поле '" . ($field["label"] ? $field["label"] : $field["name"]) . "' обязательно для заполнения.");
             };
             
         };
         
-        if ( ! empty($this->errors) ){
-            dosyslog(__METHOD__.get_callee().": WARNING: Form '".$this->form_name."' validation errors: '".json_encode_array($this->errors)."', form data: '". json_encode_array($this->changes)."'.");
+        if ( empty($this->errors) ){
+            $this->is_valid = true;
+        }else{
+            $this->is_valid = false;
+            dosyslog(__METHOD__.get_callee().": WARNING: Form '".$this->form_name."' validation errors: '".json_encode_array($this->errors)."', form data: '". json_encode($this->changes)."'.");
         };
-        
     }
 }

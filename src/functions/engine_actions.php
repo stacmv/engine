@@ -20,18 +20,32 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     //
     
     
-    list($res, $added_id) = add_data( new FormData($db_table, $_PARAMS) );
-    if ( (int) $added_id ){
-        $reason = "success";
+    // 
+    $formdata = new FormData($db_table, $_PARAMS);
+    
+        
+    if ($formdata->is_valid){
+    
+        list($res, $added_id) = add_data( $formdata );
+        if ( (int) $added_id ){
+            $reason = "success";
+        }else{
+            $reason = $added_id;
+        };
+        set_session_msg($db_table."_add_".$reason, $reason);
+        
     }else{
-        $reason = $added_id;
-    };
-    set_session_msg($db_table."_add_".$reason, $reason);
+        $res = false;
+        $reason = "validation_error";
+        set_session_msg($db_table."_add_".$reason, "fail");
+    }
        
     if (! $res){
         $_SESSION["to"] = $_PARAMS["to"];
+        $_SESSION["form_errors"] = $formdata->errors;
     }else{
         unset($_SESSION["to"]);
+        unset($_SESSION["form_errors"]);
     };   
     
     dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
@@ -200,7 +214,7 @@ function form_action(){
     $object_name = ! empty($_PARAMS["object"])   ? $_PARAMS["object"]     : null;
     
     if ( ! $action || ! $object_name ) {
-        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Mandatory parameter 'action', 'object_name' or both is not set. Check pages config for '".$_PAGE["uri"]."' or correcponding action.");
+        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Mandatory parameter 'action', 'object_name' or both is not set. Check pages config for '".$_PAGE["uri"]."' or corresponding action.");
         die("Code: ea-".__LINE__);
     };
     
