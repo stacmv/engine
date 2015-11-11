@@ -17,6 +17,8 @@ foreach(@array(
 	</div>
 	<div class="row">
 		<div class="col-md-6 col-md-offset-3 span6 offset3">
+			%%form_errors%%
+			
 			<form class="form-horizontal" action="<?=$action;?>/<?=$object_name;?><?=$CFG["URL"]["ext"];?>" method="post" enctype="multipart/form-data">
 				
 				%%form_generate%%

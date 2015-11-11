@@ -106,13 +106,24 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     };
   
     
-    list($res, $reason) = edit_data( new FormData($db_table, $_PARAMS), $id);
-    set_session_msg($db_table."_edit_".$reason);
+    $formdata = new FormData($db_table, $_PARAMS);
+    
+    if ($formdata->is_valid){
+    
+        list($res, $reason) = edit_data($formdata, $id);
+        set_session_msg($db_table."_edit_".$reason);
+    }else{
+        $res = false;
+        $reason = "validation_error";
+        set_session_msg($db_table."_edit_".$reason, "fail");
+    }
     
     if (! $res){
         $_SESSION["to"] = $_PARAMS["to"];
+        $_SESSION["form_errors"] = $formdata->errors;
     }else{
         unset($_SESSION["to"]);
+        unset($_SESSION["form_errors"]);
     };   
     
     dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);

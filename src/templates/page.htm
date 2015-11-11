@@ -26,6 +26,7 @@ foreach(@array(
 	<script src="assets/bs2/js/jquery.js"></script>
 	<script src="assets/bs2/js/bootstrap.min.js"></script>
 	<script src="assets/bs2/js/jquery.maskedinput.js"></script>
+	<script src="assets/bs2/js/jquery.multiple.select.js"></script>
 	
 	<!-- Editor -->
 	<link rel="stylesheet" href="assets/bs2/css/editor/editor.css">
@@ -38,41 +39,7 @@ foreach(@array(
 		<div class="container">
 			<a href="index.html" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
 			
-			<?if ( ! empty($topmenu) ) :?>
-				<ul class="nav">
-					<?foreach ($topmenu as $menuItem) :?>
-						<?if(!empty($menuItem["submenu"])):?>
-							<li class="dropdown <?if ($_PAGE["uri"] == $menuItem["href"]) :?>active<?endif;?>">
-								<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-									<?=$menuItem["caption"];?>
-									<b class="caret"></b>
-									<ul class="dropdown-menu">
-										<?foreach($menuItem["submenu"] as $subMenuItem):?>
-											<li>
-												<a href="<?=$subMenuItem["href"] . $CFG["URL"]["ext"];?>" title="<?=$subMenuItem["caption"];?>">
-													<?=$subMenuItem["caption"];?>
-													<?if (!empty($subMenuItem["badge"])):?>
-														<span class="badge badge-<?=$subMenuItem["badge"]["class"];?>" title="<?=$subMenuItem["badge"]["title"];?>"><?=$subMenuItem["badge"]["value"];?></span>
-													<?endif;?>
-												</a>
-											</li>
-										<?endforeach;?>
-									</ul>
-								</a>
-							</li>
-						<?else:?>
-							<li <?if ($_PAGE["uri"] == $menuItem["href"]) :?>class="active"<?endif;?>>
-								<a href="<?=$menuItem["href"].$CFG["URL"]["ext"];?>">
-									<?=$menuItem["caption"];?>
-									<?if (!empty($menuItem["badge"])):?>
-										<span class="badge badge-<?=$menuItem["badge"]["class"];?>" title="<?=$menuItem["badge"]["title"];?>"><?=$menuItem["badge"]["value"];?></span>
-									<?endif;?>
-								</a>
-							</li>
-						<?endif;?>
-					<?endforeach;?>
-				</ul>
-			<?endif;?>
+			%%topmenu%%
 			
 			%%login_logout_link%%
 			
@@ -107,7 +74,7 @@ foreach(@array(
 	</div>
 </div> 
 
-<script type="text/javascript" src="assets/js/jquery.multiple.select.js"></script>
+
 
 <script>
 	$(function(){

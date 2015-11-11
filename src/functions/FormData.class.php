@@ -116,6 +116,10 @@ class FormData{
         foreach($fields_form as $field){
             $name = $field["name"];
             
+            if ( (strpos($this->form_name, "edit_") === 0) && ! isset($changes_to[$name]) ){ // validation for field which are not changed on edit should be skipped.
+                continue;
+            };
+            
             // field specific validation rules
             if ( ! empty($field["validate"]) ){
                 $rules = explode("|", $field["validate"]);
