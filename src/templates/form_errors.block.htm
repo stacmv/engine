@@ -1,0 +1,9 @@
+<?php if(!empty($_SESSION["form_errors"])):?>
+	<ul class="form_errors">
+		<?foreach($_SESSION["form_errors"] as $field_name => $errors):?>
+			<?foreach($errors as $err):?>
+				<li class="text-error" data-field="<?=$field_name;?>" data-rule="<?=$err["rule"];?>"><?=$err["msg"];?></li>
+			<?endforeach;?>
+		<?endforeach;?>
+	</ul>
+<?endif;?>
