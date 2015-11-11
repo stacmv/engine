@@ -44,7 +44,19 @@ foreach(@array(
 						<?if ($item["isDeleted"]) continue;?>
 						<tr>
 							<?foreach($fields as $field):?>
+								<?php
+									if ( isset($field["form_values"]) && ($field["form_values"] == "tsv") ){
+										$field["_form_values"] = form_get_field_values($field);
+									};
+								?>
 								<td>
+									<?if ( ! isset($item[$field["name"]]) ):?>
+										<div class="alert alert-danger" title="Сделай миграцию базы данных!">Не актуальная структура БД!</div>
+										</td>
+										<?continue;?>
+									<?endif;?>
+									
+								
 									<?if ($field["type"] == "password"):?>
 										<?if(!empty($item[ $field["name"] ])):?>
 											Ok
@@ -74,7 +86,11 @@ foreach(@array(
 											<?endif;?>
 										<?endif;?>
 									<?else:?>
-										<?=glog_str_limit( $item[ $field["name"] ], 140);?>
+										<?if ( ! empty($field["_form_values"]) && ($fv_key = array_search($item[ $field["name"] ], $field["_form_values"])) ):?>
+                                            <?=glog_str_limit( $field["_form_values"][$fv_key], 140 );?>
+                                        <?else:?>
+                                            <?=glog_str_limit( $item[ $field["name"] ], 140);?>
+                                        <?endif;?>
 									<?endif;?>
 								</td>
 							<?endforeach;?>
