@@ -349,7 +349,7 @@ function login_simple_action(){
         $redirect_uri = $CFG["URL"]["dashboard"];
     };
 
-    redirect($redirect_uri ? $redirect : "index");
+    redirect($redirect_uri ? $redirect_uri : "index");
 
 }
 function logout_action(){
@@ -508,9 +508,8 @@ function show_login_form_action(){
     $auth_types = get_auth_types();
     $_DATA["auth_type"] = isset($auth_types[0]) ? $auth_types[0] : "simple";
     
-    if ( ! empty($_SERVER["HTTP_REFERER"]) && (strpos($_SERVER["HTTP_REFERER"], $CFG["URL"]["base"]) === 0) && ($_SERVER["HTTP_REFERER"] != $CFG["URL"]["base"] . "form/login" . $CFG["URL"]["ext"]) ){
-        return_url_push($_SERVER["HTTP_REFERER"]);
-    };
+    return_url_push($CFG["URL"]["dashboard"]);
+    
     
     // There no users yet -- link to add first user
     if ( ! db_get_count("users") ){
