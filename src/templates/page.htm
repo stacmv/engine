@@ -37,7 +37,7 @@ foreach(@array(
 <div class="navbar navbar-fixed-top">
 	<div class="navbar-inner">
 		<div class="container">
-			<a href="index.html" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
+			<a href="<?if($_USER->is_authenticated()):?><?=!empty($CFG["URL"]["dashboard"]) ? $CFG["URL"]["dashboard"] : "index";?><?else:?>index<?endif;?><?=$CFG["URL"]["ext"];?>" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
 			
 			%%topmenu%%
 			
