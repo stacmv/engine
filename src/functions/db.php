@@ -447,7 +447,7 @@ function db_delete($db_table, $id, $comment=""){
 function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
     
     global $_USER;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+
     // ДОРАБОТАТЬ: добавить проверку существования полей в таблице и обработку ошибок
     
     //dump($comment,"comment");
@@ -516,28 +516,31 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
     };
     
     
-       
-    $query = db_create_update_query($db_table, array_keys($changes->to) );
-    $update_data = array_values(db_prepare_record($db_table, $changes->to));
+    
+    $update_data = db_prepare_record($db_table, $changes->to);
+    $query = db_create_update_query($db_table, array_keys($update_data) );
     $update_data[] = $id;
     
-// dump($update_data,"update_data");die(__FUNCTION__);    
+    // dump($query, "query");
+    // dump($update_data,"update_data");die(__FUNCTION__);
+    
     
     
     $statement = db_prepare_query($db_table, $query);
     if ($statement) {
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
         $res = $statement->execute(array_values($update_data));
+        $count = $statement->rowCount();
     }else{
         $res = false;
     };
-    $update_data = db_prepare_record($db_table, $update_data);
     
-    // dump($update_data,"update_data");die(__FUNCTION__);
-       
-    if (!$res){
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'.");
+    if ( ! $res){
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'. Update data: '".json_encode_array($update_data)."'.");
         return array(false,"db_fail");
+    }elseif( ! $count){
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " No rows updated:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'. Update data: '".json_encode_array($update_data)."'.");
+        return array(false,"db_no_update");
     }else{  
         dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Update db: '".$query."'");
         
@@ -1192,12 +1195,10 @@ function db_set($db_table){
 	return $dbh;
 };
 function db_select($db_table, $select_query, $flags=0){
-    
-    global $S;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+
     $result = array();
     $dbh = db_set($db_table);
-	
+
     
     if (strtoupper(substr($select_query,0,strlen("SELECT "))) !== "SELECT "){
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Only SELECT query is allowed. Query: '".htmlspecialchars($select_query)."'. IP:".$_SERVER["REMOTE_ADDR"]);
@@ -1235,8 +1236,6 @@ function db_select($db_table, $select_query, $flags=0){
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  '".db_error($dbh)."'. Query: '".$select_query."'.");
     };
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
     return $result;
 };
 function db_sqlite_register_function($dbh, $func_name){
@@ -1335,7 +1334,11 @@ function db_prepare_record($db_table, $record){
     $schema = db_get_table_schema($db_table);
     foreach($schema as $field){
         if (isset($record[ $field["name"] ])){
-            $record[ $field["name"] ] = db_prepare_value($record[ $field["name"] ], $field["type"]);
+            if ( ($field["type"] == "password") && ! $record[ $field["name"] ] ){ // if new password is empty it is supposed that password should not be changed
+                unset($record[ $field["name"] ]);
+            }else{
+                $record[ $field["name"] ] = db_prepare_value($record[ $field["name"] ], $field["type"]);
+            };
         };
     };
 

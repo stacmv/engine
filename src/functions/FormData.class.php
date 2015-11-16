@@ -67,6 +67,7 @@ class FormData{
             
         };
         
+                
         
         if (isset($params["from"]["created"])) unset($params["from"]["created"]);
         if (isset($params["to"]["created"])) unset($params["to"]["created"]);
@@ -76,21 +77,25 @@ class FormData{
         // Трансляция данных в формат для записи в БД.
         //   Для многострочных текстовых строк - заменить конец строки на \n;
         
+        
+        
         foreach($params["to"] as $what=>$v){
             if ( ! empty($this->changes->to[$what])) continue; //  don't touch data about uploaded files
             
-            if ( $v !== "" ){
-                if ( is_string($v) ){
-                    $this->changes->to[$what] = preg_replace('~\R~u', "\n", $v);
-                }else{
-                    $this->changes->to[$what] = $v;
-                };
             
-                if ( isset($params["from"][$what]) ){
-                    $this->changes->from[$what] = ( $params["from"][$what] && is_string($params["from"][$what]) ) ? preg_replace('~\R~u', "\n", $params["from"][$what]) : $params["from"][$what];
-                };
+            if ( is_string($v) ){
+                $this->changes->to[$what] = preg_replace('~\R~u', "\n", $v);
+            }else{
+                $this->changes->to[$what] = $v;
             };
+        
+            if ( isset($params["from"][$what]) ){
+                $this->changes->from[$what] = ( $params["from"][$what] && is_string($params["from"][$what]) ) ? preg_replace('~\R~u', "\n", $params["from"][$what]) : $params["from"][$what];
+            };
+        
         };
+        
+        
        
        
         // Валидация
