@@ -606,8 +606,15 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
                 $where_clause = $field." IN (".implode(", ", array_map(function($v)use($dbh){
                     return $dbh->quote($v);
                 }, $value) ) . ")";
+                if (in_array(null,$value)){
+                    $where_clause .= " OR ".$field." IS NULL";
+                };
             }else{
-                $where_clause = $field."=".$dbh->quote($value);
+                if (is_null($value)){
+                    $where_clause = $field." IS NULL";
+                }else{
+                    $where_clause = $field."=".$dbh->quote($value);
+                };
             };
         }
         $where_clause .= ( ! ($returnOptions & DB_RETURN_DELETED) ? " AND (isDeleted IS NULL OR isDeleted = '')" : "");
@@ -615,8 +622,9 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
         // ORDER BY
         $order_by_clause = "";
         if ($returnOptions & DB_RETURN_NEW_FIRST){
-            if (!is_array($order_by)) $order_by = array($order_by);
-            $order_by[] = array("created"=>"DESC");
+            if (empty($order_by)) $order_by = array();
+            if (!empty($order_by) && !is_array($order_by)) $order_by = array($order_by);
+            $order_by["created"] ="DESC";
         };
         if ( ! empty($order_by) ){
             if (!is_array($order_by)) $order_by = array($order_by);

@@ -137,7 +137,7 @@ class FormData{
                     };
                     
                     if (function_exists("validate_rule_".$rule)){
-                        $rule_error_msg = call_user_func("validate_rule_".$rule, $name, isset($changes_to[$name]) ? $changes_to[$name] : "", $rule_params, $this->changes);
+                        $rule_error_msg = call_user_func("validate_rule_".$rule, $name, isset($changes_to[$name]) ? $changes_to[$name] : "", $rule_params, $this);
                         if ( $rule_error_msg ){
                             if ( ! isset($this->errors[$name]) ) $this->errors[$name] = array();
                             $this->errors[$name][] = array("rule" => $rule, "msg" => $rule_error_msg);
@@ -150,7 +150,7 @@ class FormData{
                 
             }elseif (function_exists("validate_field_type_".$field["type"])){
                 // field type specific validation
-                $type_validation_err_msg = call_user_func("validate_field_type_".$field["type"], $name, isset($changes_to[$name]) ? $changes_to[$name] : "", $this->changes);
+                $type_validation_err_msg = call_user_func("validate_field_type_".$field["type"], $name, isset($changes_to[$name]) ? $changes_to[$name] : "", $this);
                 if ( $type_validation_err_msg ){
                     if ( ! isset($this->errors[$name]) ) $this->errors[$name] = array();
                     $this->errors[$name][] = array("rule" => "type_".$field["type"], "msg" => $type_validation_err_msg);

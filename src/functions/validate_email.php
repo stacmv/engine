@@ -1,5 +1,5 @@
 <?php
-function validate_field_type_email($key, $value, $rule_params, ChangesSet $changes){
+function validate_field_type_email($key, $value, FormData $form){
     
 	
 	if ( (substr($value, -8) != "@test.ru") && ! empty($CFG["VALIDATE"]["mailgun_key"]) ){
@@ -25,6 +25,6 @@ function validate_field_type_email($key, $value, $rule_params, ChangesSet $chang
        $res = filter_var($value, FILTER_VALIDATE_EMAIL);
 	}
     
-    return  $res === true ? "" : _t("validate_email_fail");
+    return  $res == true ? "" : _t("validate_email_fail");
 
 };

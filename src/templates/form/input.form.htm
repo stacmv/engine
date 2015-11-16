@@ -30,3 +30,10 @@
 		});
 	</script>
 <?endif;?>
+<?if($field["type"] == "time"):?>
+	<script>
+		$(function(){
+			$("#<?=$field["id"];?>").mask("99:99");
+		});
+	</script>
+<?endif;?>
