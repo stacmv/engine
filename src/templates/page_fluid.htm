@@ -1,0 +1,96 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["base"],
+	$CFG["GENERAL"]["app_name"],
+	$CFG["GENERAL"]["app_version"],
+	$_PAGE["title"],
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <title><?=$_PAGE["title"];?></title>
+	<base href="<?=$CFG["URL"]["base"];?>">
+	
+	<style>
+		.app_content {margin-top: 70px;}
+	</style>
+
+	<link rel="stylesheet" href="assets/bs2/css/bootstrap-combined.min.css">
+	<link rel="stylesheet" href="assets/bs2/css/font-awesome.css">
+	<link rel="stylesheet" href="assets/bs2/css/multiple-select.css" type="text/css" />
+	<link rel="stylesheet" href="assets/css/custom.css">
+
+	<script src="assets/bs2/js/jquery.js"></script>
+	<script src="assets/bs2/js/bootstrap.min.js"></script>
+	<script src="assets/bs2/js/jquery.maskedinput.js"></script>
+	<script src="assets/bs2/js/jquery.multiple.select.js"></script>
+	
+	<!-- Editor -->
+	<link rel="stylesheet" href="assets/bs2/css/editor/editor.css">
+	<script src="assets/bs2/js/editor/editor.js"></script>
+	<script src="assets/bs2/js/editor/marked.js"></script>
+</head>
+<body>
+<div class="navbar navbar-fixed-top">
+	<div class="navbar-inner">
+		<div class="container">
+			<a href="<?if($_USER->is_authenticated()):?><?=!empty($CFG["URL"]["dashboard"]) ? $CFG["URL"]["dashboard"] : "index";?><?else:?>index<?endif;?><?=$CFG["URL"]["ext"];?>" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
+			
+			%%topmenu%%
+			
+			%%login_logout_link%%
+			
+		</div>
+		<div class="navbar-overlay"></div>
+	</div>
+</div>
+
+
+<div class="container-fluid">
+
+	<?if (!empty($_SESSION["msg"])):?>
+		<?=get_content("msg");?>
+	<?endif;?>
+	
+	<?=get_content("content");?>
+	   
+</div>
+
+<div style="height:100px">&nbsp;</div>
+
+<div class="navbar navbar-fixed-bottom">
+	<div class="navbar-inner">
+		<div class="container footer-margin-top">
+			
+			<div class="muted text-muted">&copy; 2015<?if(date("Y")>2015):?>&ndash;<?=date("Y");?><?endif;?> &laquo;<a href="<?=$CFG["URL"]["base"];?>"><?=$CFG["GENERAL"]["app_name"];?></a>&raquo; &nbsp;&nbsp;&nbsp; <small class="muted">Версия: <?=$CFG["GENERAL"]["app_version"];?></small>
+				
+				<div class="pull-right optimit"><small>Поддержка &laquo;ОптимИТ&raquo;</small></div>
+			</div>
+			
+		</div>
+	</div>
+</div> 
+
+
+
+<script>
+	$(function(){
+		$(".loader").	hide();
+		$(".displayOnload").removeClass("displayOnload");
+
+		$(".phone").mask("(999)999-99-99");
+		
+
+	});
+</script>
+
+<?if ( ! DEV_MODE ) :?>
+	<!-- Yandex.Metrika counter -->
+	
+	<!-- /Yandex.Metrika counter -->
+<?endif;?>
+</body>
+</html>
