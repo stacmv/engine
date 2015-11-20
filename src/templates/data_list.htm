@@ -56,12 +56,14 @@ foreach(@array(
 										<?continue;?>
 									<?endif;?>
 									
+									<?if (isset($item["_".$field["name"]])):?>
+										<?=$item["_".$field["name"]];?>
 								
-									<?if ($field["type"] == "password"):?>
+									<?elseif ($field["type"] == "password"):?>
 										<?if(!empty($item[ $field["name"] ])):?>
 											Ok
 										<?else:?>
-											<span class="label ;abel-danger">NO!<span>
+											<span class="label label-danger">NO!<span>
 										<?endif;?>
 									<?elseif ($field["type"] == "list"):?>
 										<?if(!empty($item[ $field["name"] ])):?>

@@ -108,6 +108,7 @@
 		"title":"Вход в систему",
 		"actions": [ "show_login_form" ],
 		"templates": {
+			"msg": "message.block.htm",
 			"content":"login_form.htm",
 			"page":"page.htm"
 		},
