@@ -26,9 +26,10 @@ function add_data(FormData $data, $comment = null){
     }else{
         
         dosyslog(__FUNCTION__ . ": WARNING: ".get_callee().": Данные не валидны.");
-        foreach($data->errors as $field_name => $err){
-            set_session_msg($err["msg"], "error");
-        };
+        $added_id = false;
+        // foreach($data->errors as $field_name => $err){
+            // set_session_msg($err["msg"], "error");
+        // };
         
     };
    

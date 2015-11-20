@@ -242,25 +242,24 @@ function form_action(){
     $_DATA["db_table"]    = $db_table;
     $_DATA["object_name"] = $object_name;
     
+        
     if ($id && ($action != "add") ){
-        $object = db_get($db_table, $id, DB_RETURN_DELETED);
+        $_DATA["object"] = db_get($db_table, $id, DB_RETURN_DELETED);
     }else{
-        $object = array();
+        $_DATA["object"] = array();
     };
     
-    $fields = form_prepare($db_table, $form_name, $object);
+    $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA["object"]);
           
     // Подготовка дополнительных данных для формы
     if ( function_exists("form_prepare_" . $form_name) ){
-        $fields = call_user_func("form_prepare_" . $form_name, $fields, $id);
+        $_DATA["fields_form"] = call_user_func("form_prepare_" . $form_name, $_DATA["fields_form"], $id);
     }
     if (function_exists("set_objects_action")){
         set_objects_action($form_name);
     }
-    //
+    //    
     
-    $_DATA["object"]      = $object;
-    $_DATA["fields_form"] = $fields;
     $_DATA["fields_form"][] = form_prepare_field( array("type"=>"string", "form_template"=>"hidden", "name"=>"form_name"), true, $form_name);
     
     
