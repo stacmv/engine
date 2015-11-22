@@ -795,7 +795,7 @@ function db_get($db_table, $ids, $flags=0, $limit="", $offset = 0){
             if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": DEBUG: " . get_callee() . ": Fetched ".count($result)." records. Query: '".$statement->queryString ."', parameters: ".json_encode($ids).".");
             
             if ($flags & DB_RETURN_ONE){
-                $result = $result[0];
+                $result = $result[key($result)];
             };
             
         };

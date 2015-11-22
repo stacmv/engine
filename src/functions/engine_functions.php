@@ -104,21 +104,21 @@ function get_filename($name, $ext = "") {//
 
 	return $result;
 };
-function month_name($month_num){
+function month_name($month_num, $genitive = false){
     $month_name = "";
     switch( (int) $month_num){
-        case "1": $month_name = "январь"; break;
-        case "2": $month_name = "февраль"; break;
-        case "3": $month_name = "март"; break;
-        case "4": $month_name = "апрель"; break;
-        case "5": $month_name = "май"; break;
-        case "6": $month_name = "июнь"; break;
-        case "7": $month_name = "июль"; break;
-        case "8": $month_name = "август"; break;
-        case "9": $month_name = "сентябрь"; break;
-        case "10": $month_name = "октябрь"; break;
-        case "11": $month_name = "ноябрь"; break;
-        case "12": $month_name = "декабрь"; break;
+        case "1":  $month_name = $genitive ? "января"   : "январь"; break;
+        case "2":  $month_name = $genitive ? "февраля"  : "февраль"; break;
+        case "3":  $month_name = $genitive ? "марта"    : "март"; break;
+        case "4":  $month_name = $genitive ? "апреля"   : "апрель"; break;
+        case "5":  $month_name = $genitive ? "мая"      : "май"; break;
+        case "6":  $month_name = $genitive ? "июня"     : "июнь"; break;
+        case "7":  $month_name = $genitive ? "июля"     : "июль"; break;
+        case "8":  $month_name = $genitive ? "августа"  : "август"; break;
+        case "9":  $month_name = $genitive ? "сентября" : "сентябрь"; break;
+        case "10": $month_name = $genitive ? "октября"  : "октябрь"; break;
+        case "11": $month_name = $genitive ? "ноября"   : "ноябрь"; break;
+        case "12": $month_name = $genitive ? "декабря"  : "декабрь"; break;
     }
     
     return $month_name;    
