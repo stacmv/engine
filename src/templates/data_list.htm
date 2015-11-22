@@ -88,15 +88,12 @@ foreach(@array(
 											<?endif;?>
 										<?endif;?>
 									<?else:?>
-										<?if ( ! empty($field["_form_values"]) && ($fv_key = array_search($item[ $field["name"] ], $field["_form_values"])) ):?>
-                                            <?=glog_str_limit( $field["_form_values"][$fv_key], 140 );?>
-                                        <?else:?>
-                                            <?if(is_string($item[ $field["name"] ])):?>
-												<?=glog_str_limit( $item[ $field["name"] ], 140);?>
-											<?else:?>
-												<?=json_encode_array($item[ $field["name"] ]);?>
-											<?endif;?>
-                                        <?endif;?>
+										<?if(is_string($item[ $field["name"] ])):?>
+											<?=glog_str_limit( $item[ $field["name"] ], 140);?>
+										<?else:?>
+											<?=json_encode_array($item[ $field["name"] ]);?>
+										<?endif;?>
+
 									<?endif;?>
 								</td>
 							<?endforeach;?>

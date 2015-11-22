@@ -125,6 +125,53 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         
         return $field;
 }
+function form_prepare_view($items, $fields){
+    
+    $tmp = $fields;
+    $fields = array();
+    foreach($tmp as $field){
+        $fields[ $field["name"] ] = $field;
+    };
+    
+    $items = array_map(function($item) use($fields){
+        static $tsv = array();
+        
+        foreach($item as $key => $value){
+            if ( (substr($key,-3) == "_id") || (substr($key,-4) == "_ids") ){
+                $obj_name = (substr($key,-4) == "_ids") ? substr($key, 0,-4) : substr($key, 0,-3);
+                $get_name_function = "get_".$obj_name."_name";
+                if (function_exists($get_name_function)){
+                    $item["_".$key] = call_user_func($get_name_function, $value);
+                }else{
+                    die("Code: form-".__LINE__."-".$get_name_function);
+                };
+            }elseif(isset($fields[$key]["form_values"]) && ($fields[$key]["form_values"] == "tsv")){
+                $tsv_file = cfg_get_filename("settings", $key.".tsv");
+                
+                if ( ! isset($tsv[$key]) ){
+                    $tsv[$key] = array();
+                    $tmp = import_tsv( $tsv_file );
+                    foreach($tmp as $v){
+                        $tsv[$key][$v["value"]] = $v["caption"];
+                    };
+                    unset($tmp, $v);
+                };
+                
+                if (isset($tsv[$key][$value])){
+                    $item["_".$key] = $tsv[$key][$value];
+                }else{
+                    dosyslog(__FUNCTION__.get_callee().": WARNING: Caption for value '".$value."' of field '".$key."' is not defined in '".$tsv_file."'.");
+                }
+            }
+        }
+
+        return $item;
+    }, $items);
+    
+    
+    
+    return $items;
+}
 function form_get_fields($db_table, $form_name){
     
     $schema = db_get_table_schema($db_table);
