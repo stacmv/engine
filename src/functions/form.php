@@ -256,7 +256,7 @@ function form_get_fields($db_table, $form_name){
         
         if ( ! isset($v["label"]) ) $v["label"] = "";
         
-        $fields[] = $v;
+        $fields[ $v["name"] ] = $v;
         
     };
     unset($v, $schema);
