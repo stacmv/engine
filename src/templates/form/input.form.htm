@@ -23,8 +23,8 @@
 				val( $("#<?=$field["id"];?>").val().split("-").reverse().join(".") )
 				.mask("99.99.9999");
 			$($("#<?=$field["id"];?>")[0].form).on("submit", function(){
-				$("#date").
-					val( $("#date").val().split(".").reverse().join("-") );
+				$("#<?=$field["id"];?>").
+					val( $("#<?=$field["id"];?>").val().split(".").reverse().join("-") );
 				return true;
 			});
 		});

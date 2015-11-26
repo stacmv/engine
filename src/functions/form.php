@@ -141,7 +141,13 @@ function form_prepare_view($items, $fields){
                 $obj_name = (substr($key,-4) == "_ids") ? substr($key, 0,-4) : substr($key, 0,-3);
                 $get_name_function = "get_".$obj_name."_name";
                 if (function_exists($get_name_function)){
-                    $item["_".$key] = call_user_func($get_name_function, $value);
+                    if ($fields[$key]["type"] == "list"){
+                        $item["_".$key] = array_map(function($v) use($get_name_function){
+                            return $v ? call_user_func($get_name_function, $v) : "";
+                        }, $value);
+                    }else{
+                        $item["_".$key] = $value ? call_user_func($get_name_function, $value) : "";
+                    };
                 }else{
                     die("Code: form-".__LINE__."-".$get_name_function);
                 };
@@ -152,16 +158,28 @@ function form_prepare_view($items, $fields){
                     $tsv[$key] = array();
                     $tmp = import_tsv( $tsv_file );
                     foreach($tmp as $v){
-                        $tsv[$key][$v["value"]] = $v["caption"];
+                        $tsv[$key][ isset($v["value"]) ? $v["value"] : $v[$key] ] = $v["caption"];
                     };
                     unset($tmp, $v);
                 };
-                
-                if (isset($tsv[$key][$value])){
-                    $item["_".$key] = $tsv[$key][$value];
+                    
+                if ($fields[$key]["type"] == "list"){
+                    $item["_".$key] = array_map(function($v)use($tsv, $key, $tsv_file){
+                        if (isset($tsv[$key][$v])){
+                            return $tsv[$key][$v];
+                        }else{
+                            dosyslog(__FUNCTION__.get_callee().": WARNING: Caption for value '".json_encode_array($v)."' of field '".$key."' is not defined in '".$tsv_file."'.");
+                            return $v;
+                        };
+                    }, $value);
                 }else{
-                    dosyslog(__FUNCTION__.get_callee().": WARNING: Caption for value '".$value."' of field '".$key."' is not defined in '".$tsv_file."'.");
-                }
+                
+                    if (isset($tsv[$key][$value])){
+                        $item["_".$key] = $tsv[$key][$value];
+                    }else{
+                        dosyslog(__FUNCTION__.get_callee().": WARNING: Caption for value '".json_encode_array($value)."' of field '".$key."' is not defined in '".$tsv_file."'.");
+                    }
+                };
             }
         }
 

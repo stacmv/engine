@@ -56,10 +56,8 @@ foreach(@array(
 										<?continue;?>
 									<?endif;?>
 									
-									<?if (isset($item["_".$field["name"]])):?>
-										<?=$item["_".$field["name"]];?>
-								
-									<?elseif ($field["type"] == "password"):?>
+									
+									<?if ($field["type"] == "password"):?>
 										<?if(!empty($item[ $field["name"] ])):?>
 											Ok
 										<?else:?>
@@ -68,7 +66,7 @@ foreach(@array(
 									<?elseif ($field["type"] == "list"):?>
 										<?if(!empty($item[ $field["name"] ])):?>
 											<ul>
-												<?foreach($item[ $field["name"] ] as $v):?>
+												<?foreach(isset($item["_".$field["name"]]) ? $item["_" . $field["name"] ] : $item[ $field["name"] ] as $v):?>
 													<li><?=$v;?></li>
 												<?endforeach;?>
 											</ul>
@@ -88,7 +86,9 @@ foreach(@array(
 											<?endif;?>
 										<?endif;?>
 									<?else:?>
-										<?if(is_string($item[ $field["name"] ])):?>
+										<?if (isset($item["_".$field["name"]])):?>
+											<?=$item["_".$field["name"]];?>
+										<?elseif(is_string($item[ $field["name"] ])):?>
 											<?=glog_str_limit( $item[ $field["name"] ], 140);?>
 										<?else:?>
 											<?=json_encode_array($item[ $field["name"] ]);?>

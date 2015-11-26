@@ -671,7 +671,11 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
 };
 function db_get($db_table, $ids, $flags=0, $limit="", $offset = 0){
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    if (! $ids) {
+        dosyslog(__FUNCTION__.get_callee().": ERROR: Mandatory padameter 'ids' is empty.");
+        return array();
+    };
+    
     $result = array();
     $dbh = db_set($db_table);
     

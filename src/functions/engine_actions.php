@@ -473,7 +473,7 @@ function show_data_action(){
     
     if ($model){
         $obj_name = db_get_obj_name($model);
-        $_DATA["fields"] = form_get_fields($model,"add_" . $obj_name);
+        $_DATA["fields"] = form_get_fields($model,"show_data");
         $_DATA["item_name"] = $obj_name;
         if ($mode == "list"){ // 
             $get_all_function = "get_".$model;
@@ -482,6 +482,9 @@ function show_data_action(){
             }else{
                 $_DATA["items"] = db_get($model, "all");
             };
+            
+            $_DATA["items"] = form_prepare_view($_DATA["items"], $_DATA["fields"]);
+            
             if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"]["list"]) ){
                 set_template_file("content", $_PAGE["templates"]["list"]);
             };
