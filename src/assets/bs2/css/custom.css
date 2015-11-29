@@ -1,0 +1,115 @@
+HTML {
+	height: 100%;
+}
+BODY{
+	height: 100%;
+}
+
+.app_content {
+	margin: 60px 0;
+}
+
+
+.post-image img {
+	max-width: 320px;
+}
+
+.footer-margin-top {
+	margin-top: 10px;
+}
+
+.optimit {
+	color: #ccc;
+	font-size: 5px;
+}
+.optimit:hover {
+	font-size: 12px;
+}
+A.int,
+A.int:visited,
+A.int:hover,
+A.int:active {
+	text-decoration: none;
+	border-bottom: 1px dashed blue;
+	color: blue;
+}
+.displayOnload {display:none}
+#calendar {
+	max-width: 900px;
+	margin: 0 auto;
+}
+.center-xy {
+    margin: 0 auto;
+    display: table;
+    position: relative;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+.table.table-bordered.table-striped.table-condensed th,
+.table.table-bordered.table-striped.table-condensed td:first-child {
+	text-align: center;
+	vertical-align: middle;
+}
+
+.valign-middle th, 
+.valign-middle td {
+	vertical-align: middle;
+}
+
+/* For tinysort */
+
+th.sort {
+	cursor: pointer;
+	padding-right: 23px;
+	background-repeat: no-repeat;
+	background-position: right center;
+	background-image: url('i/bg.gif');
+}
+  
+th.sort.sorted-asc {
+    background-image: url('i/asc.gif');
+}
+
+th.sort.sorted-desc {
+    background-image: url('i/desc.gif');
+}
+
+
+/* For jquery.table */
+        
+  /* add hover effect for table rows */  
+  td.hovered {  
+     background-color: lightskyblue; 
+  }
+
+    
+  th.sortable {
+    cursor: pointer;
+    padding-right: 23px;
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-image: url('i/bg.gif');
+  }
+      
+  th.sortable.sorted-asc,
+  th.sortable.sorted-desc  {
+    color: white;
+    background-color: grey;
+  }
+  
+  th.sortable.sorted-asc {
+    background-image: url('i/asc.gif');
+  }
+
+  th.sortable.sorted-desc {
+    background-image: url('i/desc.gif');
+  }
+  
+
+  th.sortable:hover {
+    color: black;
+    background-color: yellow; 
+    text-decoration: underline;    
+  }

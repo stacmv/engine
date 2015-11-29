@@ -194,9 +194,6 @@ function form_get_fields($db_table, $form_name){
     
     $schema = db_get_table_schema($db_table);
     
-    if ($form_name == "all") return $schema;
-    
-    
     if ( ! $schema ){
         dosyslog(__FUNCTION__.": " . get_callee() .": FATAL ERROR:  '".$db_table."' is not found in DB config.");
         die("Code: efrm-".__LINE__);
@@ -205,55 +202,59 @@ function form_get_fields($db_table, $form_name){
     $fields = array();
     foreach($schema as $v){
         
-        $forms = array();
-        $form_index = false; // порядковый номер $form_name в списке форм
-        if ( empty($v["form"]) ) continue;
-        if ( strpos($v["form"], "|") !== false ){
-            $forms = explode("|", $v["form"]);
-            
-        }else{
-            $forms = array($v["form"]);
-        }
-        $form_index = array_search($form_name, $forms);
-        if ($form_index === false) continue; // поле БД не попадает в форму $form_name
-            
-        $v["form"] = $form_name;
-    
-        // Parse some data
-        foreach($v as $prop_key=>$prop_value){
-            if (substr($prop_key, 0, 5) == "form_"){
-              
-                if ( strpos($prop_value, "|") !== false ){
-                    
-                    // ////
-                    if ($prop_key == "form_value_default"){
-                        $tmp_marker = "_".uniqid()."_";
-                        $prop_value = str_replace("||", $tmp_marker, $prop_value); // экранируем ||, на случай когда значение типа list
-                    }
-                    // ////
-                    
-                    $tmp = explode("|", $prop_value);
-                    if ( isset($tmp[$form_index]) ){
-                        $v[$prop_key] = $tmp[$form_index];
-                    }else{
-                        
-                        dosyslog(__FUNCTION__.": FATAL ERROR: Template for field '".$prop_key."' in form '".$form_name."' is not set. Check db config file.");
-                        die("Code: efrm-".__LINE__);
-                        
-                    }
-                    unset($tmp);
-                    
-                    // ////
-                    if ($prop_key == "form_value_default"){
-                        $v[$prop_key] = str_replace($tmp_marker, "||", $v[$prop_key]); // снимаем экран ||
-                    }
-                    // ////
-                };
-                
-            }
-        }
-        unset($prop_key, $prop_value);
+        if ( $form_name != "all" ){
         
+            $forms = array();
+            $form_index = false; // порядковый номер $form_name в списке форм
+            if ( empty($v["form"]) ) continue;
+            if ( strpos($v["form"], "|") !== false ){
+                $forms = explode("|", $v["form"]);
+                
+            }else{
+                $forms = array($v["form"]);
+            }
+            $form_index = array_search($form_name, $forms);
+            if ($form_index === false) continue; // поле БД не попадает в форму $form_name
+                
+            $v["form"] = $form_name;
+        
+            // Parse some data
+            foreach($v as $prop_key=>$prop_value){
+                if (substr($prop_key, 0, 5) == "form_"){
+                  
+                    if ( strpos($prop_value, "|") !== false ){
+                        
+                        // ////
+                        if ($prop_key == "form_value_default"){
+                            $tmp_marker = "_".uniqid()."_";
+                            $prop_value = str_replace("||", $tmp_marker, $prop_value); // экранируем ||, на случай когда значение типа list
+                        }
+                        // ////
+                        
+                        $tmp = explode("|", $prop_value);
+                        if ( isset($tmp[$form_index]) ){
+                            $v[$prop_key] = $tmp[$form_index];
+                        }else{
+                            
+                            dosyslog(__FUNCTION__.": FATAL ERROR: Template for field '".$prop_key."' in form '".$form_name."' is not set. Check db config file.");
+                            die("Code: efrm-".__LINE__);
+                            
+                        }
+                        unset($tmp);
+                        
+                        // ////
+                        if ($prop_key == "form_value_default"){
+                            $v[$prop_key] = str_replace($tmp_marker, "||", $v[$prop_key]); // снимаем экран ||
+                        }
+                        // ////
+                    };
+                    
+                }
+            }
+            unset($prop_key, $prop_value);
+        };
+        
+            
         if ( ! isset($v["label"]) ) $v["label"] = "";
         
         $fields[ $v["name"] ] = $v;
