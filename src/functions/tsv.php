@@ -83,6 +83,15 @@ function import_tsv($filename, $convertToUTF8=false, $returnHeaderOnly = false){
         $importer = new CsvImporter($filename, true);
         $res = $importer->get();
         
+        // strip commented lines (which begins with ";")
+        foreach($res as $k=>$v){
+            
+            if ( $v[$header[0]] && ($v[$header[0]]{0} == ";") ){
+                unset($res[$k]);
+            };
+        };
+        
+        
     };
     
     return $res;
