@@ -1417,7 +1417,10 @@ function db_prepare_value($value, $field_type){
                 $res = time();
             }elseif(in_array( $value, array("0", "no", "n", "N", "off", "false") )){
                 $res = null;
+            }elseif($value == glog_isodate($value)){ // Check if value is date, convert to timestamp
+                $res = strtotime($value);
             }else{   // Check if value is valid timestamp, if not (i.e it's string "yes", "on", ... ) generate current timestamp
+                
                 list($month, $day, $year) = explode("/", date("m/d/Y", $value));
                 if ( ! checkdate($month, $day, $year) ){
                     dosyslog(__FUNCTION__.get_callee().": ERROR: Invalid timestamp: '".$value."'.");

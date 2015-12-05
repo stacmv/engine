@@ -41,6 +41,14 @@ function escape_template_data($data_item){
 
     if ( is_array($data_item) ){
         return array_map("escape_template_data", $data_item);
+    }elseif(is_object($data_item)){
+        if (method_exists($data_item, "jsonSerialize")){
+            return array_map("escape_template_data", $data_item->jsonSerialize());
+        }else{
+            dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Class '".get_class($data_item)." has not method 'jsonSerialize'.");
+            die("Code: et-".__LINE__."-".get_class($data_item)."-jsonSerialize");
+        };
+        
     }else{
         return htmlspecialchars($data_item, ENT_QUOTES, "UTF-8"); 
     };
