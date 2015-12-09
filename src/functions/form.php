@@ -148,8 +148,6 @@ function form_prepare_view($items, $fields){
                     }else{
                         $item["_".$key] = $value ? call_user_func($get_name_function, $value) : "";
                     };
-                }else{
-                    die("Code: form-".__LINE__."-".$get_name_function);
                 };
             }elseif(isset($fields[$key]["form_values"]) && ($fields[$key]["form_values"] == "tsv")){
                 $tsv_file = cfg_get_filename("settings", $key.".tsv");

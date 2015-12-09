@@ -1406,6 +1406,12 @@ function db_prepare_value($value, $field_type){
                 $res = (int) $value;
             };
             break;
+        case "double":
+            if ($value === "") $res = null;
+            elseif ( ! is_null($value) ){
+                $res = (double) $value;
+            };
+            break;
         case "date":
             if ($value === "") $res = null;
             elseif ( ! is_null($value) ){
