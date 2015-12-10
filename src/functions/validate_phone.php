@@ -2,11 +2,8 @@
 function validate_field_type_phone($key, $value, FormData $form){
     
     $fields = form_get_fields($form->db_table, $form->form_name);
-    $fields = array_values(array_filter($fields, function($f) use ($key){
-        return $f["name"] == $key;
-    }));
+    $field = $fields[$key];
     
-    $field = $fields[0];
     
     if ( ($field["required"] == "required") || $value ){
     

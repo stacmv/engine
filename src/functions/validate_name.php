@@ -11,5 +11,16 @@ function validate_rule_fio($key, $value, $rule_params, FormData $form){
     return $res ? "" : _t("validate_fio_fail");
 };
 function validate_field_type_name($key, $value, FormData $form){
-    return preg_match("/^[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя\-\s]+$/",$value) ? "" : _t("validate_name_fail");
+    
+    $fields = form_get_fields($form->db_table, $form->form_name);
+    $field = $fields[$key];
+    
+    
+    if ( ($field["required"] == "required") || $value ){
+        $res = preg_match("/^[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя\-\s\.\"\(\)]+$/",$value);
+    }else{
+        $res = true;
+    }
+        
+    return $res ? "" : sprintf(_t("validate_name_fail"), $field["label"], $field["label"]);
 }

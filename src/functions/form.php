@@ -254,6 +254,7 @@ function form_get_fields($db_table, $form_name){
         
             
         if ( ! isset($v["label"]) ) $v["label"] = "";
+        if ( ! isset($v["required"]) ) $v["required"] = "";
         
         $fields[ $v["name"] ] = $v;
         
