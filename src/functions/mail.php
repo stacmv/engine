@@ -2,7 +2,7 @@
 function send_message($emailOrUserId, $template, $data, $options=""){
     global $CFG;
     global $_SITE;
-    global $_USER; // for testing in DEV_MODE all emails will be sent to current user (supposed tester) email;
+    global $_USER; // for testing in DEV_MODE all emails will be sent to current user if authenticated (supposed tester) email;
     
     $http_host = ! empty($_SERVER["HTTP_HOST"]) ? $_SERVER["HTTP_HOST"] : "";
     $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "_unknown_";
@@ -74,11 +74,13 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     
     // //////
     if (DEV_MODE){
-        $message = "Test message for: " . $email . "<hr><br>\n" . $message;
-        $to = !empty($_USER["profile"]["email"]) ? $_USER["profile"]["email"] : null;
-        if (!$to){
-            die("Code: mail-".__LINE__."-Set_your_email_in_profile!");
-        }
+        if ( ! empty($_USER["profile"]) ){ // current user (tester) is authenticated
+            $message = "Test message for: " . $email . "<hr><br>\n" . $message;
+            $to = !empty($_USER["profile"]["email"]) ? $_USER["profile"]["email"] : null;
+            if (!$to){
+                die("Code: mail-".__LINE__."-Set_your_email_in_profile!");
+            }
+        };
     };
     // //////
     

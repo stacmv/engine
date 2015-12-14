@@ -28,12 +28,13 @@ foreach(@array(
 		</div>
 	<?else:?>
 			
-		<div class="row">
+		<div class="row-fluid">
 			<div class="span12">
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
 							<?foreach($fields as $field):?>
+								<?if (!empty($field["acl"]) && ! userHasRight($field["acl"]) ) continue;?>
 								<th title="<?=$field["name"];?>" style="vertical-align:top;text-align:center"><?= ! empty($field["label"]) ? $field["label"] : $field["name"];?></th>
 							<?endforeach;?>
 							<th style="vertical-align:top;text-align:center">Операции</th>
@@ -44,6 +45,7 @@ foreach(@array(
 						<?if ($item["isDeleted"]) continue;?>
 						<tr>
 							<?foreach($fields as $field):?>
+								<?if (!empty($field["acl"]) && ! userHasRight($field["acl"]) ) continue;?>
 								<?php
 									if ( isset($field["form_values"]) && ($field["form_values"] == "tsv") ){
 										$field["_form_values"] = form_get_field_values($field);
@@ -56,8 +58,10 @@ foreach(@array(
 										<?continue;?>
 									<?endif;?>
 									
-									
-									<?if ($field["type"] == "password"):?>
+									<?if (file_exists(cfg_get_filename("templates", "data_list_".$item_name."_".$field["name"].".htm"))):?>
+										<?include cfg_get_filename("templates", "data_list_".$item_name."_".$field["name"].".htm");?>
+										
+									<?elseif ($field["type"] == "password"):?>
 										<?if(!empty($item[ $field["name"] ])):?>
 											Ok
 										<?else:?>
@@ -98,7 +102,9 @@ foreach(@array(
 								</td>
 							<?endforeach;?>
 							<td>
-								<?if (userHasRight("manager")):?>
+								<?if (file_exists(cfg_get_filename("templates", "data_list_".$item_name.".actions.htm"))):?>
+									<?include cfg_get_filename("templates", "data_list_".$item_name.".actions.htm");?>
+								<?elseif (userHasRight("manager")):?>
 									<a href="form/edit/<?=$item_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small"><i class="icon-edit"></i>Ред.</a>
 									<a href="form/delete/<?=$item_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small btn-danger">&times;</a>
 								<?else:?>

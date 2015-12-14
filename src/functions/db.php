@@ -975,6 +975,9 @@ function db_get_table_schema($db_table){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $table;
 };
+function db_get_tables($db_name = ""){
+    return db_get_tables_list_from_xml($db_name);
+}
 function db_get_tables_list_from_xml($db_name=""){
     
     global $CFG;

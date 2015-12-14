@@ -65,6 +65,52 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     return array($res, $added_id);
 
 };
+function add_user_application_action(){
+    global $CFG;
+    
+    list($res, $added_id) = add_data_action("user_applications", "form/login", "form/signup");
+    
+    // if ($res){
+        
+        // $user_application = db_get("user_applications", $added_id);
+        
+        // $md5 = md5($user_application["email"].date("Y-m-d",$user_application["created"]).$added_id);
+        // $confirm_link = $CFG["URL"]["base"] . "confirm_email/".urlencode($added_id."...".$md5."...".$user_application["email"]).$CFG["URL"]["ext"];
+        
+        // $data = array(
+            // "cfg_app_name" => $CFG["GENERAL"]["app_name"],
+            // "cfg_app_url"  => $CFG["URL"]["base"],
+            // "confirm_link" => $confirm_link,
+        // );
+        
+        // if (send_message($user_application["email"], "signup.confirm_email", $data)){
+            // dosyslog(__FUNCTION__.": NOTICE: Confirmation link was sent to e-mail '".@$application["email"]."': ".$confirm_link.".");
+        // }else{
+            // dosyslog(__FUNCTION__.": ERROR:  An error occur while sendinng confirmation link to e-mail '".@$application["email"]."'.");
+        // };
+        
+    // }
+    
+    
+}
+function approve_user_application_action(){
+    global $_PARAMS;
+    
+    $id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
+    
+    if ($id && userHasRight("access,manager")){
+        $user_application = db_get("user_applications",$id);
+        if ($user_application){
+            $user_application["acl"] = array("access");
+            $_SESSION["to"] = $user_application;
+            redirect("form/add/user");
+            return;
+        }
+    }
+    
+    die("No way!");
+    
+}
 function do_nothing_action(){
     // do nothing special except ...
     
@@ -214,7 +260,7 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
     
     return array($res, $reason);
 };
-function form_action(){
+function form_action($is_public=false){
     global $_PARAMS;
     global $_PAGE;
     global $_DATA;
@@ -241,6 +287,8 @@ function form_action(){
     $_DATA["action"]      = $action;
     $_DATA["db_table"]    = $db_table;
     $_DATA["object_name"] = $object_name;
+    $_DATA["form_name"]   = $form_name;
+    $_DATA["form_action_link"] = form_get_action_link($form_name, $is_public);
     
         
     if ($id && ($action != "add") ){
@@ -519,3 +567,22 @@ function show_login_form_action(){
     };
     
 }
+function show_signup_form_action(){
+    global $_PARAMS;
+    $db_tables = db_get_tables("user_applications");
+    
+    if ( ! in_array("user_applications", $db_tables) ){  // registration is not supported in app.
+        dosyslog(__FUNCTION__.": FATAL ERROR: Attempt to load signup form!");
+        die("<h3>" . _t("Registration closed.") . "</h3>");
+    };
+    
+    $_PARAMS["action"] = "add";
+    $_PARAMS["object"] = "user_application";
+    $_PARAMS["form_name"] = "add_user_application";
+    
+    $is_public = true;
+    
+    form_action(true);
+    
+}
+

@@ -24,6 +24,18 @@
         "acl": [ ]
 	},
 	{
+		"uri": "pub/add/user_application",
+        "title": "",
+        "params": {
+            "object": {"type": "string", "source": "get",  "regexp": "/(add)\\/(.+)/", "pos": 2},
+            "action": {"type": "string", "source": "get",  "regexp":"/(add)\\/(.+)/", "pos": 1},
+			"to": {"type": "array", "source": "post"},
+			"form_name": {"type": "string", "source": "post"}
+        },
+        "actions":[ "add_user_application" ],
+        "acl": [ ]
+	},
+	{
 		"uri": "edit",
         "title": "",
 		"params": {
@@ -113,6 +125,42 @@
 			"page":"page.htm"
 		},
 		"acl":[]
+	},
+	{
+		"uri":"form/signup",
+		"title":"Регистрация",
+		"actions": [ "show_signup_form" ],
+		"templates": {
+			"msg": "message.block.htm",
+			"content":"signup_form.htm",
+			"page":"page.htm"
+		},
+		"acl":[]
+	},
+	{
+		"uri":"user_applications",
+		"title":"Регистрации",
+		"params":{
+			"model": { "type": "string", "source": "get", "regexp": "/(user_applications)(?:\\/(\\d+))?/", "pos": 1 },
+			"id": { "type": "number", "source": "get", "regexp": "/(user_applications)(?:\\/(\\d+))?/", "pos": 2 }
+		},
+		"actions": [ "show_data" ],
+		"templates": {
+			"msg": "message.block.htm",
+			"item": "item_details.htm",
+			"list":"data_list.htm",
+			"page":"page.htm"
+		},
+		"acl":[]
+	},
+	{
+		"uri":"approve/user_application",
+		"title":"Одобрение заявки на регистрацию",
+		"params":{
+			"id": { "type": "number", "source": "get", "regexp": "/approve\\/user_application\\/(\\d+)/", "pos": 1 }
+		},
+		"actions": [ "approve_user_application" ],
+		"acl":["access", "manager"]
 	},
 	{
 		"uri": "ulogin",

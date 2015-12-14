@@ -1,0 +1,12 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["base"],
+	$CFG["URL"]["ext"],
+	$CFG["GENERAL"]["app_name"],
+	$item,
+	$field,
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+
+?>
+<a class="btn btn-success" href="approve/user_application/<?=$item["id"];?><?=$CFG["URL"]["ext"];?>"><i class="icon icon-white icon-ok"></i> Одобрить</a>
+<a class="btn btn-danger" href="form/delete/user_application/<?=$item["id"];?><?=$CFG["URL"]["ext"];?>" title="Удалить">&times;</a>

@@ -3,8 +3,8 @@ foreach(@array(
 	$CFG["URL"]["base"],
 	$CFG["URL"]["ext"],
 	$CFG["GENERAL"]["app_name"],
-	$action,
-	$object_name,
+	$form_name,
+	$form_action_link,
 	$_PAGE["header"],
 
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
@@ -19,12 +19,12 @@ foreach(@array(
 		<div class="col-md-6 col-md-offset-3 span6 offset3">
 			%%form_errors%%
 			
-			<form class="form-horizontal" action="<?=$action;?>/<?=$object_name;?><?=$CFG["URL"]["ext"];?>" method="post" enctype="multipart/form-data">
+			<form class="form-horizontal" action="<?=$form_action_link;?>" method="post" enctype="multipart/form-data">
 				
 				%%form_generate%%
 				
 				<div class="pull-right">
-					<input class="btn btn-success" type="submit" value="Сохранить">
+					<input class="btn btn-success" type="submit" value="OK">
 					<?if (!empty($_SERVER["HTTP_REFERER"])):?>
 						<a class="btn btn-default" href="<?=$_SERVER["HTTP_REFERER"];?>">Отменить</a>
 					<?endif;?>
@@ -34,8 +34,8 @@ foreach(@array(
 	</div> <!-- /.row -->
 </article>
 
-<?if(file_exists("assets/app/".$action."_".$object_name.".js")):?>
-	<script src="assets/app/<?=$action;?>_<?=$object_name;?>.js"></script>
+<?if(file_exists("assets/app/".$form_name.".js")):?>
+	<script src="assets/app/<?=$form_name;?>.js"></script>
 <?endif;?>
 
 <?php

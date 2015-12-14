@@ -9,22 +9,22 @@ function json_decode_array($str, $urldecode = true){
         case JSON_ERROR_NONE:
         break;
         case JSON_ERROR_DEPTH:
-            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: Достигнута максимальная глубина стека");
+            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: Р”РѕСЃС‚РёРіРЅСѓС‚Р° РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ РіР»СѓР±РёРЅР° СЃС‚РµРєР°");
         break;
         case JSON_ERROR_STATE_MISMATCH:
-            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: Некорректные разряды или не совпадение режимов");
+            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ СЂР°Р·СЂСЏРґС‹ РёР»Рё РЅРµ СЃРѕРІРїР°РґРµРЅРёРµ СЂРµР¶РёРјРѕРІ");
         break;
         case JSON_ERROR_CTRL_CHAR:
-            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: Некорректный управляющий символ");
+            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ СѓРїСЂР°РІР»СЏСЋС‰РёР№ СЃРёРјРІРѕР»");
         break;
         case JSON_ERROR_SYNTAX:
-            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: Синтаксическая ошибка, не корректный JSON");
+            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: РЎРёРЅС‚Р°РєСЃРёС‡РµСЃРєР°СЏ РѕС€РёР±РєР°, РЅРµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ JSON");
         break;
         case JSON_ERROR_UTF8:
-            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: Некорректные символы UTF-8, возможно неверная кодировка");
+            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ СЃРёРјРІРѕР»С‹ UTF-8, РІРѕР·РјРѕР¶РЅРѕ РЅРµРІРµСЂРЅР°СЏ РєРѕРґРёСЂРѕРІРєР°");
         break;
         default:
-            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: Неизвестная ошибка");
+            dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°");
         break;
     }
    
