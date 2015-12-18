@@ -84,8 +84,10 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     };
     // //////
     
+    $from_email = ! empty($CFG["GENERAL"]["system_email"]) ? $CFG["GENERAL"]["system_email"] : "info@optimit.ru";
+    $reply_to_email = ! empty($CFG["GENERAL"]["admin_email"]) ? $CFG["GENERAL"]["admin_email"] : "info@optimit.ru";
     
-    $res = @mail($to, $subject, $message, "FROM:".$CFG["GENERAL"]["system_email"]."\nREPLY-TO:".$CFG["GENERAL"]["admin_email"]."\ncontent-type: text/html; charset=UTF-8");
+    $res = @mail($to, $subject, $message, "FROM:".$from_email."\nREPLY-TO:".$reply_to_email."\ncontent-type: text/html; charset=UTF-8");
     
     dosyslog($log_msg_prolog . " sending to email " . $email . "  " . ($to != $email ? "(really sent to " . $to . ")" : "") . " with message_id:" . $message_id . " ... " . ($res? "success" : "fail") . ". IP:" . $ip . ". Query string:'" . $qs . "'.");
      
