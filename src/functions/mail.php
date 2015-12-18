@@ -87,7 +87,7 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     
     $res = @mail($to, $subject, $message, "FROM:".$CFG["GENERAL"]["system_email"]."\nREPLY-TO:".$CFG["GENERAL"]["admin_email"]."\ncontent-type: text/html; charset=UTF-8");
     
-    dosyslog($log_msg_prolog . " sending to email " . $email . "  " . ($to != $email ? "(really sent to " . $to . ")" : "") . " with message_id:" . $message_id . " ... " . ($res? "success" : "fail") . ". IP:" . $ip . ". Qusery string:'" . $qs . "'.");
+    dosyslog($log_msg_prolog . " sending to email " . $email . "  " . ($to != $email ? "(really sent to " . $to . ")" : "") . " with message_id:" . $message_id . " ... " . ($res? "success" : "fail") . ". IP:" . $ip . ". Query string:'" . $qs . "'.");
      
     return $res;
 };
