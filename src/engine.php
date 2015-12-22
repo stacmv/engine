@@ -9,6 +9,7 @@ function APPLYPAGETEMPLATE(){
     global $_PAGE;
     global $CFG;
     global $IS_IFRAME_MODE;
+    global $IS_MOBILE;
     
     if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
     
@@ -25,6 +26,8 @@ function APPLYPAGETEMPLATE(){
                 dosyslog(__FUNCTION__.": ERROR: Could not find template 'iframe' for page '".$_PAGE["uri"]."' requested in iframe_mode.");
                 $_RESPONSE["body"] = get_content("page");
             }
+        }elseif($IS_MOBILE && !empty($_PAGE["templates"]["page_mobile"])){
+            $_RESPONSE["body"] = get_content("page_mobile");
         }else{
             $_RESPONSE["body"] = get_content("page");
         };
@@ -435,6 +438,8 @@ $ISERRORSREGISTERED = false; // зарегистрированы ли ошибк
 $ISREDIRECT = false;
 $IS_API_CALL = false;
 $IS_IFRAME_MODE = ! empty($_GET["i"]) ? true : false;
+$IS_MOBILE = is_mobile();
+
 
 
 GETURI();

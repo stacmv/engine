@@ -6,5 +6,16 @@ function detect_mobile(){
 
 }
 function is_mobile(){
-    return detect_mobile();
+   
+    if ( isset($_GET["m"]) ){
+        if ($_GET["m"] == 1) {
+            $is_mobile = true;
+        }elseif($_GET["m"] == 0){
+            $is_mobile = false;
+        }
+    }else{
+        $is_mobile = detect_mobile();
+    }
+    
+    return $is_mobile;
 }
