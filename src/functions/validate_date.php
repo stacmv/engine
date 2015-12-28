@@ -11,5 +11,15 @@ function validate_rule_date_future($key,$value, $rule_params, FormData $form){
     
 }
 function validate_field_type_date($key, $value, FormData $form){
-    return $value == glog_isodate(strtotime($value)) ? "" : _t("validate_date_fail");
+    
+    $fields = form_get_fields($form->db_table, $form->form_name);
+    $field = $fields[$key];
+    
+    if ( ($field["required"] == "required") || $value ){
+        $res = $value == glog_isodate(strtotime($value));
+    }else{
+        $res = true;
+    }
+    
+    return  $res == true ? "" : _t("validate_date_fail");
 }

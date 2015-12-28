@@ -155,7 +155,9 @@ class FormData{
                     if ( ! isset($this->errors[$name]) ) $this->errors[$name] = array();
                     $this->errors[$name][] = array("rule" => "type_".$field["type"], "msg" => $type_validation_err_msg);
                 };
-            }elseif ( $field["required"] && empty($changes_to[$name]) ){
+            };
+            
+            if ( $field["required"] && empty($changes_to[$name]) ){
                 // required
                 $this->is_valid = false;
                 if ( ! isset($this->errors[$name]) ) $this->errors[$name] = array();
