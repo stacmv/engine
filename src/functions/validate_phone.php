@@ -13,7 +13,7 @@ function validate_field_type_phone($key, $value, FormData $form){
         $phone_cleared = glog_clear_phone($value); // номер телефона, только цифры.
         
         
-        $res = preg_match("/^\d{10}$/",$phone_cleared);
+        $res = preg_match("/\d{10}$/",$phone_cleared);
     }else{
         $res = true;
         
