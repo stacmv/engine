@@ -29,6 +29,16 @@
 			});
 		});
 	</script>
+	<script>
+		$(function(){
+			$("#<?=$field["id"];?>").datepicker({
+				changeMonth: true,
+				changeYear: true,
+			});
+			$("#<?=$field["id"];?>").datepicker( "option", "dateFormat", "dd.mm.yy" );
+		});
+	</script>
+
 <?endif;?>
 <?if($field["type"] == "time"):?>
 	<script>
