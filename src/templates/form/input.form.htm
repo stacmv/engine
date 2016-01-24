@@ -20,8 +20,13 @@
 	<script>
 		$(function(){
 			$("#<?=$field["id"];?>").
-				val( $("#<?=$field["id"];?>").val().split("-").reverse().join(".") )
-				.mask("99.99.9999");
+				attr("value", $("#<?=$field["id"];?>").val().split("-").reverse().join(".") )
+				.mask("99.99.9999")
+				.datepicker({
+					changeMonth: true,
+					changeYear: true,
+					dateFormat: "dd.mm.yy" 
+				});
 			$($("#<?=$field["id"];?>")[0].form).on("submit", function(){
 				$("#<?=$field["id"];?>").
 					val( $("#<?=$field["id"];?>").val().split(".").reverse().join("-") );
@@ -29,15 +34,7 @@
 			});
 		});
 	</script>
-	<script>
-		$(function(){
-			$("#<?=$field["id"];?>").datepicker({
-				changeMonth: true,
-				changeYear: true,
-			});
-			$("#<?=$field["id"];?>").datepicker( "option", "dateFormat", "dd.mm.yy" );
-		});
-	</script>
+
 
 <?endif;?>
 <?if($field["type"] == "time"):?>
