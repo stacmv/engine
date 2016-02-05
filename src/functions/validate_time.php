@@ -2,10 +2,10 @@
 function validate_field_type_time($key, $value, FormData $form){
     
     $fields = form_get_fields($form->db_table, $form->form_name);
-    $field = $fields[$key];
+    $field  = $fields[$key];
     
     if ( ($field["required"] == "required") || $value ){
-        $res = preg_match("/^([01]\d|2[0-3]):([0-5]\d)$/", $value)
+        $res = preg_match("/^([01]\d|2[0-3]):([0-5]\d)$/", $value);
     }else{
         $res = true;
     }
