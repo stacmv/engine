@@ -92,7 +92,7 @@ function upload_file($param_name, $storage_name){
                 };
                 
             }else{
-                if ($_FILES["to"]["error"][$param_name][$k]){
+                if ($_FILES["to"]["error"][$param_name]){
                     dosyslog(__FUNCTION__.get_callee().": DEBUG: File error for '".$param_name."': ".$_FILES["to"]["error"][$param_name]);
                 };
                 list($res, $dest_name) = upload_move_uploaded_file($_FILES["to"]["tmp_name"][$param_name], $_FILES["to"]["name"][$param_name], $upload_dir);

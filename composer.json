@@ -10,6 +10,7 @@
 	"minimum_stability": "dev",
     "require": {
 		"php": ">=5.3",
-		"optimit/glog_util": "dev-master"
+		"optimit/glog_util": "dev-master",
+		"erusev/parsedown": "dev-master"
 	}
 }

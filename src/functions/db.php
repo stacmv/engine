@@ -1313,8 +1313,10 @@ function db_parse_result($db_table, $result){
     // Десериализация данных, полученных из БД
     $schema = db_get_table_schema($db_table);
     $fields = array();
-    foreach($schema as $field){
-        $fields[ $field["name"] ] = $field;
+    if (is_array($schema)){
+        foreach($schema as $field){
+            $fields[ $field["name"] ] = $field;
+        };
     };
     unset($schema, $field);
     
@@ -1460,7 +1462,7 @@ function db_prepare_value($value, $field_type){
         case "timestamp":
             if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
                 $res = time();
-            }elseif(in_array( $value, array("0", "no", "n", "N", "off", "false") )){
+            }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false") )){
                 $res = null;
             }elseif($value == glog_isodate($value)){ // Check if value is date, convert to timestamp
                 $res = strtotime($value);
