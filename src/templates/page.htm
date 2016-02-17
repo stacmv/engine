@@ -30,9 +30,12 @@ foreach(@array(
 	<script src="assets/bs2/js/jquery.maskedinput.js"></script>
 	<script src="assets/bs2/js/jquery.multiple.select.js"></script>
 	<script src="assets/bs2/js/jquery.ui.datepicker-ru.js"></script>
+	<script src="assets/bs2/js/jquery.table.js"></script>
 	
 	<!-- Editor -->
-	<script src="assets/bs2/js/epiceditor.min.js"></script>
+	<link rel="stylesheet" href="assets/bs2/css/editor/editor.css">
+	<script src="assets/bs2/js/editor/editor.js"></script>
+	<script src="assets/bs2/js/editor/marked.js"></script>
 </head>
 <body>
 <div class="navbar navbar-fixed-top">
@@ -87,6 +90,7 @@ foreach(@array(
 
 	});
 </script>
+
 
 <?if ( ! DEV_MODE ) :?>
 	<!-- Yandex.Metrika counter -->

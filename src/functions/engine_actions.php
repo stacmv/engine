@@ -528,7 +528,7 @@ function show_data_action(){
             if (function_exists($get_all_function)){
                 $_DATA["items"] = call_user_func($get_all_function, "all");
             }else{
-                $_DATA["items"] = db_get($model, "all");
+                $_DATA["items"] = db_get($model, "all", DB_RETURN_NEW_FIRST);
             };
             
             $_DATA["items"] = form_prepare_view($_DATA["items"], $_DATA["fields"]);

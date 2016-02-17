@@ -30,14 +30,14 @@ foreach(@array(
 			
 		<div class="row-fluid">
 			<div class="span12">
-				<table class="table table-bordered table-striped">
+				<table class="table table-bordered table-striped sortable">
 					<thead>
 						<tr>
 							<?foreach($fields as $field):?>
 								<?if (!empty($field["acl"]) && ! userHasRight($field["acl"]) ) continue;?>
-								<th title="<?=$field["name"];?>" style="vertical-align:top;text-align:center"><?= ! empty($field["label"]) ? $field["label"] : $field["name"];?></th>
+								<th data-field_name="<?=$field["name"];?>" style="vertical-align:top;text-align:center"><?= ! empty($field["label"]) ? $field["label"] : $field["name"];?></th>
 							<?endforeach;?>
-							<th style="vertical-align:top;text-align:center">Операции</th>
+							<th style="vertical-align:top;text-align:center" data-sort="false">Операции</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -119,6 +119,11 @@ foreach(@array(
 		</div>
 	<?endif;?>
 </article> <!-- /.app_content -->
+<script>
+$(function(){
+	table_sorter( 'table.sortable' );
+});
+</script>
 <?php
 	unset($_SESSION["msg"]);
 	unset($_SESSION["to"]);
