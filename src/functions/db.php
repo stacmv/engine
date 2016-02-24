@@ -978,6 +978,32 @@ function db_get_table_schema($db_table){
 function db_get_tables($db_name = ""){
     return db_get_tables_list_from_xml($db_name);
 }
+function db_get_tables_list($db_name = ""){
+    $db_tables_info = db_get_tables($db_name = "");
+    return  array_reduce(
+                array_map(
+                    function($db_name, $tables){
+                        return array_map(
+                            function($table) use ($db_name){
+                                return $db_name.".".$table;
+                            },
+                            array_filter(
+                                $tables,
+                                function($table){
+                                    return $table != "history";
+                                }
+                            )
+                        );
+                    },
+                    array_keys($db_tables_info),
+                    $db_tables_info
+                ),
+                function($acc, $tables){
+                    return array_merge($acc, $tables);
+                },
+                array()
+            );
+}
 function db_get_tables_list_from_xml($db_name=""){
     
     global $CFG;

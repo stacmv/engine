@@ -9,14 +9,9 @@ class EUsers{
         return db_find(self::DB_TABLE, $key, $value, DB_RETURN_ROW | DB_RETURN_ONE);
     }
     static public function get(){
-        global $_USER;
-    
+           
         $users = array();
-    
-        if (userHasRight("manager")){
-            $users = db_get(self::DB_TABLE, "all");
-        };
-        
+        $users = db_get(self::DB_TABLE, "all");
         return $users;
     }
     static public function get_for_select(){

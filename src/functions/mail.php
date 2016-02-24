@@ -84,7 +84,7 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     };
     // //////
     
-    $from_email = ! empty($CFG["GENERAL"]["system_email"]) ? $CFG["GENERAL"]["system_email"] : "info@optimit.ru";
+    $from_email = ! empty($CFG["GENERAL"]["admin_email"]) ? $CFG["GENERAL"]["admin_email"] : "info@optimit.ru";
     $reply_to_email = ! empty($CFG["GENERAL"]["admin_email"]) ? $CFG["GENERAL"]["admin_email"] : "info@optimit.ru";
     
     $res = @mail($to, $subject, $message, "FROM:".$from_email."\nREPLY-TO:".$reply_to_email."\ncontent-type: text/html; charset=UTF-8");
