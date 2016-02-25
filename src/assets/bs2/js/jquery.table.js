@@ -15,7 +15,25 @@
     var sortFuncs = {
           "int"    : function(left,right) { return left - right; },
           "float"  : function(left,right) { return left - right; },
-          "string" : function(left,right) { if (left<right) return -1; if (left>right) return 1; return 0;},
+          "string" : function(left,right) {
+              
+                
+              
+                var float_left = parseFloat(left);
+                var float_right = parseFloat(right);
+                
+                if (isNaN(float_left) && isNaN(float_right)){
+                    if (left<right) return -1; if (left>right) return 1; return 0;
+                }else{
+                    
+                    if ( ! isNaN(float_left) && isNaN(float_right)) return -1;
+                    if ( isNaN(float_left) && ! isNaN(float_right)) return 1;
+                    var int_compare = sortFuncs.int(float_left, float_right);
+                    
+                    return int_compare;
+
+                };
+            },
           "date"   : function(left,right) { return left - right; }
         };    
 
