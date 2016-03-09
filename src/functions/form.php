@@ -266,6 +266,12 @@ function form_get_field_values($field){
     global $_DATA;
     global $_USER;
     
+    
+    if ($field["type"] == "boolean"){
+        return array(1);
+    };
+    
+    
     if ( ! isset($field["form_values"]) ){
         return array();
     };

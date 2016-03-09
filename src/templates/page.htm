@@ -6,6 +6,7 @@ foreach(@array(
 	$_PAGE["title"],
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
+if (!isset($page_fluid)) $page_fluid = false;
 ?>
 <!DOCTYPE html>
 <html>
@@ -22,11 +23,13 @@ foreach(@array(
 	<link rel="stylesheet" href="assets/bs2/css/font-awesome.css">
 	<link rel="stylesheet" href="assets/bs2/css/multiple-select.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/datepicker.css" type="text/css" />
+	<link rel="stylesheet" href="assets/bs2/css/bootstrap-editable.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/custom.css">
 
 	<script src="assets/bs2/js/jquery.js"></script>
 	<script src="assets/bs2/js/jquery-ui.js"></script>
 	<script src="assets/bs2/js/bootstrap.min.js"></script>
+	<script src="assets/bs2/js/bootstrap-editable.min.js"></script>
 	<script src="assets/bs2/js/jquery.maskedinput.js"></script>
 	<script src="assets/bs2/js/jquery.multiple.select.js"></script>
 	<script src="assets/bs2/js/jquery.ui.datepicker-ru.js"></script>
@@ -53,7 +56,7 @@ foreach(@array(
 </div>
 
 
-<div class="container">
+<div class="container<?if($page_fluid):?>-fluid<?endif;?>">
 
 	<?if (!empty($_SESSION["msg"])):?>
 		<?=get_content("msg");?>
