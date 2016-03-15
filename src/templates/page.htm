@@ -4,6 +4,7 @@ foreach(@array(
 	$CFG["GENERAL"]["app_name"],
 	$CFG["GENERAL"]["app_version"],
 	$_PAGE["title"],
+	$_PAGE["uri"],
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
 if (!isset($page_fluid)) $page_fluid = false;
@@ -14,6 +15,7 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<meta charset="UTF-8">
     <title><?=$_PAGE["title"];?></title>
 	<base href="<?=$CFG["URL"]["base"];?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 	
 	<style>
 		.app_content {margin-top: 70px;}
@@ -92,7 +94,25 @@ if (!isset($page_fluid)) $page_fluid = false;
 	});
 </script>
 
+<?if (userHasRight("manager")):?>
+<script>
+$(function(){
+	$(window).bind('beforeunload', function() {
+		if(unsaved){
+			return "Вы не сохранили изменения. Хотите покинуть страницу и поерять внесенные изменения?";
+		}
+	});
 
+	// Monitor dynamic inputs
+	$(document).on('change', ':input', function(){ //triggers change in all input fields including text type
+		unsaved = true;
+	});
+	$('input[type=submit]').click(function() {
+		unsaved = false;
+	});
+});
+</script>
+<?endif;?>
 <?if ( ! DEV_MODE ) :?>
 	<!-- Yandex.Metrika counter -->
 	

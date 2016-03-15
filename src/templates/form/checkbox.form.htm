@@ -10,10 +10,18 @@
 		<?if ($field["required"]):?>required<?endif;?>
 		<?if (isset($field["values"]) && isset($field["values"][0])):?>
 			value="<?=$field["values"][0];?>"
-			<?if ($field["value"] == $field["values"][0]):?> checked<?endif;?>
+		<?else:?>
+			<?if (!empty($field["value"])):?>
+				<?$field["values"][0] = $field["value"];?>
+				value="<?=$field["value"];?>"
+			<?else:?>
+				<?$field["values"][0] = 1;?>
+				value="1"
+			<?endif;?>
 		<?endif;?>
+		<?if ($field["value"] == $field["values"][0]):?> checked<?endif;?>
 	>
 </label>
-<?if(DEV_MODE && empty($field["values"][0])):?>
+<?if(DEV_MODE && empty($field["values"][0]) && ($field["type"]!=="timestamp")):?>
 	<div class="alert alert-danger"><b>DEV_MODE</b>: Field value is not set. Check DB config.</div>
 <?endif;?>

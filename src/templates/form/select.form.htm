@@ -1,3 +1,6 @@
+<?if (is_array($field["value"])):?>
+	<?=$field["value"] = $field["value"][0];?>
+<?endif;?>
 <input type="hidden" name="to[<?=$field["name"];?>]" value="null">
 <select 
 	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
