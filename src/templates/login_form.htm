@@ -44,9 +44,9 @@ foreach(@array(
 	</div> <!-- /.row -->
 </article> <!-- /.app_content -->
 
-<?if ($auth_type == "http_basic"):?>
+<?php if ($auth_type == "http_basic"):?>
 	<script>
-		<? // http://www.peej.co.uk/articles/rich-user-experience.html ?>
+		<?php  // http://www.peej.co.uk/articles/rich-user-experience.html ?>
 		function getHTTPObject() { 
 			if (typeof XMLHttpRequest != 'undefined') {
 				return new XMLHttpRequest();
@@ -60,7 +60,7 @@ foreach(@array(
 			return false;
 		}
 		
-		<? // http://www.peej.co.uk/articles/http-auth-with-html-forms.html ?>
+		<?php  // http://www.peej.co.uk/articles/http-auth-with-html-forms.html ?>
 		function login() {         
 			var http = getHTTPObject();
 			var username = document.getElementById("UserEmail").value;
@@ -80,9 +80,9 @@ foreach(@array(
 		})
 		
 	</script>
-<?endif;?>
+<?php endif;?>
 
-<?if (isset($import_first_user) && $import_first_user):?>
+<?php if (isset($import_first_user) && $import_first_user):?>
 	<p>Первый запуск системы - нет пользователей.</p>
 	<p>Для добавления первого пользователя введите логин и пароль и нажмите <a href="#" id="cmdImportFirstUser">здесь</a>.</p>
 	<script>
@@ -93,7 +93,7 @@ foreach(@array(
 			location.href = "adm_import_first_user/" + username + ":" + pass + ":access||manager||adm<?=$CFG["URL"]["ext"];?>";
 		});
 	</script>
-<?endif;?>
+<?php endif;?>
 
 <?php
 	unset($_SESSION["msg"]);

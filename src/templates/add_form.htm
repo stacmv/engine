@@ -25,18 +25,18 @@ foreach(@array(
 				
 				<div class="pull-right">
 					<input class="btn btn-success" type="submit" value="OK">
-					<?if (!empty($_SERVER["HTTP_REFERER"])):?>
+					<?php if (!empty($_SERVER["HTTP_REFERER"])):?>
 						<a class="btn btn-default" href="<?=$_SERVER["HTTP_REFERER"];?>">Отменить</a>
-					<?endif;?>
+					<?php endif;?>
 				</div>
 			</form>
 		</div>
 	</div> <!-- /.row -->
 </article>
 
-<?if(file_exists("assets/app/".$form_name.".js")):?>
+<?php if(file_exists("assets/app/".$form_name.".js")):?>
 	<script src="assets/app/<?=$form_name;?>.js"></script>
-<?endif;?>
+<?php endif;?>
 
 <?php
 	unset($_SESSION["msg"]);

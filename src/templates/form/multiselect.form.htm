@@ -1,37 +1,37 @@
 <input type="hidden" name="to[<?=$field["name"];?>]" value="null">
 <select multiple data-placeholder="-"
-	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
+	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
 	id="<?=$field["name"];?>"
-	class="form-control input-xxlarge <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
+	class="form-control input-xxlarge <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
 >
 	
-	<?if (empty($field["value"]) && !empty($field["form_value_default"])):?>
-		<?$field["value"] = db_parse_value($field["form_value_default"], "list");?>
-	<?endif;?>
+	<?php if (empty($field["value"]) && !empty($field["form_value_default"])):?>
+		<?php $field["value"] = db_parse_value($field["form_value_default"], "list");?>
+	<?php endif;?>
 
-	<?$in_group = false;?>
-	<?foreach($field["values"] as $caption=>$value):?>
-		<?if ($value == "optgroup"):?>
-			<?if ($in_group):?>
+	<?php $in_group = false;?>
+	<?php foreach($field["values"] as $caption=>$value):?>
+		<?php if ($value == "optgroup"):?>
+			<?php if ($in_group):?>
 				</optgroup>
-			<?endif;?>
+			<?php endif;?>
 			<optgroup label="<?=$caption;?>">
-			<?$in_group = true;?>
-		<?else:?>
+			<?php $in_group = true;?>
+		<?php else:?>
 				
-			<?if ( ! is_int($caption) ):?>
-				<option value="<?=$value;?>" <?if ( ! empty($field["value"]) && ( in_array($value, $field["value"]) ) ):?> selected<?endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
-			<?else:?>
-				<option <?if ( ! empty($field["value"]) && ( in_array($value, $field["value"]) ) ):?> selected<?endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
-			<?endif;?>
+			<?php if ( ! is_int($caption) ):?>
+				<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ( in_array($value, $field["value"]) ) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
+			<?php else:?>
+				<option <?php if ( ! empty($field["value"]) && ( in_array($value, $field["value"]) ) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
+			<?php endif;?>
 			
-		<?endif;?>
-	<?endforeach;?>
+		<?php endif;?>
+	<?php endforeach;?>
 
-</select><?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
-<?if(!empty($field["hint"])):?>
+</select><?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
+<?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=unescape_template_data($field["hint"]);?></span>
-<?endif;?>
+<?php endif;?>
 <script>
 $(function(){
 	$("#<?=$field["name"];?>").multipleSelect(

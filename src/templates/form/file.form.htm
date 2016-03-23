@@ -1,12 +1,12 @@
-<input type="hidden" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>_cur_file" <?if (isset($field["value"])):?>value="<?=$field["value"];?>"<?endif;?>>
+<input type="hidden" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>_cur_file" <?php if (isset($field["value"])):?>value="<?=$field["value"];?>"<?php endif;?>>
 
 <img src="<?=$field["value"];?>" style="max-width:100%" class="img-polaroid">
 <br>
 <input
 	type="file"
-	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
-	<?if (isset($field["id"])):?>id="<?=$field["id"];?>"<?endif;?> 
-	class="input-file <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
+	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
+	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?> 
+	class="input-file <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
 >
 
 

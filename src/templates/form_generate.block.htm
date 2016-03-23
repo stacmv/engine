@@ -5,29 +5,29 @@
 		die("Code: ".basename(__FILE__)."-init");
 	}
 ?>
-<?foreach($fields_form as $field):?>
-	<?if ( $field["type"] == "list"):?>
-		<?foreach((array)$field["value_from"] as $value):?>
+<?php foreach($fields_form as $field):?>
+	<?php if ( $field["type"] == "list"):?>
+		<?php foreach((array)$field["value_from"] as $value):?>
 			<input type="hidden" name="<?=$field["name_from"];?>" value='<?=$value;?>'>
-		<?endforeach;?>
-	<?else:?>
+		<?php endforeach;?>
+	<?php else:?>
 		<input type="hidden" name="<?=$field["name_from"];?>" value='<?=$field["value_from"];?>'>
-	<?endif;?>
+	<?php endif;?>
 	
-	<?if ($field["template"] != "hidden"):?>
+	<?php if ($field["template"] != "hidden"):?>
 		<div class="control-group">
-			<label class="control-label" <?if (!empty($field["id"])):?>for="<?=$field["id"];?>"<?endif;?>>
+			<label class="control-label" <?php if (!empty($field["id"])):?>for="<?=$field["id"];?>"<?php endif;?>>
 					<?=$field["label"];?>
-					<?if ($field["required"]):?> <span class="text-error" style="color:red"><b>*</b></span><?endif;?>
+					<?php if ($field["required"]):?> <span class="text-error" style="color:red"><b>*</b></span><?php endif;?>
 			</label>
 			<div class="controls">
 
-				<?include $field["template_file"];?>
+				<?php include $field["template_file"];?>
 
 			</div>
 		</div>
-	<?else:?>
-		<?include $field["template_file"];?>
-	<?endif;?>
+	<?php else:?>
+		<?php include $field["template_file"];?>
+	<?php endif;?>
 	
-<?endforeach;?>
+<?php endforeach;?>

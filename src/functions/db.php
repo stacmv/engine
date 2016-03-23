@@ -210,14 +210,14 @@ function db_check_schema($db_table){ // проверяет схему табли
                         <caption><?=$table;?></caption>
                         <tr><th>Текущие поля</th><td><?=implode(", ", $columns[$table]);?></td></tr>
                         <tr><th>Поля</th><th>Операции</th></tr>
-                        <?foreach(array_merge($columns[$table], $fields_to_add[$table]) as $k=>$v):?>
+                        <?php foreach(array_merge($columns[$table], $fields_to_add[$table]) as $k=>$v):?>
                             
-                            <?if (in_array($v, $fields_to_add[$table]) ):?>
+                            <?php if (in_array($v, $fields_to_add[$table]) ):?>
                                 <tr><th><?=$v;?></th> <td><i class="icon icon-plus text-success"></i></td> </tr>
-                            <?elseif(in_array($v, $fields_to_del[$table]) ):?>
+                            <?php elseif(in_array($v, $fields_to_del[$table]) ):?>
                                 <tr><th><?=$v;?></th> <td><i class="icon icon-remove text-danger"></i></td> </tr>
-                            <?endif;?>
-                        <?endforeach;?>
+                            <?php endif;?>
+                        <?php endforeach;?>
                     </table>
                 <?php
                 

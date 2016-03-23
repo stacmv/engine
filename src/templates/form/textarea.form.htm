@@ -1,11 +1,11 @@
 <textarea rows="5" cols="20"
 
-	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
-	<?if (isset($field["id"])):?>id="<?=$field["id"];?>"<?endif;?> 
-	class="form-control input-xxlarge <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
-	<?if (isset($field["placeholder"])):?>placeholder="<?=$field["placeholder"];?>"<?endif;?> 
-	<?if ($field["required"]):?>required<?endif;?>
-><?if (isset($field["value"])):?><?=$field["value"];?><?endif;?></textarea> <?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
-<?if(!empty($field["hint"])):?>
+	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
+	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?> 
+	class="form-control input-xxlarge <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
+	<?php if (isset($field["placeholder"])):?>placeholder="<?=$field["placeholder"];?>"<?php endif;?> 
+	<?php if ($field["required"]):?>required<?php endif;?>
+><?php if (isset($field["value"])):?><?=$field["value"];?><?php endif;?></textarea> <?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
+<?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
-<?endif;?>
+<?php endif;?>

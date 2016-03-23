@@ -8,9 +8,9 @@ foreach(@array(
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 ?>
 <form class="form-horizontal" action="<?=$action;?>/<?=$object_name;?><?=$CFG["URL"]["ext"];?>" method="post" enctype="multipart/form-data">
-	<?if ( isset($object["id"]) ):?>
+	<?php if ( isset($object["id"]) ):?>
 		<input type="hidden" name="id" value="<?=$object["id"];?>">
-	<?endif;?>
+	<?php endif;?>
 	
 	%%form_generate%%
 		

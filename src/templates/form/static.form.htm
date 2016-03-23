@@ -1,8 +1,8 @@
 <p
-	<?if (isset($field["name"])):?>data-name="<?=$field["name_to"];?>"<?endif;?>
-	<?if (isset($field["id"])):?>id="<?=$field["id"];?>"<?endif;?> 
-	class="form-control-static <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>" 
-><?if (isset($field["value"])):?><?=$field["value"];?><?endif;?></p>
-<?if(!empty($field["hint"])):?>
+	<?php if (isset($field["name"])):?>data-name="<?=$field["name_to"];?>"<?php endif;?>
+	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?> 
+	class="form-control-static <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>" 
+><?php if (isset($field["value"])):?><?=$field["value"];?><?php endif;?></p>
+<?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
-<?endif;?>
+<?php endif;?>

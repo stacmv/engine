@@ -1,35 +1,35 @@
-<?if ( ! empty($topmenu) ) :?>
+<?php if ( ! empty($topmenu) ) :?>
 	<ul class="nav">
-		<?foreach ($topmenu as $menuItem) :?>
-			<?if(!empty($menuItem["submenu"])):?>
-				<li class="dropdown <?if ($_PAGE["uri"] == $menuItem["href"]) :?>active<?endif;?>">
+		<?php foreach ($topmenu as $menuItem) :?>
+			<?php if(!empty($menuItem["submenu"])):?>
+				<li class="dropdown <?php if ($_PAGE["uri"] == $menuItem["href"]) :?>active<?php endif;?>">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
 						<?=$menuItem["caption"];?>
 						<b class="caret"></b>
 						<ul class="dropdown-menu">
-							<?foreach($menuItem["submenu"] as $subMenuItem):?>
+							<?php foreach($menuItem["submenu"] as $subMenuItem):?>
 								<li>
 									<a href="<?=$subMenuItem["href"] . $CFG["URL"]["ext"];?>" title="<?=$subMenuItem["caption"];?>">
 										<?=$subMenuItem["caption"];?>
-										<?if (!empty($subMenuItem["badge"])):?>
+										<?php if (!empty($subMenuItem["badge"])):?>
 											<span class="badge badge-<?=$subMenuItem["badge"]["class"];?>" title="<?=$subMenuItem["badge"]["title"];?>"><?=$subMenuItem["badge"]["value"];?></span>
-										<?endif;?>
+										<?php endif;?>
 									</a>
 								</li>
-							<?endforeach;?>
+							<?php endforeach;?>
 						</ul>
 					</a>
 				</li>
-			<?else:?>
-				<li <?if ($_PAGE["uri"] == $menuItem["href"]) :?>class="active"<?endif;?>>
+			<?php else:?>
+				<li <?php if ($_PAGE["uri"] == $menuItem["href"]) :?>class="active"<?php endif;?>>
 					<a href="<?=$menuItem["href"].$CFG["URL"]["ext"];?>">
 						<?=$menuItem["caption"];?>
-						<?if (!empty($menuItem["badge"])):?>
+						<?php if (!empty($menuItem["badge"])):?>
 							<span class="badge badge-<?=$menuItem["badge"]["class"];?>" title="<?=$menuItem["badge"]["title"];?>"><?=$menuItem["badge"]["value"];?></span>
-						<?endif;?>
+						<?php endif;?>
 					</a>
 				</li>
-			<?endif;?>
-		<?endforeach;?>
+			<?php endif;?>
+		<?php endforeach;?>
 	</ul>
-<?endif;?>
+<?php endif;?>

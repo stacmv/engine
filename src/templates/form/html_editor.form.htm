@@ -1,12 +1,12 @@
 <div style="border:1px solid #369" class="epiceditor"></div>
 
 <textarea name="<?=$field["name_to"];?>" id="<?=$field["name"];?>"
-	<?if ($field["required"]):?>required<?endif;?>
-><?if (isset($field["value"])):?><?=$field["value"];?><?endif;?></textarea> <?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
+	<?php if ($field["required"]):?>required<?php endif;?>
+><?php if (isset($field["value"])):?><?=$field["value"];?><?php endif;?></textarea> <?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
 
-<?if(!empty($field["hint"])):?>
+<?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
-<?endif;?>
+<?php endif;?>
 <span class="help-block">Помощь по <a target="_blank" href="https://ru.wikipedia.org/wiki/Markdown#.D0.9F.D1.80.D0.B8.D0.BC.D0.B5.D1.80.D1.8B_.D1.81.D0.B8.D0.BD.D1.82.D0.B0.D0.BA.D1.81.D0.B8.D1.81.D0.B0">разметке Markdown</a></span>
 
 <script>

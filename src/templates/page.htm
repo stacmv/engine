@@ -44,7 +44,7 @@ if (!isset($page_fluid)) $page_fluid = false;
 <div class="navbar navbar-fixed-top">
 	<div class="navbar-inner">
 		<div class="container">
-			<a href="<?if($_USER->is_authenticated()):?><?=!empty($CFG["URL"]["dashboard"]) ? $CFG["URL"]["dashboard"] : "index";?><?else:?>index<?endif;?><?=$CFG["URL"]["ext"];?>" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
+			<a href="<?php if($_USER->is_authenticated()):?><?=!empty($CFG["URL"]["dashboard"]) ? $CFG["URL"]["dashboard"] : "index";?><?php else:?>index<?php endif;?><?=$CFG["URL"]["ext"];?>" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
 			
 			%%topmenu%%
 			
@@ -56,11 +56,11 @@ if (!isset($page_fluid)) $page_fluid = false;
 </div>
 
 
-<div class="container<?if($page_fluid):?>-fluid<?endif;?>">
+<div class="container<?php if($page_fluid):?>-fluid<?php endif;?>">
 
-	<?if (!empty($_SESSION["msg"])):?>
+	<?php if (!empty($_SESSION["msg"])):?>
 		<?=get_content("msg");?>
-	<?endif;?>
+	<?php endif;?>
 	
 	<?=get_content("content");?>
 	   
@@ -72,7 +72,7 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<div class="navbar-inner">
 		<div class="container footer-margin-top">
 			
-			<div class="muted text-muted">&copy; 2015<?if(date("Y")>2015):?>&ndash;<?=date("Y");?><?endif;?> &laquo;<a href="<?=$CFG["URL"]["base"];?>"><?=$CFG["GENERAL"]["app_name"];?></a>&raquo; &nbsp;&nbsp;&nbsp; <small class="muted">Версия: <?=$CFG["GENERAL"]["app_version"];?></small>
+			<div class="muted text-muted">&copy; 2015<?php if(date("Y")>2015):?>&ndash;<?=date("Y");?><?php endif;?> &laquo;<a href="<?=$CFG["URL"]["base"];?>"><?=$CFG["GENERAL"]["app_name"];?></a>&raquo; &nbsp;&nbsp;&nbsp; <small class="muted">Версия: <?=$CFG["GENERAL"]["app_version"];?></small>
 				
 				<div class="pull-right optimit"><small>Поддержка &laquo;ОптимИТ&raquo;</small></div>
 			</div>
@@ -94,7 +94,7 @@ if (!isset($page_fluid)) $page_fluid = false;
 	});
 </script>
 
-<?if (userHasRight("manager")):?>
+<?php if (userHasRight("manager")):?>
 <script>
 $(function(){
 	$(window).bind('beforeunload', function() {
@@ -112,11 +112,11 @@ $(function(){
 	});
 });
 </script>
-<?endif;?>
-<?if ( ! DEV_MODE ) :?>
+<?php endif;?>
+<?php if ( ! DEV_MODE ) :?>
 	<!-- Yandex.Metrika counter -->
 	
 	<!-- /Yandex.Metrika counter -->
-<?endif;?>
+<?php endif;?>
 </body>
 </html>

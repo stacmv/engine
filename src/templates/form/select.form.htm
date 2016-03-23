@@ -1,33 +1,33 @@
-<?if (is_array($field["value"])):?>
+<?php if (is_array($field["value"])):?>
 	<?=$field["value"] = $field["value"][0];?>
-<?endif;?>
+<?php endif;?>
 <input type="hidden" name="to[<?=$field["name"];?>]" value="null">
 <select 
-	<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
-	<?if (isset($field["name"])):?>id="<?=$field["name"];?>"<?endif;?> 
-	class="form-control <?if (isset($field["class"])):?><?=$field["class"];?><?endif;?>"
+	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
+	<?php if (isset($field["name"])):?>id="<?=$field["name"];?>"<?php endif;?> 
+	class="form-control <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
 >
-	<?if ( empty($field["readonly"])):?>
+	<?php if ( empty($field["readonly"])):?>
 		<option></option>
-		<?foreach($field["values"] as $caption=>$value):?>
-			<?if ( ! is_int($caption) ):?>
-				<option value="<?=$value;?>" <?if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
-			<?else:?>
-				<option <?if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
-			<?endif;?>
-		<?endforeach;?>
-	<?else:?>
-		<?if (!empty($field["value"])):?>
-			<?if (is_array($field["value"])):?>
+		<?php foreach($field["values"] as $caption=>$value):?>
+			<?php if ( ! is_int($caption) ):?>
+				<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
+			<?php else:?>
+				<option <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
+			<?php endif;?>
+		<?php endforeach;?>
+	<?php else:?>
+		<?php if (!empty($field["value"])):?>
+			<?php if (is_array($field["value"])):?>
 				<option value="<?=current($field["value"]);?>"><?=key($field["value"]);?></option>
-			<?else:?>
+			<?php else:?>
 				<option><?=$field["value"];?></option>
-			<?endif;?>
-		<?else:?>
+			<?php endif;?>
+		<?php else:?>
 			<option></option>
-		<?endif;?>
-	<?endif;?>
-</select><?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?endif;?>
-<?if(!empty($field["hint"])):?>
+		<?php endif;?>
+	<?php endif;?>
+</select><?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
+<?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=unescape_template_data($field["hint"]);?></span>
-<?endif;?>
+<?php endif;?>

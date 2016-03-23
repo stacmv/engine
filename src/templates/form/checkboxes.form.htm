@@ -1,17 +1,17 @@
-<?foreach($field["values"] as $caption=>$value):?>
+<?php foreach($field["values"] as $caption=>$value):?>
 	<label>
 		<input
 			type="checkbox"
-			<?if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?endif;?>
-			<?if (! empty($value)) :?>id="<?=$field["name"]."_".glog_codify($value);?>"<?endif;?> 
-			<?if (isset($field["class"])):?>class="<?=$field["class"];?>"<?endif;?> 
+			<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
+			<?php if (! empty($value)) :?>id="<?=$field["name"]."_".glog_codify($value);?>"<?php endif;?> 
+			<?php if (isset($field["class"])):?>class="<?=$field["class"];?>"<?php endif;?> 
 			value="<?=$value;?>"
-			<?if ( ! empty($field["value"]) && in_array($value, (array) $field["value"]) ):?> checked<?endif;?>
+			<?php if ( ! empty($field["value"]) && in_array($value, (array) $field["value"]) ):?> checked<?php endif;?>
 		> 
 		<?=is_int($caption) ? $value : $caption;?><br>
 	</label>
-<?endforeach;?>
-<?if(!empty($field["hint"])):?>
+<?php endforeach;?>
+<?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
-<?endif;?>
-<?if ( ! $field["label"] && $field["required"]):?><span class="help-inline">Поле обязательно.</span><?endif;?>
+<?php endif;?>
+<?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">Поле обязательно.</span><?php endif;?>
