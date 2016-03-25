@@ -1,0 +1,75 @@
+<?php
+$id = "il".uniqid();
+?>
+<div class="image-list" id="<?=$id;?>">
+	<input type="hidden" name="to[<?=$field["name"];?>]" value="null">
+	<?if (!empty($field["value"])):?>
+		<h6>Загруженные картинки</h6>
+		<div class="image-line">
+			<?if(!empty($field["value"])):?>
+				<?foreach($field["value"] as $image):?>
+					<div class="image">
+						<input type="hidden" name="<?=$field["name_to"];?>" value="<?=$image;?>">
+						<img src="<?=$image;?>">
+						<br><a href="#" class="btn-del">&times; Удалить</a>
+					</div>
+				<?endforeach;?>
+			<?endif;?>
+		</div>
+		<div class="alert"></div>
+	<?endif;?>
+	<h6>Загрузить новые картинки</h6>
+	<ol class="file-inputs">
+		<li><input type="file" name="<?=$field["name_to"];?>"></li>
+	</ol>
+	<a href="#" class="btn btn-default btn-add"><i class="glyphicon glyphicon-plus"></i> Еще один файл</a>
+	<?if (!empty($field["hint"])):?>
+		<span class="help-block"><?=$field["hint"];?></span>
+	<?endif;?>
+</div>
+
+<script>
+$(function(){
+	$("#<?=$id;?> .btn-add").on("click", function(e){
+		e.preventDefault();
+		$ol = $("#<?=$id;?> .file-inputs");
+		$li = $('<li><input type="file" name="<?=$field["name_to"];?>"></li>');
+		$ol.append($li);
+		return false;
+	});
+	$("#<?=$id;?> .btn-del").on("click", function(e){
+		e.preventDefault();
+		$(this).parent().remove();
+		$("#<?=$id;?> .alert").addClass("alert-warning").html("Сохраните изменения.");
+		return false;
+	});
+});
+</script>
+
+<style>
+.image-list {
+	padding: 5px;
+	border: 1px dotted black;
+}
+.image-line {
+	position: relative;
+	overflow: hidden;
+	margin: 1em 0;
+}
+.image-line .image {
+	float: left;
+	margin-right: 10px;
+}
+.image-line .image img {
+	height: 100px;
+}
+
+.image-line .image {
+	text-align: center;
+}
+.image-line .image a.btn-del {
+	text-decoration: none;
+	border-bottom: 1px dashed red;
+	color: red;
+}
+</style>

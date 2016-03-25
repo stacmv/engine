@@ -41,7 +41,8 @@ foreach(@array(
 						</tr>
 					</thead>
 					<tbody>
-					<?php foreach ($items as $item):?>
+					
+					<?php if(!empty($items)) foreach ($items as $item):?>
 						<?php if ($item["isDeleted"]) continue;?>
 						<tr>
 							<?php foreach($fields as $field):?>
@@ -60,6 +61,12 @@ foreach(@array(
 									
 									<?php if (file_exists(cfg_get_filename("templates", "data_list_".$item_name."_".$field["name"].".htm"))):?>
 										<?php include cfg_get_filename("templates", "data_list_".$item_name."_".$field["name"].".htm");?>
+										
+									<?php elseif (file_exists(cfg_get_filename("templates", "data_list_field_name_".$field["name"].".htm"))):?>
+										<?php include cfg_get_filename("templates", "data_list_field_name_".$field["name"].".htm");?>
+									
+									<?php elseif (file_exists(cfg_get_filename("templates", "data_list_field_type_".$field["type"].".htm"))):?>
+										<?php include cfg_get_filename("templates", "data_list_field_type_".$field["type"].".htm");?>
 										
 									<?php elseif ($field["type"] == "password"):?>
 										<?php if(!empty($item[ $field["name"] ])):?>
