@@ -155,10 +155,12 @@ function form_prepare_view($items, $fields){
                 if ( ! isset($tsv[$key]) ){
                     $tsv[$key] = array();
                     $tmp = import_tsv( $tsv_file );
-                    foreach($tmp as $v){
-                        $tsv[$key][ isset($v["value"]) ? $v["value"] : $v[$key] ] = $v["caption"];
+                    if (!empty($tmp)){
+                        foreach($tmp as $v){
+                            $tsv[$key][ isset($v["value"]) ? $v["value"] : $v[$key] ] = $v["caption"];
+                        };
+                        unset($tmp, $v);
                     };
-                    unset($tmp, $v);
                 };
                     
                 if ($fields[$key]["type"] == "list"){
