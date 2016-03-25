@@ -85,7 +85,7 @@ foreach(@array(
 									<?php elseif ($field["type"] == "timestamp"):?>
 										<?=show_date($item[ $field["name"] ], SHOW_DATE_TIME_DIFF | SHOW_DATE_AGO);?>
 									<?php elseif ($field["type"] == "date"):?>
-										<?=glog_rusdate($item[ $field["name"] ]);?>
+										<?=($item[$field["name"]]  ? glog_rusdate($item[$field["name"]]) : "");?>
 									<?php elseif($field["type"] == "file"):?>
 										<?php if (!empty($item[ $field["name"] ])):?>
 											<?php if(in_array( strtolower(substr($item[ $field["name"] ], -4)), array(".png", ".gif", ".jpg") )):?>
