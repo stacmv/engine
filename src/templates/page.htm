@@ -96,26 +96,27 @@ if (!isset($page_fluid)) $page_fluid = false;
 
 <?php if (userHasRight("manager")):?>
 <script>
+window.optimit = {app: {unsaved:false}};
 $(function(){
 	$(window).bind('beforeunload', function() {
-		if(unsaved){
+		if(window.optimit.app.unsaved){
 			return "Вы не сохранили изменения. Хотите покинуть страницу и поерять внесенные изменения?";
 		}
 	});
 
 	// Monitor dynamic inputs
 	$(document).on('change', ':input', function(){ //triggers change in all input fields including text type
-		unsaved = true;
+		window.optimit.app.unsaved = true;
 	});
 	$('input[type=submit]').click(function() {
-		unsaved = false;
+		window.optimit.app.unsaved = false;
 	});
 });
 </script>
 <?php endif;?>
 <?php if ( ! DEV_MODE ) :?>
 	<!-- Yandex.Metrika counter -->
-	
+	%%yandex.metrika.block%%
 	<!-- /Yandex.Metrika counter -->
 <?php endif;?>
 </body>

@@ -3,6 +3,7 @@
 if (!defined("TEST_MODE")) define ("TEST_MODE", false);
 define("DB_NOTICE_QUERY",true); // писать запросы в лог
 define("DB_LIST_DELIMITER", "||"); // разделитель элементов в полях типа list
+define("DB_MONEY_PRECISION", 2);  // количество знаков после запятой для значений типа money
 define("DB_PREPARE_VALUE", 32); // флаг для db_get(), что надо вернуть поля типа list, json и др. в виде готовом для записи в БД, т.е. в виде строки, возвращаемой db_prepare_value()
 define("DB_DONT_PARSE", 64); //  флаг для db_get() и db_select(), что надо вернуть данные как есть, не выполняя db_parse_result()
 define("DB_RETURN_ID", 1);  // флаг для db_find() и db_select(), что надо вернуть только ID
@@ -1447,7 +1448,7 @@ function db_prepare_value($value, $field_type){
                 };
             };
             
-            array_unshift($res,"");// добавим в начало и конец масива пустые строки, чтобы можно было искать отдельные значения массива с помощью SQL выражения LIKE "%||value||%"
+            array_unshift($res,"");// добавим в начало и конец массива пустые строки, чтобы можно было искать отдельные значения массива с помощью SQL выражения LIKE "%||value||%"
             array_push($res,"");
             // dump($res,"res_unshfted_pushed");
             $res = implode(DB_LIST_DELIMITER, $res); 
@@ -1473,6 +1474,12 @@ function db_prepare_value($value, $field_type){
             if ($value === "") $res = null;
             elseif ( ! is_null($value) ){
                 $res = (double) $value;
+            };
+            break;
+        case "money":
+            if ($value === "") $res = null;
+            elseif ( ! is_null($value) ){
+                $res = (string) bcadd($value, 0, DB_MONEY_PRECISION);
             };
             break;
         case "date":

@@ -13,7 +13,7 @@ function form_prepare($db_table, $form_name, $object=""){
         $is_stand_alone = false;
         $value = isset($_SESSION["to"][$v["name"]])  ? $_SESSION["to"][$v["name"]] : ( !empty($object[ $v["name"] ]) ? $object[ $v["name"] ] : "");
         $value_from = ! empty($object[ $v["name"] ]) ? $object[ $v["name"] ] : "";
-        $fields[] = form_prepare_field($v, $is_stand_alone, $value, $value_from);
+        $fields[ $v["name"] ] = form_prepare_field($v, $is_stand_alone, $value, $value_from);
     }
     unset($v);
         
@@ -24,8 +24,7 @@ function form_prepare($db_table, $form_name, $object=""){
 function form_prepare_field($field, $is_stand_alone = false, $value = "", $value_from = ""){
         
         if ( empty($field["form_template"]) ){
-            dosyslog(__FUNCTION__.": FATAL ERROR: Template for field '".$field["name"]."' is not found. Check DB config.");
-            die("Code: efrm-".__LINE__."-".$field["name"]);
+            $field["form_template"] = "static";
         };
         
         $type     = $field["type"]; // тип поля в БД
@@ -118,10 +117,10 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         };
         
         // Убрать не нужные на форме свойства
-        unset($field["form"]);
-        unset($field["form_template"]);
-        unset($field["form_values"]);
-        unset($field["form_hint"]);
+        // unset($field["form"]);
+        // unset($field["form_template"]);
+        // unset($field["form_values"]);
+        // unset($field["form_hint"]);
         
         return $field;
 }
@@ -137,6 +136,8 @@ function form_prepare_view($items, $fields){
         static $tsv = array();
         
         foreach($item as $key => $value){
+            if ( ! isset($fields[$key] ) ) continue;
+            
             if ( (substr($key,-3) == "_id") || (substr($key,-4) == "_ids") ){
                 $obj_name = (substr($key,-4) == "_ids") ? substr($key, 0,-4) : substr($key, 0,-3);
                 $get_name_function = "get_".$obj_name."_name";
@@ -235,10 +236,7 @@ function form_get_fields($db_table, $form_name){
                         if ( isset($tmp[$form_index]) ){
                             $v[$prop_key] = $tmp[$form_index];
                         }else{
-                            
-                            dosyslog(__FUNCTION__.": FATAL ERROR: Template for field '".$prop_key."' in form '".$form_name."' is not set. Check db config file.");
-                            die("Code: efrm-".__LINE__);
-                            
+                            $v[$prop_key] = $tmp[count($tmp)-1];  // если для формы свойство не задано явно, используем последнее явно заданное значение
                         }
                         unset($tmp);
                         

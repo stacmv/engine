@@ -6,6 +6,7 @@ foreach(@array(
 	$items,
 	$fields,
 	$item_name,
+	$form_name,
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
 ?>
@@ -111,11 +112,8 @@ foreach(@array(
 							<td>
 								<?php if (file_exists(cfg_get_filename("templates", "data_list_".$item_name.".actions.htm"))):?>
 									<?php include cfg_get_filename("templates", "data_list_".$item_name.".actions.htm");?>
-								<?php elseif (userHasRight("manager")):?>
-									<a href="form/edit/<?=$item_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small"><i class="icon-edit"></i>Ред.</a>
-									<a href="form/delete/<?=$item_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small btn-danger">&times;</a>
-								<?php else:?>
-									&nbsp;
+								<?php else :?>
+									<?php include cfg_get_filename("templates", "data_list_default.actions.htm");?>
 								<?php endif;?>
 							</td>
 						</tr>
@@ -131,6 +129,9 @@ $(function(){
 	table_sorter( 'table.sortable' );
 });
 </script>
+<?php if (file_exists("assets/app/" . $form_name . ".js")):?>
+	<script src="assets/app/<?=$form_name;?>.js"></script>
+<?php endif;?>
 <?php
 	unset($_SESSION["msg"]);
 	unset($_SESSION["to"]);

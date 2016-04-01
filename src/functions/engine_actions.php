@@ -547,6 +547,9 @@ function show_data_action(){
                 set_template_file("content", $_PAGE["templates"]["item"]);
             };
         }
+        
+        $_DATA["form_name"] = $model . "_" . $mode;
+        
     }else{
         die("Code: ea-".__LINE__."-model");
     }
