@@ -190,6 +190,6 @@ function set_template_file($template_name,$template_file){
 /* *** */
 function expand_youtube_links($data_item){
     
-    return preg_replace("/https:\/\/(youtu\.be|www\.youtube\.com\/embed)\/(\w+)/", "\n<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/$2\" frameborder=\"0\" allowfullscreen></iframe>", $data_item);    
+    return preg_replace("/https:\/\/(youtu\.be|www\.youtube\.com\/embed)\/(\w+)/", "\n<iframe width=\"100%\" src=\"https://www.youtube.com/embed/$2\" frameborder=\"0\" allowfullscreen></iframe>", $data_item);    
     
 }
