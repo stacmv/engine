@@ -297,7 +297,12 @@ function form_action($is_public=false){
         $_DATA["object"] = array();
     };
     
+    if ($id) $_DATA["id"] = $id;
+    
     $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA["object"]);
+    if ($_DATA["object"]){
+        $_DATA["object"] = form_prepare_view_item($_DATA["object"], $_DATA["fields_form"]);
+    }
           
     // Подготовка дополнительных данных для формы
     if ( function_exists("form_prepare_" . $form_name) ){

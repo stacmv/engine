@@ -17,6 +17,7 @@ function validate_field_type_date($key, $value, FormData $form){
     
     if ( ($field["required"] == "required") || $value ){
         $res = $value == glog_isodate(strtotime($value));
+        dosyslog(__FUNCTION__.": DEBUG: '".$value."' ". ($res == true ? "==" : "!="). "'".glog_isodate(strtotime($value))."'.");
     }else{
         $res = true;
     }
