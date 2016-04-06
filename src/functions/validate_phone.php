@@ -9,11 +9,16 @@ function validate_field_type_phone($key, $value, FormData $form){
     
     
     if ( ($field["required"] == "required") || $value ){
-    
-        $phone_cleared = glog_clear_phone($value); // номер телефона, только цифры.
         
+        $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
         
-        $res = preg_match("/\d{10}$/",$phone_cleared);
+        try {
+            $phoneProto = $phoneUtil->parse($value, "RU");
+            $res= $phoneUtil->isValidNumber($phoneProto);
+        } catch (\libphonenumber\NumberParseException $e) {
+            $res = false;
+        }
+        
     }else{
         $res = true;
         
