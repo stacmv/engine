@@ -13,8 +13,8 @@ function validate_field_type_phone($key, $value, FormData $form){
         $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
         
         try {
-            $phoneProto = $phoneUtil->parse($value, "RU");
-            $res= $phoneUtil->isValidNumber($phoneProto);
+            $phoneProto = $phoneUtil->parse($value, null);
+            $res = $phoneUtil->isValidNumber($phoneProto);
         } catch (\libphonenumber\NumberParseException $e) {
             $res = false;
         }
