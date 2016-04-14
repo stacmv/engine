@@ -39,7 +39,7 @@ function json_array_urlencode($arr){
             if (is_array($v)){
                 $arr[$k] = json_array_urlencode($v);
             }elseif( ! is_numeric($v) ){
-                $arr[$k] = urlencode($v);
+                $arr[$k] = urlencode(addslashes($v));
             };
         };
     }else{
@@ -56,7 +56,7 @@ function json_array_urldecode($arr){
             if (is_array($v)){
                 $arr[$k] = json_array_urldecode($v);
             }else{
-                $arr[$k] = urldecode($v);
+                $arr[$k] = stripslashes(urldecode($v));
             };
         };
     }else{

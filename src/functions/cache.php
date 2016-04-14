@@ -1,6 +1,7 @@
 <?php
 // require PHP 5.4
 define("CACHE_ENABLED", true);
+define("CACHE_DELETE_FLAG", uniqid("cache_del"));
 function cache($value = null){
     if ( ! CACHE_ENABLED ) return null;
         
@@ -15,6 +16,9 @@ function cache($value = null){
         return _cache($key, $value);
     };
 
+}
+function cache_del($key){
+    cache_set($key, CACHE_DELETE_FLAG);
 }
 function cache_get($key){
     return _cache($key);
@@ -32,7 +36,9 @@ function cached($key = null){
         $args     = $dbt[1]["args"];
         
         $hash     = $function . "::" . md5(serialize($args));
-    };
+    }else{
+        $hash = $key;
+    }
     
     return ! is_null(_cache($hash));
 }
@@ -48,6 +54,13 @@ function _cache($key, $value = null){
             return null;
         };
     }else{                     // set into cache
+        if ($value === CACHE_DELETE_FLAG){
+            if (isset($cache[$key])){
+                unset($cache[$key]);
+            };
+            return;
+        }
+        
         $cache[$key] = $value;
         // dosyslog(__FUNCTION__.get_callee().": DEBUG: Запись: ".$function."(".implode(", ", $args).").");
         return $value;

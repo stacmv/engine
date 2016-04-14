@@ -147,6 +147,8 @@ function form_prepare_view_item($item, $fields){
     static $tsv = array();
     
     foreach($item as $key => $value){
+        if (empty($fields[$key])) continue;
+        
         if ( (substr($key,-3) == "_id") || (substr($key,-4) == "_ids") ){
             $obj_name = (substr($key,-4) == "_ids") ? substr($key, 0,-4) : substr($key, 0,-3);
             $get_name_function = "get_".$obj_name."_name";
