@@ -55,7 +55,30 @@ function db_get_table($db_table){
     
     return $table;
 }
-
+function db_get_meta($db_table, $attr){
+    $dbs = array_map("xml_to_array", db_get_tables_list_from_xml($db_table));
+    
+    $db = array_reduce($dbs, function($acc, $db) use ($db_table){
+        if (!is_null($acc)) return $acc;
+        if ($db["@attributes"]["name"] == db_get_name($db_table)){
+           $acc = $db;
+        };
+        return $acc;
+    }, null);
+    
+    $tables = $db["table"];
+    $table = array_reduce($tables, function($acc, $table) use ($db_table){
+        if (!is_null($acc)) return $acc;
+        if ($table["@attributes"]["name"] == db_get_table($db_table)){
+           $acc = $table;
+        };
+        return $acc;
+    }, null);
+    
+    $table_meta = $table["@attributes"];
+    
+    return isset($table_meta[$attr]) ? $table_meta[$attr] : "";
+}
 /* ***********************************************************
 **  DATABASE FUNCTIONS
 **
@@ -977,7 +1000,28 @@ function db_get_table_schema($db_table){
     return $table;
 };
 function db_get_tables($db_name = ""){
-    return db_get_tables_list_from_xml($db_name);
+    
+    $dbs = db_get_tables_list_from_xml($db_name);
+    
+    foreach($dbs as $db){
+        if (!empty($db->table)){
+            foreach($db->table as $xmltable){
+                
+                $cur_db_name = (string)$db["name"];
+            
+                if (empty($tables_list[ $cur_db_name ])) $tables_list[ $cur_db_name ] = array();
+                if (!in_array((string) $xmltable["name"], $tables_list[ $cur_db_name ])){
+                    $tables_list[ $cur_db_name ][] = (string) $xmltable["name"];
+                };
+            };
+        };
+    };
+    
+    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
+    if ($db_name) return $tables_list[$db_name];
+    else return $tables_list;
+    
 }
 function db_get_tables_list($db_name = ""){
     $db_tables_info = db_get_tables($db_name = "");
@@ -1037,24 +1081,8 @@ function db_get_tables_list_from_xml($db_name=""){
         return array();
     };
         
-    foreach($dbs as $db){
-        if (!empty($db->table)){
-            foreach($db->table as $xmltable){
-                
-                $cur_db_name = (string)$db["name"];
-            
-                if (empty($tables_list[ $cur_db_name ])) $tables_list[ $cur_db_name ] = array();
-                if (!in_array((string) $xmltable["name"], $tables_list[ $cur_db_name ])){
-                    $tables_list[ $cur_db_name ][] = (string) $xmltable["name"];
-                };
-            };
-        };
-    };
+    return $dbs;
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
-    if ($db_name) return $tables_list[$db_name];
-    else return $tables_list;
 };
 function db_insert($db_table, ChangesSet $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");

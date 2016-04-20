@@ -53,8 +53,16 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     
     if ($res){
         if ( ! is_null($redirect_on_success) ){
-           $redirect_uri = $redirect_on_success ? $redirect_on_success : (!empty($CFG["URL"]["redirect_on_success_default"]) ? $CFG["URL"]["redirect_on_success_default"] : str_replace(".","__", $db_table) );
-           redirect($redirect_uri);
+            if ($redirect_on_success){
+               $redirect_uri = $redirect_on_success;
+            }elseif (db_get_meta($db_table, "add_success_redirect")){
+                $redirect_uri = db_get_meta($db_table, "add_success_redirect");
+            }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
+                $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
+            }else{
+                $redirect_uri = str_replace(".","__", $db_table);
+            };
+            redirect($redirect_uri);
         };
     }else{
         if ( ! is_null($redirect_on_fail) ){
@@ -537,6 +545,10 @@ function show_data_action(){
             };
             
             $_DATA["items"] = form_prepare_view($_DATA["items"], $_DATA["fields"]);
+            
+            if (empty($_PAGE["title"])){
+                $_PAGE["title"] = $_PAGE["header"] = db_get_meta($model, "comment");
+            };
             
             if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"]["list"]) ){
                 set_template_file("content", $_PAGE["templates"]["list"]);
