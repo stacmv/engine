@@ -15,7 +15,7 @@
 <?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
 <?php endif;?>
-<?php if($field["validate"] == "phone"):?>
+<?php if($field["validate"] == "phone_international"):?>
 	<div class="help-block">
 		
 		<label class="checkbox">
@@ -24,6 +24,12 @@
 		</label>
 			
 	</div>
+<?php elseif($field["type"] == "phone"):?>
+	<script>
+		$(function(){
+			$("#<?=$field["id"];?>").mask("(999)999-99-99");
+		});
+	</script>
 <?php endif;?>
 <?php if($field["type"] == "date"):?>
 	<script>
@@ -51,7 +57,7 @@
 		});
 	</script>
 <?php endif;?>
-<?php if($field["validate"] == "phone"):?>
+<?php if($field["validate"] == "phone_international"):?>
 	<script>
 		$(function(){
 			var maskList = $.masksSort($.masksLoad("assets/bs2/data/phone-codes.json"), ['#'], /[0-9]|#/, "mask");
