@@ -122,8 +122,8 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, Cha
     $table_name = db_get_table($db_table);
     
     // Есть ли таблица history в БД
-    $tables_list = db_get_tables_list_from_xml($db_name);
-    if ( ! in_array("history", $tables_list) ){
+    $tables_list = db_get_tables_list($db_name, $skipHistory = false);
+    if ( ! in_array($db_name.".history", $tables_list) ){
         return true; // не нужно писать историю для это БД
     };
 
@@ -1023,16 +1023,16 @@ function db_get_tables($db_name = ""){
     else return $tables_list;
     
 }
-function db_get_tables_list($db_name = ""){
+function db_get_tables_list($db_name = "", $skipHistory = true){
     $db_tables_info = db_get_tables($db_name = "");
     
     $db_tables_info = array_map(
-        function($db_name, $tables){
+        function($db_name, $tables) use ($skipHistory){
             return array_map(function($table) use ($db_name){
                 return $db_name . "." . $table;
             },
-            array_filter($tables, function($table){
-                return $table != "history";
+            array_filter($tables, function($table) use ($skipHistory){
+                return !($skipHistory && $table == "history");
             }));
         },
         array_keys($db_tables_info),
