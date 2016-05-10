@@ -1,7 +1,7 @@
 <?php
-class EUser implements ArrayAccess
+class EUser extends EModel implements ArrayAccess
 {
-    protected $_user = array();
+    protected $data = array();
     
     static function create_by_id($id){
         $user = new User;
@@ -24,17 +24,17 @@ class EUser implements ArrayAccess
     }
     
     function get_id(){
-        return isset($this->_user["profile"]["id"]) ? $this->_user["profile"]["id"] : null;
+        return isset($this->data["id"]) ? $this->data["id"] : null;
     }
     function get_login(){
-        return isset($this->_user["profile"]["login"]) ? $this->_user["profile"]["login"] : null;
+        return isset($this->data["login"]) ? $this->data["login"] : null;
     }
     function get_username(){
         $username = "";
-        if ( isset($this->_user["profile"]["name"]) ){
-            $username = $this->_user["profile"]["name"];
-        }elseif( isset($this->_user["profile"]["login"]) ){
-            $username = _t("User") . " " . $this->_user["profile"]["login"];
+        if ( isset($this->data["name"]) ){
+            $username = $this->data["name"];
+        }elseif( isset($this->data["login"]) ){
+            $username = _t("User") . " " . $this->data["login"];
         }else{
             $username = _t("Unknown user");
         }
@@ -42,11 +42,12 @@ class EUser implements ArrayAccess
     }
     
     function is_authenticated(){
+        dosyslog(__METHOD__.get_callee().": DEBUG: User 'authenticated' value: '".serialize(@$_SESSION["authenticated"])."'.");
         return ! empty($_SESSION["authenticated"]) ;
     }
     
     protected function init(array $profile){
-        $this->_user["profile"] = $profile;
+        $this->data = $profile;
     }
     
     
@@ -54,18 +55,18 @@ class EUser implements ArrayAccess
     // ArrayAccess implementation
     
     function offsetExists($offset){
-        return isset($this->_user[$offset]);
+        return isset($this->data[$offset]);
         
     }
     function offsetGet($offset){
-        return isset($this->_user[$offset]) ? $this->_user[$offset] : null;
+        return isset($this->data[$offset]) ? $this->data[$offset] : null;
     }
     function offsetSet($offset, $value){
-        $this->_user[$offset] = $value;
+        $this->data[$offset] = $value;
     }
     function offsetUnset($offset){
-        if (isset($this->_user[$offset])){
-            unset($this->_user[$offset]);
+        if (isset($this->data[$offset])){
+            unset($this->data[$offset]);
         };
     }
     

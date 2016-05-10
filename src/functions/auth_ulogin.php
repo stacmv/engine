@@ -64,16 +64,16 @@ function ulogin_unlink_action(){
     if ($_USER["authenticated"]){
         $ulogin_data = db_get("users.ulogin", $id);
         if ($ulogin_data){
-            if ($ulogin_data["user_id"] == $_USER["profile"]["id"]){
-                $comment = "Пользователь user_id:".$_USER["profile"]["id"]." отвязал аккаунт '".$ulogin_data["network"]."'.";
+            if ($ulogin_data["user_id"] == $_USER["id"]){
+                $comment = "Пользователь user_id:".$_USER["id"]." отвязал аккаунт '".$ulogin_data["network"]."'.";
                 list($res, $reason) = db_delete("users.ulogin", $id, $comment);
                 set_session_msg("users.ulogin_delete_".$reason,$reason); 
                 dosyslog(__FUNCTION__.": INFO: ".$comment);
             }else{
-                dosyslog(__FUNCTION__.": ERROR: User user_id:".$_USER["profile"]["id"]." tried to unlink ulogin account with id:'".$id."' which linked to user_id:".$ulogin_data["user_id"].".");
+                dosyslog(__FUNCTION__.": ERROR: User user_id:".$_USER["id"]." tried to unlink ulogin account with id:'".$id."' which linked to user_id:".$ulogin_data["user_id"].".");
             };
         }else{
-            dosyslog(__FUNCTION__.": ERROR: User user_id:".$_USER["profile"]["id"]." tried to unlink ulogin account with id:'".$id."' which is not found in db.");
+            dosyslog(__FUNCTION__.": ERROR: User user_id:".$_USER["id"]." tried to unlink ulogin account with id:'".$id."' which is not found in db.");
         };
     }else{
         dosyslog(__FUNCTION__.": ERROR: User tried to unlink ulogin account with id:'".$id."' but is not authenticated.");
@@ -89,12 +89,12 @@ function auth_ulogin_authenticate(){
     
     $ulogin_data = db_find("users.ulogin", "identity", $_SESSION["ulogin"]["user"]["identity"], DB_RETURN_ROW | DB_RETURN_ONE);
         
-    $authenticated = ($ulogin_data["user_id"] == $_USER["profile"]["id"]);
+    $authenticated = ($ulogin_data["user_id"] == $_USER["id"]);
     
     if ($authenticated){
-        dosyslog(__FUNCTION__.": Notice: User '" . $_USER["profile"]["login"]."' (user_id:".$_USER["profile"]["id"].") authenticated via identity '", $_SESSION["ulogin"]["user"]["identity"] ."'.");
+        dosyslog(__FUNCTION__.": Notice: User '" . $_USER["login"]."' (user_id:".$_USER["id"].") authenticated via identity '", $_SESSION["ulogin"]["user"]["identity"] ."'.");
     }else{
-        dosyslog(__FUNCTION__.": WARNING: User '" . $_USER["profile"]["login"]."' (user_id:".$_USER["profile"]["id"].") IS NOT authenticated via identity '", $_SESSION["ulogin"]["user"]["identity"] . " profile is not linked.");
+        dosyslog(__FUNCTION__.": WARNING: User '" . $_USER["login"]."' (user_id:".$_USER["id"].") IS NOT authenticated via identity '", $_SESSION["ulogin"]["user"]["identity"] . " profile is not linked.");
     };
     
     return $authenticated ? time() : false;
@@ -137,7 +137,7 @@ function auth_ulogin_link_profile(){
         if ( ! empty($ulogin_data) ){
             if ($ulogin_data["user_id"] == $user_id){
                 $data = array("to" => $ulogin_user);
-                $data["to"]["isDeleted"] = null;
+                $data["to"]["deleted"] = null;
                 $data["from"] = $ulogin_data;
                 $comment = "Existed link restored for user_id".$user_id;
                 list($res, $reason) = db_edit("users.ulogin", $ulogin_data["id"], db_translate_changes($data,1), $comment);

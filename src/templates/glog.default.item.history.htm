@@ -1,0 +1,28 @@
+<?php // !!! Don't use double quotes in output since in may be embedded in HTML attribute (double-quoted);?>
+
+<table class='table table-bordered table-striped table-condensed'>
+<thead><tr><th>Дата-время</th><th>Статус</th><th>Оператор</th><th>Комментарий</th></tr></thead>
+<tbody>
+<?php foreach($item_history as $hist):?>
+	<?php $state_name = isset($states[$hist["state"]]) ? $states[$hist["state"]]["caption"] : $hist["state"];?>
+	<tr>
+		<td><?=show_date($hist["timestamp"], SHOW_DATE_AGO);?></td>
+		<td>
+			<?php if ($hist["state"] == 0):?>
+				<span class='lead_state_<?=$hist["state"];?> label label-warning'><?=$state_name;?></span>
+			<?php elseif ($hist["state"] == 160):?>
+				<span class='lead_state_<?=$hist["state"];?> label'><?=$state_name;?></span>
+			<?php elseif ($hist["state"] & 128):?>
+				<span class='lead_state_<?=$hist["state"];?> label label-success'><?=$state_name;?></span>
+			<?php elseif ($hist["state"] & 32):?>
+				<span class='lead_state_<?=$hist["state"];?> label label-important'><?=$state_name;?>	</span>
+			<?php else:?>
+				<span class='lead_state_<?=$hist["state"];?>'><?=$state_name;?></span>
+			<?php endif;?>
+		</td>
+		<td><?=EUsers::get_username_by_id($hist["subjectId"]);?></td>
+		<td><?=nl2br($hist["comment"]);?></td>
+	</tr>
+<?php endforeach;?>
+</tbody>
+</table>

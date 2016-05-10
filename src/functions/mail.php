@@ -74,9 +74,9 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     
     // //////
     if (DEV_MODE){
-        if ( ! empty($_USER["profile"]) ){ // current user (tester) is authenticated
+        if ( ! empty($_USER) ){ // current user (tester) is authenticated
             $message = "Test message for: " . $email . "<hr><br>\n" . $message;
-            $to = !empty($_USER["profile"]["email"]) ? $_USER["profile"]["email"] : null;
+            $to = !empty($_USER["email"]) ? $_USER["email"] : null;
             if (!$to){
                 die("Code: mail-".__LINE__."-Set_your_email_in_profile!");
             }

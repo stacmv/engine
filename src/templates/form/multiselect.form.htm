@@ -1,5 +1,5 @@
 <input type="hidden" name="to[<?=$field["name"];?>]" value="null">
-<select multiple data-placeholder="-"
+<select multiple size="1" data-placeholder="-"
 	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
 	id="<?=$field["name"];?>"
 	class="form-control input-xxlarge <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"

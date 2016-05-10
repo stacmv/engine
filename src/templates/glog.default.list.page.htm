@@ -1,0 +1,80 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["base"],
+	$CFG["URL"]["ext"],
+	$CFG["GENERAL"]["app_name"],
+	$model,
+	$filter,
+	$nav,
+	$items_by_group,
+	$groups_data,
+	$fields,
+
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+
+?>
+<?php if ( !empty($auto_reload) ):?>
+<script>
+	window.setTimeout(function(){location.reload()}, <?=$auto_reload;?>*1000);
+</script>
+<?php endif;?>
+
+<article class="app_content">
+	%%glog.default.list.nav%%
+	
+	<div class="page-header">
+		<h1>
+			<div class="pull-right">
+				<a href="form/add/<?=$item_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> </a>
+			</div>
+			<?php if ( !empty($items_by_group) ):?>
+				<div class="pull-right">
+					<?php foreach($groups_data as $group):?>
+						<?php if ( isset($items_by_group[$group["value"]]) && (count($items_by_group[$group["value"]]) > 0) ):?>
+							<a class="btn btn-link" href="<?=$_SERVER["REQUEST_URI"];?>#group<?=$group["value"];?>"><?=$group["caption"];?> (<?=count($items_by_group[$group["value"]]);?>)</a>&nbsp;&nbsp;
+						<?php endif;?>
+					<?php endforeach;?>
+				</div>
+			<?php endif;?>
+			<?=$_PAGE["header"];?>
+		</h1>
+	</div>
+		
+	<?php if(empty($items_by_group)):?>
+		<div class="alert alert-warning">
+			Нет данных за период.
+		</div>
+	<?php else:?>
+			
+		
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<?php foreach($groups_data as $group):?>
+					<?php if (empty($items_by_group[$group["value"]])) continue;?>
+					<?php $items = $items_by_group[$group["value"]];?>
+				
+					<a name="state<?=$group["value"];?>" style="display:block;margin-bottom:100px"></a>
+					<h3><?=$group["caption"];?> (<?=count($items);?>)</h3>
+
+					<?php if (file_exists(cfg_get_filename("templates", "glog." . $model.".table.htm"))):?>
+						<?php include( cfg_get_filename("templates", "glog." . $model.".table.htm") );?>
+					<?php elseif (file_exists(cfg_get_filename("templates", "data_list." . $model.".table.htm"))):?>
+						<?php include( cfg_get_filename("templates", "data_list." . $model.".table.htm") );?>
+					<?php else:?> 
+						<?php include( cfg_get_filename("templates", "data_list.default.table.htm") );?>
+					<?php endif;?>
+					
+					
+					<div class="pull-right">
+						<a href="<?=$_SERVER["REQUEST_URI"];?>#top">Наверх</a>
+					</div>
+				<?php endforeach;?>
+			</div>
+		</div>
+	<?php endif;?>
+</article> <!-- /.app_content -->
+<?php
+	unset($_SESSION["msg"]);
+	unset($_SESSION["to"]);
+?>

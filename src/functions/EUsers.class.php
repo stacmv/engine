@@ -1,5 +1,5 @@
 <?php
-class EUsers{
+class EUsers extends ERepository{
     const DB_TABLE = "users";
     
     static public function find($key, $value){

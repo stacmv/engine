@@ -48,20 +48,20 @@ function auth_http_basic_authenticate($password_field="pass"){
     if ( isset($_SESSION["http_basic"]["ident"]) && isset($_SESSION["http_basic"]["pass"]) ){
 		if (!empty($_SESSION["http_basic"]["user_id"])){
 			
-			if( ! empty($_USER["profile"]) && ! empty($_USER["profile"][$password_field]) ){
+			if( ! empty($_USER) && ! empty($_USER[$password_field]) ){
                
 				if (
-                    passwords_verify($_SESSION["http_basic"]["pass"], $_USER["profile"][$password_field]) &&
-                    ( $_USER["profile"]["login"] === $_SESSION["http_basic"]["ident"])
+                    passwords_verify($_SESSION["http_basic"]["pass"], $_USER[$password_field]) &&
+                    ( $_USER["login"] === $_SESSION["http_basic"]["ident"])
                    )
                 {
                     $authenticated = true;
-                    dosyslog(__FUNCTION__.": NOTICE: User '".$_USER["profile"]["login"]."' authenticated.");
+                    dosyslog(__FUNCTION__.": NOTICE: User '".$_USER["login"]."' authenticated.");
 				}else{
-					dosyslog(__FUNCTION__.": NOTICE: Wrong password for login '".(!empty($_USER["profile"]["login"]) ? $_USER["profile"]["login"] :"_unlnown_")."' entered. User id: ".$_USER["profile"]["id"]);
+					dosyslog(__FUNCTION__.": NOTICE: Wrong password for login '".(!empty($_USER["login"]) ? $_USER["login"] :"_unlnown_")."' entered. User id: ".$_USER["id"]);
 				};
 			}else{
-				dosyslog(__FUNCTION__.": ERROR: Can not get user profile for id '".$_USER["profile"]["id"]."'. User fallback to guest.");
+				dosyslog(__FUNCTION__.": ERROR: Can not get user profile for id '".$_USER["id"]."'. User fallback to guest.");
 			};
 		}else{
             dosyslog(__FUNCTION__.": NOTICE: Visitor is guest.");

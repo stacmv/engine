@@ -1,0 +1,24 @@
+<?php if ($nav["start"] == $nav["end"]):?>
+	<div class="row-fluid">
+		<?php if($nav["prev"]):?>
+			<div class="span2">
+				<a href="<?=$model;?><?=$CFG["URL"]["ext"];?>?fmax=<?=$nav["prev"]["value"];?>" class="btn btn-small"><i class="icon icon-backward"></i> <?=$nav["prev"]["caption"];?></a>
+			</div>
+		<?php endif;?>
+		
+		<div class="span8 text-center">
+			<?php if ($filter == "date"):?>
+				<a href="<?=$model;?><?=$CFG["URL"]["ext"];?>?fmax=<?=glog_isodate();?>" class="btn btn-small">Сегодня: <?=glog_rusdate();?></a>
+			<?php endif;?>
+		</div>
+		
+		<?php if($nav["next"]):?>
+			<div class="span2 text-right">
+				<?php if ($nav["next"]):?>
+					<a href="<?=$model;?><?=$CFG["URL"]["ext"];?>?fmax=<?=$nav["next"]["value"];?>" class="btn btn-small"><?=$nav["next"]["caption"];?>> <i class="icon icon-forward"></i></a>
+				<?php endif;?>
+			</div>
+		<?php endif;?>
+		<p>&nbsp;</p>
+	</div>
+<?php endif;?>

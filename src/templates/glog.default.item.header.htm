@@ -1,0 +1,13 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["ext"],
+	$item,
+	$nav,
+
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+?>
+<h1>
+	<?if ($nav["list"]):?>
+		<a href="<?=$nav["list"]["uri"];?><?=$CFG["URL"]["ext"];?>" class="btn">&larr; <?=$nav["list"]["caption"];?></a>
+	<?=$item["name"];?>
+</h1>

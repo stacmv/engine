@@ -1,0 +1,37 @@
+<?php
+foreach(@array(
+	$fields,
+	$model,
+	$item,
+
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+?>
+<table border="1" cellspacing="0" width="100%" class="table table-bordered table-striped">
+	<?php foreach($fields as $field):?>
+		<?php if(!isset($item[$field["name"]])) continue;?>
+		<tr>
+			<?php if ($field["label"]):?>
+				<th><?=$field["label"];?></th>
+			<?php endif;?>
+			<td <?php if ( ! $field["label"] ):?>colspan="2"<?php endif;?>>
+				<?php if (file_exists( cfg_get_filename("templates", "glog." . $model . "." . $field["name"] .".htm") )):?>
+					<?php include cfg_get_filename("templates", "glog." . $model . "." . $field["name"] .".htm") ;?>
+				<?php elseif (file_exists( cfg_get_filename("templates", "glog." . $model . "." . $field["type"] .".htm") )):?>
+					<?php include cfg_get_filename("templates", "glog." . $model . "." . $field["type"] .".htm");?>
+				<?php elseif (file_exists( cfg_get_filename("templates", "glog." . $field["type"] .".htm") )):?>
+					<?php include cfg_get_filename("templates", "glog." . $field["type"] .".htm");?>
+				<?php elseif (isset($item["_" . $field["name"]])):?>
+					<?php if (is_string($item["_" . $field["name"]])):?>
+						<?=$item["_" . $field["name"]];?>
+					<?php else:?>
+						<?=json_encode_array($item["_" . $field["name"]]);?>
+					<?php endif;?>
+				<?php elseif (is_string($item[$field["name"]])):?>
+					<?=$item[$field["name"]];?>
+				<?php else:?>
+					<?=json_encode_array($item[$field["name"]]);?>
+				<?php endif;?>
+			</td>
+		</tr>
+	<?php endforeach;?>
+</table>

@@ -12,10 +12,12 @@ foreach(@array(
 		<input type="hidden" name="id" value="<?=$object["id"];?>">
 	<?php endif;?>
 	
-	%%form_generate%%
+	<?php include cfg_get_filename("templates", "form_generate.block.htm");?>
 		
 	<div class="pull-right">
 		<input class="btn btn-success" type="submit" value="Сохранить">
-		<a class="btn btn-default" href="<?=( !empty($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : $db_table . $CFG["URL"]["ext"] );?>">Отменить</a>
+		<?php if (!isset($cancel_btn) || ($cancel_btn !== false)):?>
+			<a class="btn btn-default" href="<?=( !empty($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : $db_table . $CFG["URL"]["ext"] );?>">Отменить</a>
+		<?php endif;?>
 	</div>
 </form>

@@ -20,7 +20,7 @@ require APP_DIR . "require.php";
 <head>
     <meta charset="UTF-8">
     <base href="../../">
-    <link rel="stylesheet" href="assets/css/bootstrap-combined.min.css">
+    <link rel="stylesheet" href="assets/bs2/css/bootstrap-combined.min.css">
 </head>
 <body>
 <div class="container">

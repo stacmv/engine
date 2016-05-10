@@ -4,18 +4,34 @@
 <input type="hidden" name="to[<?=$field["name"];?>]" value="null">
 <select 
 	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
-	<?php if (isset($field["name"])):?>id="<?=$field["name"];?>"<?php endif;?> 
+	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"
+	<?php elseif (isset($field["name"])):?>id="<?=$field["name"];?>"
+	<?php endif;?> 
 	class="form-control <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
 >
 	<?php if ( empty($field["readonly"])):?>
 		<option></option>
+		<?php $in_optgroup = false;?>
 		<?php foreach($field["values"] as $caption=>$value):?>
+			<?php if ($value == "optgroup"):?>
+				<?php if ($in_optgroup):?>
+					</optgroup>
+				<?php endif;?>
+				<optgroup label="<?=$caption;?>">
+				<?php $in_optgroup = true;?>
+				<?php continue;?>
+			<?php endif;?>
+			
+			
 			<?php if ( ! is_int($caption) ):?>
 				<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
 			<?php else:?>
 				<option <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
 			<?php endif;?>
 		<?php endforeach;?>
+		<?php if ($in_optgroup):?>
+			</optgroup>
+		<?php endif;?>
 	<?php else:?>
 		<?php if (!empty($field["value"])):?>
 			<?php if (is_array($field["value"])):?>

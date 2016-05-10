@@ -309,7 +309,7 @@ function SETPARAMS(){
                     break;
                     
                 default:
-                    dosyslog(__FUNCTION__.": ERROR: Parameter source '" . $fparam["source"] . "' does not supported. Attribute 'source' of parameter '" . $fparam_name . "'. URI: '" . $_URI . "'.");
+                    dosyslog(__FUNCTION__.": ERROR: Parameter source '" . @$fparam["source"] . "' does not supported. Attribute 'source' of parameter '" . $fparam_name . "'. URI: '" . $_URI . "'.");
                     break;
             }; // switch
                         

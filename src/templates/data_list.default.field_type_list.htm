@@ -1,0 +1,7 @@
+<?php if(!empty($item[ $field["name"] ])):?>
+	<ul>
+		<?php foreach(isset($item["_".$field["name"]]) ? $item["_" . $field["name"] ] : $item[ $field["name"] ] as $v):?>
+			<li><?=$v;?></li>
+		<?php endforeach;?>
+	</ul>
+<?php endif;?>

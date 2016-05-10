@@ -448,8 +448,8 @@ if (!function_exists("get_user_login")){
         global $_USER;
         
         if ( ! $user_id ){
-            if ( isset($_USER["profile"]["login"])){
-                $login = $_USER["profile"]["login"];
+            if ( isset($_USER["login"])){
+                $login = $_USER["login"];
             };
         }else{
             
@@ -463,83 +463,84 @@ if (!function_exists("get_user_login")){
         return "";
     }
 }
-if (!function_exists("get_user_registered_ip")){
-    function get_user_registered_ip($user_id="", $login="", $ip="", $register_new_ip = false){
+// DEPRECATED since 2016-05-05
+// if (!function_exists("get_user_registered_ip")){
+    // function get_user_registered_ip($user_id="", $login="", $ip="", $register_new_ip = false){
         // $register_new_ip    Регистрировать новые IP, если БД нет записей по (user_id, login, ip)
         
         // TODO: Переписать устаревший код
-        global $S;
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        // global $S;
+        // if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
                 
-        $ip_records = array();
-        $result = array();
+        // $ip_records = array();
+        // $result = array();
         
-        $where = "";
-        $limit = "";
-        if ( userHasRight("manager") ){
-            if ($user_id == "all") $user_id = "";
-            if ($login == "all") $login = "";
-            if ($ip == "all") $ip = "";
+        // $where = "";
+        // $limit = "";
+        // if ( userHasRight("manager") ){
+            // if ($user_id == "all") $user_id = "";
+            // if ($login == "all") $login = "";
+            // if ($ip == "all") $ip = "";
             
             
-            if ($user_id || $login || $ip){
+            // if ($user_id || $login || $ip){
                 
-                if ( $user_id ) $where .= "user_id = '".sqlite_escape_string($user_id)."' ";
-                if ( $login || $ip ) $where .= " AND ";
-                if ( $login ) $where .= " login = '".sqlite_escape_string($login)."' ";
-                if ( $ip ) $where .= " AND ";
-                if ( $ip ) $where .= " ip = '".sqlite_escape_string($ip)."' ";
-            };
+                // if ( $user_id ) $where .= "user_id = '".sqlite_escape_string($user_id)."' ";
+                // if ( $login || $ip ) $where .= " AND ";
+                // if ( $login ) $where .= " login = '".sqlite_escape_string($login)."' ";
+                // if ( $ip ) $where .= " AND ";
+                // if ( $ip ) $where .= " ip = '".sqlite_escape_string($ip)."' ";
+            // };
                         
-            if ( ($user_id || $login) && $ip ) $limit = " LIMIT 1";
+            // if ( ($user_id || $login) && $ip ) $limit = " LIMIT 1";
 
-        }else{
+        // }else{
             
-            $user_id = $_USER["profile"]["id"];
-            if ($_USER["authenticated"]){
-                $login   = $_USER["profile"]["login"];
-            }
+            // $user_id = $_USER["id"];
+            // if ($_USER["authenticated"]){
+                // $login   = $_USER["login"];
+            // }
             
-            $where .= "user_id = '".sqlite_escape_string($user_id)."' ";
-            $where .= " AND ";
-            $where .= " login = '".sqlite_escape_string($login)."' ";
-            if ( $ip ) $where .= " AND ";
-            if ( $ip ) $where .= " ip = '".sqlite_escape_string($ip)."' ";
+            // $where .= "user_id = '".sqlite_escape_string($user_id)."' ";
+            // $where .= " AND ";
+            // $where .= " login = '".sqlite_escape_string($login)."' ";
+            // if ( $ip ) $where .= " AND ";
+            // if ( $ip ) $where .= " ip = '".sqlite_escape_string($ip)."' ";
             
-            if ( $ip ) $limit = " LIMIT 1";
+            // if ( $ip ) $limit = " LIMIT 1";
 
-        }
+        // }
         
-        if ( ! $where ) $where .= "isDeleted IS NULL";
-        else $where .= "AND isDeleted IS NULL";
+        // if ( ! $where ) $where .= "deleted IS NULL";
+        // else $where .= "AND deleted IS NULL";
         
-        $query = "SELECT * FROM ip WHERE ". $where . $limit . ";";
+        // $query = "SELECT * FROM ip WHERE ". $where . $limit . ";";
         
         
-        $ip_records = db_select("users.ip", $query);
+        // $ip_records = db_select("users.ip", $query);
         
-        if (empty($ip_records)){
-            dosyslog(__FUNCTION__.": WARNING: No IP records found.");
+        // if (empty($ip_records)){
+            // dosyslog(__FUNCTION__.": WARNING: No IP records found.");
             
-            if ($register_new_ip){
-                if ( register_user_ip($user_id, $login, $ip, false) ){
-                    dosyslog(__FUNCTION__ . ": WARNING: Registered new IP (".$ip.") for user (".$user_id.", ".$login.").");
-                    $result = get_user_registered_ip($user_id, $login, $ip, false);
+            // if ($register_new_ip){
+                // if ( register_user_ip($user_id, $login, $ip, false) ){
+                    // dosyslog(__FUNCTION__ . ": WARNING: Registered new IP (".$ip.") for user (".$user_id.", ".$login.").");
+                    // $result = get_user_registered_ip($user_id, $login, $ip, false);
                     
-                }else{
-                    dosyslog(__FUNCTION__ . ": ERROR: Failed registering new IP (".$ip.") for user (".$user_id.", ".$login.").");
-                }
-            };
+                // }else{
+                    // dosyslog(__FUNCTION__ . ": ERROR: Failed registering new IP (".$ip.") for user (".$user_id.", ".$login.").");
+                // }
+            // };
             
-        }else{
-            if ( ($user_id || $login) && $ip ) $result = $ip_records[0];
-            else $result = $ip_records;
-        }
+        // }else{
+            // if ( ($user_id || $login) && $ip ) $result = $ip_records[0];
+            // else $result = $ip_records;
+        // }
            
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        return $result;   
-    }
-}
+        // if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+        // return $result;   
+    // }
+// }
 if (!function_exists("logout")){
     function logout(){
         global $_USER;
@@ -779,7 +780,7 @@ if (!function_exists("show_page")){
     };
 };
 if (!function_exists("userHasRight")){
-    function userHasRight($right,$login=""){
+    function userHasRight($right, $login="", $object_accessed = null ){
         global $_USER;
         $user = array();
        
@@ -787,18 +788,18 @@ if (!function_exists("userHasRight")){
           // ИЛИ - |
         if (strpos($right,"|") > 0){
             $OR_rights = explode("|", $right, 2);
-            return userHasRight($OR_rights[0], $login) || userHasRight($OR_rights[1], $login);
+            return userHasRight($OR_rights[0], $login, $object_accessed) || userHasRight($OR_rights[1], $login, $object_accessed);
           // И - , 
         }elseif(strpos($right,",") > 0){
             $AND_rights = explode(",", $right, 2);
-            return userHasRight($AND_rights[0], $login) && userHasRight($AND_rights[1], $login);
+            return userHasRight($AND_rights[0], $login, $object_accessed) && userHasRight($AND_rights[1], $login, $object_accessed);
         };
         
         $right = trim($right);
         
         
         if ( ! $login ){
-            if ( empty($_USER["profile"]["acl"]) ){
+            if ( empty($_USER["acl"]) ){
                 if ( $_USER["authenticated"] ){
                     dosyslog(__FUNCTION__.": ERROR: ".$login.": права не заданы.");
                 };
@@ -806,7 +807,7 @@ if (!function_exists("userHasRight")){
             };
             
             $login = $_USER->get_login();
-            $user_rights = $_USER->is_authenticated() ? $_USER["profile"]["acl"] : array();
+            $user = $_USER->is_authenticated() ? $_USER : array();
         }else {
             $users = EUsers::find("login", $login);
             if (count($users)==0){
@@ -817,12 +818,22 @@ if (!function_exists("userHasRight")){
                 return false;
             }else{
                 $user = $users[0];
-                $user_rights = $user["acl"];
             };
         };
+        
+        $user_rights = !empty($user) ? $user["acl"] : array();
+        
+        // Ownership of object_accessed
+        if ($object_accessed){
+            
+            if (! empty($object_accessed["user_id"]) && ($object_accessed["user_id"] == $user["id"])){
+                $user_rights[] = "owner";
+            };
+        };
+        
         $res = !empty($user_rights) && in_array($right, $user_rights);
         
-        // dosyslog(__FUNCTION__.": DEBUG: ".$login." ".($res?"имеет право " : "не имеет права "). $right);
+        dosyslog(__FUNCTION__.": DEBUG: ".$login." ".($res?"имеет право " : "не имеет права "). $right);
         
         return $res;
     };
@@ -840,9 +851,9 @@ if (!function_exists("user_has_access_by_ip")){
         if ( ! $ip ) $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "";
         
         if ( ! $user_id && ! $login ){
-            $user_id = $_USER["profile"]["id"];
+            $user_id = $_USER["id"];
             if ($_USER["authenticated"]){
-                $login   = $_USER["profile"]["login"];
+                $login   = $_USER["login"];
             }
         }elseif( ! $user_id && $login ){
             $user = get_user_by_login($login);

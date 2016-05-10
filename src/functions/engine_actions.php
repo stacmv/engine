@@ -185,7 +185,15 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 
     if ($res){
         if ( ! is_null($redirect_on_success) ){
-            $redirect_uri = $redirect_on_success ? $redirect_on_success : (!empty($CFG["URL"]["redirect_on_success_default"]) ? $CFG["URL"]["redirect_on_success_default"] : str_replace(".","__", $db_table));
+            if ($redirect_on_success){
+               $redirect_uri = $redirect_on_success;
+            }elseif (db_get_meta($db_table, "edit_success_redirect")){
+                $redirect_uri = db_get_meta($db_table, "edit_success_redirect");
+            }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
+                $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
+            }else{
+                $redirect_uri = str_replace(".","__", $db_table);
+            };
             redirect($redirect_uri);
         };
     }else{
@@ -528,48 +536,45 @@ function show_data_action(){
     global $_DATA;
     global $_PAGE;
     
-    $id    = ! empty($_PARAMS["id"]) ? (int) $_PARAMS["id"] : null; 
-    $model = ! empty($_PARAMS["model"]) ? $_PARAMS["model"] : null; 
-    $mode  = $id ? "item" : "list";
-    
-    if ($model){
-        $obj_name = db_get_obj_name($model);
-        $_DATA["fields"] = form_get_fields($model,"show_data");
-        $_DATA["item_name"] = $obj_name;
-        if ($mode == "list"){ // 
-            $get_all_function = "get_".$model;
-            if (function_exists($get_all_function)){
-                $_DATA["items"] = call_user_func($get_all_function, "all");
-            }else{
-                $_DATA["items"] = db_get($model, "all", DB_RETURN_NEW_FIRST);
-            };
-            
-            $_DATA["items"] = form_prepare_view($_DATA["items"], $_DATA["fields"]);
-            
-            if (empty($_PAGE["title"])){
-                $_PAGE["title"] = $_PAGE["header"] = db_get_meta($model, "comment");
-            };
-            
-            if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"]["list"]) ){
-                set_template_file("content", $_PAGE["templates"]["list"]);
-            };
-        }else{
-            $get_item_function = "get" . $obj_name;
-            if (function_exists($get_item_function)){
-                $_DATA["item"] = call_user_func($get_item_function, $id);
-            }else{
-                $_DATA["item"] = db_get($model, $id);
-            };
-            if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"]["item"]) ){
-                set_template_file("content", $_PAGE["templates"]["item"]);
-            };
-        }
-        
-        $_DATA["form_name"] = $model . "_" . $mode;
-        
-    }else{
+    $db_table = ! empty($_PARAMS["model"]) ? $_PARAMS["model"] : null; 
+    if (!$db_table) {
         die("Code: ea-".__LINE__."-model");
-    }
+    };
+    
+    $id    = ! empty($_PARAMS["id"]) ? (int) $_PARAMS["id"] : null; 
+    $mode  = $id ? "item" : "list";
+    $obj_name = db_get_obj_name($db_table);
+    $form_name = $id ? "show_".$obj_name : "list_".$db_table;
+    
+    $repository = ERepository::create($db_table, $form_name);
+    if ($mode == "list"){ // 
+        $_DATA["items"] = $repository->fetchAll();
+    }else{
+        $_DATA["items"] = $repository->load($id)->fetchAll();
+    };
+    
+    
+    
+    $_DATA["fields"] = array_filter(form_get_fields($db_table, $form_name), "check_form_field_acl");
+    $_DATA["items"]  = array_filter($_DATA["items"], function($item) use ($db_table){
+            return check_data_item_acl($item, $db_table);
+    });
+        
+    $_DATA["items"] = form_prepare_view($_DATA["items"], $_DATA["fields"]);
+    
+    if (empty($_PAGE["title"])){
+        $_PAGE["title"] = $_PAGE["header"] = db_get_meta($db_table, "comment");
+    };
+    
+    if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"][$mode]) ){
+        set_template_file("content", $_PAGE["templates"][$mode]);
+    };
+    
+    $_DATA["item_name"] = $obj_name;
+    $_DATA["form_name"] = $form_name;
+    $_DATA["model"]     = $db_table;
+
+    
 }
 function show_login_form_action(){
     global $_DATA;

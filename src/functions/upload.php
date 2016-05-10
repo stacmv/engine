@@ -6,13 +6,13 @@ function upload_get_dir($storage_name, $folder = "", $user_id = ""){
     $dir = FILES_DIR . glog_codify($storage_name) ."/";
     
     if ( empty($user_id) ){
-        if ( ! empty($_USER["profile"]["id"]) ){
-            $user_id = $_USER["profile"]["id"];
+        if ( ! empty($_USER["id"]) ){
+            $user_id = $_USER["id"];
         };
     };
     
     if ( ! empty($user_id) ){
-        $dir .= glog_codify($_USER["profile"]["id"]) . "/";
+        $dir .= glog_codify($_USER["id"]) . "/";
     };
     
     if ( $folder ){
