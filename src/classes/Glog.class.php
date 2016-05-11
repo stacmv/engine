@@ -15,6 +15,7 @@ final class Glog
     private $model_name;
     private $model;
     private $repository;
+    private $states;
 
     
     public function urlBuilder(EModel $item = null, $options = ""){
@@ -55,7 +56,7 @@ final class Glog
     
     public function __construct(array $params = array()){
         foreach($params as $k=>$v){
-            if ($k == "model"){
+            if ($k == "db_table"){
                 $this->repository = ERepository::create($v);
             }elseif (property_exists(__CLASS__, $k)){
                 $this->$k = $v;

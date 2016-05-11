@@ -42,6 +42,7 @@ function escape_template_data($data_item){
     if ( is_array($data_item) ){
         return array_map("escape_template_data", $data_item);
     }elseif(is_object($data_item)){
+        
         if (method_exists($data_item, "jsonSerialize")){
             return array_map("escape_template_data", $data_item->jsonSerialize());
         }else{

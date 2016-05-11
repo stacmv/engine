@@ -45,8 +45,13 @@ function show_glog_list_action(){
 
     
         
-    $_DATA["items_by_group"] = $glog->all();
-        
+    $_DATA["items_by_group"] = array_map(function($items){
+        return array_map(function($item){
+            $view = View::getView($item);
+            return $view->prepare("list");
+        }, $items);
+    }, $glog->all());
+    
     
     $_DATA["groups_data"] = $glog->getGroups();
       
@@ -72,10 +77,12 @@ function show_glog_item_action(){
         $glogItem = (new Glog($_PARAMS))->getItem($id);
         
         
-        $_DATA["item"] = $glogItem;
-        
-        $_DATA["model"] = $glogItem->model_name;
-        $_DATA["fields"] =$glogItem->fields;
+        $view = View::getView($glogItem);
+        $_DATA["item"] = $view->prepare();
+                
+        $_DATA["db_table"]  = $glogItem->db_table;
+        $_DATA["model"]  = $glogItem->model_name;
+        $_DATA["fields"] = $view->getFields("item");
         
         // Навигация
         $_DATA["nav"] =  $glogItem->nav();
@@ -83,10 +90,10 @@ function show_glog_item_action(){
         
         
         // Модерация
-        $_DATA["moderation_needed"] = $glogItem->moderationNeeded();
-        $_DATA["moderation_forms"]  = $glogItem->moderationForms();
+        $_DATA["moderation_needed"] = !empty($glogItem["state"]["moderation_form"]);
+        $_DATA["moderation_forms"]  = array($glogItem["state"]["moderation_form"]);
         
-        // dump($_DATA["moderation_needed"]);die();
+        
         
         // Операции
         $_DATA["controls"] = $glogItem->controls();

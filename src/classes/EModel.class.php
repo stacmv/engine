@@ -7,6 +7,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     
     protected $fields;
     protected $data;
+    protected $data_before_changes;
     
 
     
@@ -18,9 +19,11 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
             if (in_array($k, array_merge(array_keys($this->fields), $this->common_fields))){
                 $this->data[$k] = $v;
             }else{
-                $thsis->data["extra"][$k] = $v;
+                $this->data["extra"][$k] = $v;
             }
         };
+        
+        $this->data_before_changes = $this->data;
     }
 
     public static function prepare_view($itemData, $fields, $strict = false){
@@ -100,7 +103,27 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         };
     }
     
+    public function modify(array $to, array $from){
+        foreach($to as $k=>$v){
+            $this->data[$k] = $v;
+        }
+        
+        return $this;
+    }
     
+    public function save($comment=""){
+        
+        if (!empty($this->data["id"])){
+            list($res, $reason) = db_edit($this->db_table, $this->data["id"], new ChangesSet($this->data, $this->data_before_changes), $comment);
+        }else{
+            $res = db_add($this->db_table, new ChangesSet($this->data), $comment);
+            if ($res){
+                $this->data["id"] = $res;
+            };
+        }
+        
+        return $this;
+    }
     
     public function __get($key){
         if ($key == "db_table") return $this->db_table;
@@ -158,11 +181,11 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     /* jsonSerializable implementation */
     public function jsonSerialize(){
         
-        $item = self::prepare_view($this->data, form_get_fields($this->db_table, "show_".$this->model_name), $strict = true);
-        
+        $item = $this->data;
+                
         if (empty($this->data["link"]))     $item["link"]  = $this->getLink();
         if (empty($this->data["history"]))  $item["history"]  = $this->getHistory();
-        
+                
         return $item;
         
     }

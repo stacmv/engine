@@ -6,12 +6,13 @@ foreach(@array(
 	$model,
 	$item,
 	$moderation_needed,
+	$moderation_forms,
 
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 ?>
 
 <?php if($moderation_needed):?>
-	<?php foreach($moderation_needed as $moderation_form_file):?>
+	<?php foreach($moderation_forms as $moderation_form_file):?>
 		<?php if (file_exists(cfg_get_filename("templates", $moderation_form_file))):?>
 			<?php include cfg_get_filename("templates", $moderation_form_file);?>
 		<?php else:?>

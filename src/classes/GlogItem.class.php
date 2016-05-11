@@ -1,5 +1,5 @@
 <?php
-class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
+class GlogItem extends EModel implements ArrayAccess, jsonSerializable, IteratorAggregate
 {
     private $id;
     private $glog;
@@ -7,6 +7,7 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
     private $statesData;
     private $editable;
     private $state;
+       
     
     
     private function stateField(){
@@ -26,6 +27,12 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
         $this->model = $model;
         $this->glog = $glog;
         $this->id = $model["id"];
+        
+        $this->common_fields = $this->model->common_fields;
+        $this->db_table = $this->model->db_table;
+        $this->model_name = $this->model->model_name;
+        $this->fields     = $this->model->fields;
+        
         
         $stateField = $this->stateField();
         
@@ -100,13 +107,6 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
         return $hist;
     }
     
-    
-    public function moderationForms(){
-        return array();
-    }
-    public function moderationNeeded(){
-        return false;
-    }
     public function nav(){
                 
         $nav = array(
@@ -121,6 +121,27 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
         return $nav;
     }
     
+    public function modify(array $to, array $from){
+        $this->model = $this->model->modify($to, $from);
+        return $this;
+        
+    }
+    public function save($comment = ""){
+        $this->model[$this->stateField()] = $this->state["value"];
+        $this->model->save($comment);
+        return $this;
+    }
+    
+    public function setState($state_value){
+        
+        if (isset($this->statesData[$state_value])){
+            $this->state = $this->statesData[$state_value];
+        }
+        
+        // TODO Handle erroe here
+        
+        return $this;
+    }
     
     private function _start(){
         $res = null;
@@ -130,7 +151,8 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
     public function __get($key){
         switch ($key){
             case "id": return $this->id; break;
-            case "model_name": return $this->model->model_name; break;
+            case "db_table": return $this->db_table; break;
+            case "model_name": return $this->model_name; break;
             case "fields": return $this->model->fields; break;
         }
         
@@ -201,6 +223,7 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
     public function offsetGet($offset) {
         
         if ($offset == "editable") return $this->editable;
+        if ($offset == "state") return $this->state;
         
         return $this->model[$offset];
     }

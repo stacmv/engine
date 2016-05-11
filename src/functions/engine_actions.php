@@ -565,7 +565,11 @@ function show_data_action(){
             return check_data_item_acl($item, $db_table);
     });
         
-    // $_DATA["items"] = form_prepare_view($_DATA["items"], $_DATA["fields"]);
+    
+    $_DATA["items"] = array_map(function($item) use ($mode){
+        $view = View::getView($item);
+        return $view->prepare($mode);
+    },$_DATA["items"]);
     
     if (empty($_PAGE["title"])){
         $_PAGE["title"] = $_PAGE["header"] = db_get_meta($db_table, "comment");
