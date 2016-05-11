@@ -2,18 +2,21 @@
 final class Glog
 {
     const DEFAULT_STATE = 0;
+    private $data;
     private $dateField;
     private $dateFieldType;
+    private $fields;
     private $filter;
     private $filterValue;
     private $filterClause;
     private $group;
     private $groupValue;
     private $id;
-    private $itemName;
+    private $model_name;
     private $model;
     private $repository;
 
+    
     public function urlBuilder(EModel $item = null, $options = ""){
         
         
@@ -22,12 +25,12 @@ final class Glog
         
         if ($this->filter){
             $a_link[] = $this->filter;
-        }elseif($this->group){
+        }else{
             $a_link[] = "all";
         };
         if (!is_null($this->filterValue)){
             $a_link[] = $this->filterValue;
-        }elseif($this->group){
+        }else{
             $a_link[] = "all";
         };
         if ($this->group){
@@ -71,10 +74,11 @@ final class Glog
             $this->groupValue = null;
         };
         
-        $this->itemName = $this->repository->model_name;
-        $this->dateField      = isset($this->fields[$this->itemName . "_date"]) ? $this->itemName . "_date" : (isset($this->fields["date"]) ? "date" : "created");
+        $this->model_name = $this->repository->model_name;
+        $this->dateField      = isset($this->fields[$this->model_name . "_date"]) ? $this->model_name . "_date" : (isset($this->fields["date"]) ? "date" : "created");
         $this->dateFieldType = $this->fields[$this->dateField]["type"];
         
+        $this->fields = form_get_fields($this->repository->db_table, "list_" . $this->repository->db_table);
                 
         $this->filterClause = $this->_filterClause();
         
@@ -83,24 +87,20 @@ final class Glog
     }
     public function all(){
         
-        $res = array();
-        
-        if ($this->filterClause){
-            $res = $this->repository->where($this->filterClause)->fetchAll();
-        }else{
-            $res = $this->repository->fetchAll();
+        if (!is_array($this->data)){
+            $this->_fetchAll();
         }
         
-        if ($res){
-            $res = form_prepare_view($res, $this->repository->fields);
+        if ($this->data){
             if ( $this->filter && ( ($this->filter != "all") || ! is_null($this->groupValue)) ){
-                return arr_group($res, $this->_field($this->group));
+                return arr_group($this->data, $this->_field($this->group));
             }else{
-                return array("all" => $res);
+                return array("all" => $this->data);
             };
         }else{
             return array();
         }
+        
     }
     public function checkACL($item, $right = "show"){
         
@@ -124,6 +124,9 @@ final class Glog
         return $counts;
         
     }
+    public function getFields(){
+        
+    }
     public function getGroups(){
         $group_field = $this->_field($this->group);
         
@@ -135,7 +138,7 @@ final class Glog
         );
         
         
-        $groups = $this->repository->select( $group_field )->where($this->filterClause)->groupBy($group_field)->orderBy(array($group_field=>"ASC"))->fetchAll();
+        $groups = $this->repository->select( $group_field )->where($this->filterClause)->groupBy($group_field)->orderBy(array($group_field=>"ASC"))->fetchAllAssoc();
             
         if ($groups){
             if ($this->group == "state"){
@@ -145,7 +148,10 @@ final class Glog
                 }, $groups);
             };
             
-            $groups = form_prepare_view($groups, $this->repository->fields);
+                        
+            $groups = array_map(function($group){
+                return EModel::prepare_view($group, $this->repository->fields);
+            }, $groups);
             
             $groups = array_map( function($g) use ($group_field){
                 $res =  array();
@@ -183,14 +189,23 @@ final class Glog
     public function getItem($id){
         return new GlogItem($this->repository->findOne($id), $this);
     }
+    public function nav(){
+        return $nav = array(
+            "prev"  => $this->_prev(),
+            "start" => $this->_start(),
+            "end"   => $this->_end(),
+            "next"  => $this->_next(),
+        );
+    }
     
     public function __get($key){
         switch ($key){
+            case "fields": return $this->fields; break;
+            case "filter": return $this->filter; break;
             case "filterValue": return $this->filterValue; break;
             case "filterClause": return $this->filterClause; break;
-            case "modelName": return $this->repository->db_table;break;
-            case "itemName": return $this->itemName;break;
-            case "fields": return $this->repository->fields;break;
+            case "db_table": return $this->repository->db_table;break;
+            case "model_name": return $this->model_name;break;
             case "repository": return $this->repository; break;
             
         }
@@ -208,6 +223,7 @@ final class Glog
                 return $filter;
         };
     }
+    
     private function _filterClause(){
         $filter = $this->filter;
         $filter_value  = $this->filterValue;
@@ -247,24 +263,27 @@ final class Glog
             };
         };
         
+        if (!$where_clause) $where_clause = "( 1=1 )";
         
         return $where_clause;
         
     }
-    private function _navigation(){
-                
-        $nav = array(
-            "prev"  => $this->_prev(),
-            "start" => $this->_start(),
-            "end"   => $this->_end(),
-            "next"  => $this->_next(),
-        );
+
+    private function _fetchAll(){
+        $res = array();
         
-        if ($this->id){
-            $nav["list"] = $this->_listUri();
-        };
+        if ($this->filterClause){
+            $res = $this->repository->where($this->filterClause)->fetchAll();
+        }else{
+            $res = $this->repository->fetchAll();
+        }
         
-        return $nav;
+        if ($res){
+            $glog = $this;
+            $this->data = array_map(function($model) use ($glog){
+                return new GlogItem($model, $glog);
+            }, $res);
+        }
     }
     private function _start(){
         $res = null;
@@ -340,5 +359,6 @@ final class Glog
             "caption" => _t("To the list"),
         );
     }
-
+    
+    
 }

@@ -37,12 +37,14 @@ function show_glog_list_action(){
                     
     $glog = new Glog($_PARAMS);
         
-    $_DATA["model"]      = $glog->modelName;
-    $_DATA["fields"]     = form_get_fields($glog->modelName, "list_".$glog->modelName);
-    $_DATA["item_name"]  = $glog->itemName;
-    $_DATA["filter"]     = $glog->filterName;
-    $_DATA["nav"]        = $glog->navigation;
+    $_DATA["db_table"]      = $glog->db_table;
+    $_DATA["fields"]        = $glog->fields;
+    $_DATA["model_name"]  = $glog->model_name;
+    $_DATA["filter"]     = $glog->filter;
+    $_DATA["nav"]        = $glog->nav();
 
+    
+        
     $_DATA["items_by_group"] = $glog->all();
         
     
@@ -78,14 +80,18 @@ function show_glog_item_action(){
         // Навигация
         $_DATA["nav"] =  $glogItem->nav();
         
+        
+        
         // Модерация
         $_DATA["moderation_needed"] = $glogItem->moderationNeeded();
         $_DATA["moderation_forms"]  = $glogItem->moderationForms();
         
-        
+        // dump($_DATA["moderation_needed"]);die();
         
         // Операции
         $_DATA["controls"] = $glogItem->controls();
+        
+        // dump($_DATA["controls"]);die();
         
         
         // Заголовок страницы

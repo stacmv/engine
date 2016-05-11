@@ -3,8 +3,8 @@ foreach(@array(
 	$CFG["URL"]["base"],
 	$CFG["URL"]["ext"],
 	$CFG["GENERAL"]["app_name"],
-	$model,
-	$filter,
+	$db_table,
+	$model_name,
 	$nav,
 	$items_by_group,
 	$groups_data,
@@ -25,7 +25,7 @@ foreach(@array(
 	<div class="page-header">
 		<h1>
 			<div class="pull-right">
-				<a href="form/add/<?=$item_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> </a>
+				<a href="form/add/<?=$model_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> </a>
 			</div>
 			<?php if ( !empty($items_by_group) ):?>
 				<div class="pull-right">
@@ -57,10 +57,10 @@ foreach(@array(
 					<a name="state<?=$group["value"];?>" style="display:block;margin-bottom:100px"></a>
 					<h3><?=$group["caption"];?> (<?=count($items);?>)</h3>
 
-					<?php if (file_exists(cfg_get_filename("templates", "glog." . $model.".table.htm"))):?>
-						<?php include( cfg_get_filename("templates", "glog." . $model.".table.htm") );?>
-					<?php elseif (file_exists(cfg_get_filename("templates", "data_list." . $model.".table.htm"))):?>
-						<?php include( cfg_get_filename("templates", "data_list." . $model.".table.htm") );?>
+					<?php if (file_exists(cfg_get_filename("templates", "glog." . $db_table.".table.htm"))):?>
+						<?php include( cfg_get_filename("templates", "glog." . $db_table.".table.htm") );?>
+					<?php elseif (file_exists(cfg_get_filename("templates", "data_list." . $db_table.".table.htm"))):?>
+						<?php include( cfg_get_filename("templates", "data_list." . $db_table.".table.htm") );?>
 					<?php else:?> 
 						<?php include( cfg_get_filename("templates", "data_list.default.table.htm") );?>
 					<?php endif;?>

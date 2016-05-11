@@ -47,4 +47,11 @@ class EUsers extends ERepository{
         $res = db_get_list(self::DB_TABLE, array("id","login"),$limit);
         return $res;
     }
+
+    public function checkACL($item, $right){
+        
+        return userHasRight("manager");
+        
+    }
+    
 };

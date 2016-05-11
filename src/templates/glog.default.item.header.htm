@@ -7,7 +7,8 @@ foreach(@array(
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 ?>
 <h1>
-	<?if ($nav["list"]):?>
+	<?php if ($nav["list"]):?>
 		<a href="<?=$nav["list"]["uri"];?><?=$CFG["URL"]["ext"];?>" class="btn">&larr; <?=$nav["list"]["caption"];?></a>
+	<?php endif;?>
 	<?=$item["name"];?>
 </h1>

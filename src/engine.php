@@ -185,8 +185,6 @@ function SENDHEADERS(){
 function SENDBODY(){
     global $_RESPONSE;
     
-    
-    
     if (isset($_RESPONSE["body"])) echo $_RESPONSE["body"];
     
     
@@ -225,6 +223,17 @@ function SETACTIONLIST(){
 
     
 };
+function SETAJAXRESPONSEBODY(){
+    global $IS_AJAX;
+    global $_DATA;
+    global $_RESPONSE;
+    
+    if ($IS_AJAX && empty($_RESPONSE["body"])){
+        $_RESPONSE["headers"]["Content-type"] = "application/json";
+        $_RESPONSE["body"] = json_encode($_DATA);
+    };
+    
+}
 function SETPARAMS(){
     global $_URI;
     global $_PAGE;
@@ -439,7 +448,7 @@ $ISREDIRECT = false;
 $IS_API_CALL = false;
 $IS_IFRAME_MODE = ! empty($_GET["i"]) ? true : false;
 $IS_MOBILE = is_mobile();
-
+$IS_AJAX = is_ajax();
 
 
 GETURI();
@@ -454,11 +463,15 @@ while(HASNEXTACTION()){
 
 };
 
-if ( ! $ISREDIRECT && ! $IS_API_CALL){
+if ( ! $ISREDIRECT && ! $IS_API_CALL && ! $IS_AJAX ){
    
     APPLYPAGETEMPLATE();
   
-};
+}elseif($IS_AJAX){
+    
+    SETAJAXRESPONSEBODY();
+    
+}
 
 
 SENDHEADERS();

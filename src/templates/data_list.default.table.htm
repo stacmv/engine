@@ -2,7 +2,7 @@
 foreach(@array(
 	$items,
 	$fields,
-	$model,
+	$db_table,
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
 ?>
@@ -35,10 +35,10 @@ foreach(@array(
 						<?php continue;?>
 					<?php endif;?>
 					
-					<?php if (file_exists(cfg_get_filename("templates", "data_list.".$model."field_name_".$field["name"].".htm"))):?>
-						<?php include cfg_get_filename("templates", "data_list.".$model."field_name_".$field["name"].".htm");?>
-					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.".$model."field_type_".$field["type"].".htm"))):?>
-						<?php include cfg_get_filename("templates", "data_list.".$model."field_type_".$field["type"].".htm");?>
+					<?php if (file_exists(cfg_get_filename("templates", "data_list.".$db_table."field_name_".$field["name"].".htm"))):?>
+						<?php include cfg_get_filename("templates", "data_list.".$db_table."field_name_".$field["name"].".htm");?>
+					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.".$db_table."field_type_".$field["type"].".htm"))):?>
+						<?php include cfg_get_filename("templates", "data_list.".$db_table."field_type_".$field["type"].".htm");?>
 					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.default.field_name_".$field["name"].".htm"))):?>
 						<?php include cfg_get_filename("templates", "data_list.default.field_name_".$field["name"].".htm");?>
 					
@@ -78,8 +78,8 @@ foreach(@array(
 				</td>
 			<?php endforeach;?>
 			<td>
-				<?php if (file_exists(cfg_get_filename("templates", "data_list.".$model.".actions.htm"))):?>
-					<?php include cfg_get_filename("templates", "data_list.".$model.".actions.htm");?>
+				<?php if (file_exists(cfg_get_filename("templates", "data_list.".$db_table.".actions.htm"))):?>
+					<?php include cfg_get_filename("templates", "data_list.".$db_table.".actions.htm");?>
 				<?php else :?>
 					<?php include cfg_get_filename("templates", "data_list.default.actions.htm");?>
 				<?php endif;?>

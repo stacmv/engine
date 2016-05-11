@@ -1,5 +1,5 @@
 <?php
-class EUrlManager
+abstract class EUrlManager
 {
     protected static $urlBuilders = array();
     
@@ -15,7 +15,7 @@ class EUrlManager
     
     public static function setUrlBuilder($model_db_table, $func){
         self::$urlBuilders[$model_db_table] = $func;
-        dosyslog(__METHOD__.get_callee().": DEBUG: Set urlBuilder function for '".$model_db_table."': '".serialize($func)."'.");
+        // dosyslog(__METHOD__.get_callee().": DEBUG: Set urlBuilder function for '".$model_db_table."': '".serialize($func)."'.");
     }
     
 }

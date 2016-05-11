@@ -3,6 +3,7 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
 {
     private $id;
     private $glog;
+    private $model;
     private $statesData;
     private $editable;
     private $state;
@@ -17,21 +18,25 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
         
         return $stateField;
     }
-    
+
+    public function historyBuilder(EModel $item = null, $options = ""){
+        
+    }
     public function __construct(EModel $model, Glog $glog){
         $this->model = $model;
         $this->glog = $glog;
         $this->id = $model["id"];
         
         $stateField = $this->stateField();
-        $this->statesData = (function()use($stateField){
-            $file = cfg_get_filename("settings", $stateField . ".tsv");
-            $tsv  = import_tsv($file);
-            return arr_index($tsv, "value");
-        })();
+        
+        $file = cfg_get_filename("settings", $stateField . ".tsv");
+        $tsv  = import_tsv($file);
+        $this->statesData = arr_index($tsv, "value");
         
         $this->editable = true;
         $this->state = $this->statesData[$this->model[$stateField]];
+        
+        HistoryManager::setHistoryBuilder($this->glog->repository->model_name, array($this, "historyBuilder"));
         
     }
     public function checkACL($right){
@@ -39,9 +44,10 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
     }
     public function controls(){
         $item = $this;
+        
         return array_filter($this->statesData, function($state) use ($item){
             $right = $state["action"];
-            return $item->checkACL($right);
+            return $item->glog->repository->checkACL($item->model,$right);
         });
     }
     public function history(){
@@ -145,7 +151,7 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
         if (! userHasRight("manager")){
             $where_clause .= " AND (user_id = " . $_USER["id"].") ";
         };
-        $res = $this->glog->repository->select("id")->where($where_clause)->orderBy(array("id"=>"DESC"))->limit(1)->fetch();
+        $res = $this->glog->repository->select("id")->where($where_clause)->orderBy(array("id"=>"DESC"))->limit(1)->fetchAssoc();
         if ($res){
             $res["uri"] = $this->model->getLink($res["id"]);
         }
@@ -161,10 +167,11 @@ class GlogItem  implements ArrayAccess, jsonSerializable, IteratorAggregate
         if (! userHasRight("manager")){
             $where_clause .= " AND (user_id = " . $_USER["id"].") ";
         };
-        $res = $this->glog->repository->select("id")->where($where_clause)->orderBy(array("id"=>"ASC"))->limit(1)->fetch();
+        $res = $this->glog->repository->select("id")->where($where_clause)->orderBy(array("id"=>"ASC"))->limit(1)->fetchAssoc();
         if ($res){
             $res["uri"] = $this->model->getLink($res["id"]);
         }
+        
         
         return $res;
     }

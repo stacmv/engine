@@ -1,31 +1,33 @@
 <?php
 class EUser extends EModel implements ArrayAccess
 {
+    protected $db_table = "users";
+    protected $model_name = "user";
     protected $data = array();
     
-    static function create_by_id($id){
-        $user = new User;
-        $user->init( db_get("users", $id) );
-    }
-    static function create_by_login($login){
-        $user = new User;
-        $user->init( db_find("users", "login", $login, DB_RETURN_ONE | DB_RETURN_ROW) );
-    }
+    // static function create_by_id($id){
+        // $user = new User;
+        // $user->init( db_get("users", $id) );
+    // }
+    // static function create_by_login($login){
+        // $user = new User;
+        // $user->init( db_find("users", "login", $login, DB_RETURN_ONE | DB_RETURN_ROW) );
+    // }
     
     function __construct(array $profile = array()){
         
         if ( ! empty($profile) ){
-            $this->init($profile);
+            parent::__construct($profile);
         }else{
             if ($this->is_authenticated()){
-                $this->init( db_get("users", $_SESSION["authenticated"]) );
+                $this->data = db_get("users", $_SESSION["authenticated"]);
             };
         }
     }
     
-    function get_id(){
-        return isset($this->data["id"]) ? $this->data["id"] : null;
-    }
+    // function get_id(){
+        // return isset($this->data["id"]) ? $this->data["id"] : null;
+    // }
     function get_login(){
         return isset($this->data["login"]) ? $this->data["login"] : null;
     }
@@ -45,10 +47,7 @@ class EUser extends EModel implements ArrayAccess
         dosyslog(__METHOD__.get_callee().": DEBUG: User 'authenticated' value: '".serialize(@$_SESSION["authenticated"])."'.");
         return ! empty($_SESSION["authenticated"]) ;
     }
-    
-    protected function init(array $profile){
-        $this->data = $profile;
-    }
+
     
     
     

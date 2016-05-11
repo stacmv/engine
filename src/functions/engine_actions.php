@@ -3,9 +3,8 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     global $_PARAMS;
     global $_DATA;
     global $CFG;
-    
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
+    global $IS_AJAX;
+        
     if (!$db_table){
         $db_table = db_get_db_table($_PARAMS["object"]);  //uri: add/account.html, but db = accounts; add/user => users.
     };
@@ -51,7 +50,11 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
+    
+    $_DATA["res"] = $res;
+    $_DATA["reason"] = $reason;
     if ($res){
+        $_DATA["added_id"] = $added_id;
         if ( ! is_null($redirect_on_success) ){
             if ($redirect_on_success){
                $redirect_uri = $redirect_on_success;
@@ -62,11 +65,15 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
             }else{
                 $redirect_uri = str_replace(".","__", $db_table);
             };
-            redirect($redirect_uri);
+              
+            if ($IS_AJAX) $_DATA["redirect_uri"] = $redirect_uri;
+            else redirect($redirect_uri);
         };
     }else{
         if ( ! is_null($redirect_on_fail) ){
-            redirect($redirect_on_fail ? $redirect_on_fail : "form/add/".$_PARAMS["object"]);
+            $redirec_uri = $redirect_on_fail ? $redirect_on_fail : "form/add/".$_PARAMS["object"];
+            if ($IS_AJAX) $_DATA["redirect_uri"] = $redirect_uri;
+            else redirect($redirect_uri);
         };
     };
     
@@ -316,9 +323,9 @@ function form_action($is_public=false){
     if ($id) $_DATA["id"] = $id;
     
     $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA["object"]);
-    if ($_DATA["object"]){
-        $_DATA["object"] = form_prepare_view_item($_DATA["object"], $_DATA["fields_form"]);
-    }
+    // if ($_DATA["object"]){
+        // $_DATA["object"] = form_prepare_view_item($_DATA["object"], $_DATA["fields_form"]);
+    // }
           
     // Подготовка дополнительных данных для формы
     if ( function_exists("form_prepare_" . $form_name) ){
@@ -553,14 +560,12 @@ function show_data_action(){
         $_DATA["items"] = $repository->load($id)->fetchAll();
     };
     
-    
-    
     $_DATA["fields"] = array_filter(form_get_fields($db_table, $form_name), "check_form_field_acl");
     $_DATA["items"]  = array_filter($_DATA["items"], function($item) use ($db_table){
             return check_data_item_acl($item, $db_table);
     });
         
-    $_DATA["items"] = form_prepare_view($_DATA["items"], $_DATA["fields"]);
+    // $_DATA["items"] = form_prepare_view($_DATA["items"], $_DATA["fields"]);
     
     if (empty($_PAGE["title"])){
         $_PAGE["title"] = $_PAGE["header"] = db_get_meta($db_table, "comment");
@@ -572,9 +577,8 @@ function show_data_action(){
     
     $_DATA["item_name"] = $obj_name;
     $_DATA["form_name"] = $form_name;
-    $_DATA["model"]     = $db_table;
+    $_DATA["db_table"]  = $db_table;
 
-    
 }
 function show_login_form_action(){
     global $_DATA;

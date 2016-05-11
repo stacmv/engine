@@ -1,10 +1,9 @@
 <?php 
-class ERepository implements ArrayAccess, IteratorAggregate
+abstract class ERepository implements IteratorAggregate, jsonSerializable
 {
     protected $db_table;
     protected $fields;
     protected $id;
-    protected $data;
     protected $model_name;
     protected $sql_hash;
     protected $sql_query;
@@ -16,6 +15,7 @@ class ERepository implements ArrayAccess, IteratorAggregate
     protected $sql_limit;
     protected $uri_prefix;
     
+    abstract public function checkACL($model, $right);
     
     public static function create($repository_name, $form_name = "all"){
         $class_name = self::_class_name($repository_name);
@@ -28,10 +28,8 @@ class ERepository implements ArrayAccess, IteratorAggregate
     }
     public function load($id){
         $item =  self::create($this->db_table);
-        $item->data = $item->select("*")->where("id = $id")->fetch();
-        if ($item->data){
-            $item->id = $id;
-        }
+        $item->select("*")->where("id = $id");
+        
         return $item;
     }
     public function history(){
@@ -92,12 +90,18 @@ class ERepository implements ArrayAccess, IteratorAggregate
         return str_replace(" ","_", ucfirst(str_replace("."," ", $repository_name)));
     }
     public function fetch(){
+        $row = $this->fetchAssoc();
+        if (is_array($row) && !empty($row)){
+            $modelClass = self::_class_name($this->model_name);
+            return new $modelClass($row);
+        }else{
+            return null;
+        }
+    }
+    public function fetchAssoc(){
         if ( ! $this->sql_result){
             $this->createSql();
-            $this->sql_result = array_map(function($row){
-                $modelClass = self::_class_name($this->model_name);
-                return new $modelClass($row);
-            }, db_select($this->db_table, $this->sql_query));
+            $this->sql_result = db_select($this->db_table, $this->sql_query);
         };
                 
         
@@ -190,7 +194,7 @@ class ERepository implements ArrayAccess, IteratorAggregate
     }
     public function __get($key){
         if ($key == "db_table") return $this->db_table;
-        if ($key == "model_name") return $this->db_table;
+        if ($key == "model_name") return $this->model_name;
         if ($key == "fields") return $this->fields;
         if ($key == "uri_prefix") return $this->uri_prefix;
         
@@ -248,29 +252,23 @@ class ERepository implements ArrayAccess, IteratorAggregate
     }
     
     
-    /* ArrayAccess implementation */
-    public function offsetSet($offset, $value) {
-        if (is_null($offset)) {
-            $this->data[] = $value;
-        } else {
-            $this->data[$offset] = $value;
-        }
-    }
+       
+    /* jsonSerializable implementation */
+    public function jsonSerialize(){
+        
+        
+        
+        $res =  array_map(function($item){
+            return $item->jsonSerialize();
+        }, $this->fetchAll());
+        
+        
 
-    public function offsetExists($offset) {
-        return isset($this->data[$offset]);
     }
-
-    public function offsetUnset($offset) {
-        unset($this->data[$offset]);
-    }
-
-    public function offsetGet($offset) {
-        return isset($this->data[$offset]) ? $this->data[$offset] : null;
-    }
+    
     
     /* IteratorAggregate implementation */
     public function getIterator() {
-        return new ArrayIterator($this->data);
+        return new ArrayIterator($this->fetchAll());
     }
 }

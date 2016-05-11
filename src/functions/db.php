@@ -67,6 +67,7 @@ function db_get_meta($db_table, $attr){
     }, null);
     
     $tables = $db["table"];
+    
     $table = array_reduce($tables, function($acc, $table) use ($db_table){
         if (!is_null($acc)) return $acc;
         if ($table["@attributes"]["name"] == db_get_table($db_table)){

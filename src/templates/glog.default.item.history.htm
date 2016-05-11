@@ -3,7 +3,7 @@
 <table class='table table-bordered table-striped table-condensed'>
 <thead><tr><th>Дата-время</th><th>Статус</th><th>Оператор</th><th>Комментарий</th></tr></thead>
 <tbody>
-<?php foreach($item_history as $hist):?>
+<?php foreach($item["history"] as $hist):?>
 	<?php $state_name = isset($states[$hist["state"]]) ? $states[$hist["state"]]["caption"] : $hist["state"];?>
 	<tr>
 		<td><?=show_date($hist["timestamp"], SHOW_DATE_AGO);?></td>
