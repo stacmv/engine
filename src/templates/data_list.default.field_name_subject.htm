@@ -1,0 +1,8 @@
+<?php
+ $subjectRepo = ERepository::create($item["subject"])->load($item["subject_id"]);
+ $subjectModel = $subjectRepo->fetch();
+?>
+<?=_t(ucfirst($subjectModel->model_name));?> <?=_quote($subjectModel["name"]);?>
+
+
+

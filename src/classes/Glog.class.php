@@ -188,6 +188,7 @@ final class Glog
         return $header;
     }
     public function getItem($id){
+        if (!$id) return null;
         return new GlogItem($this->repository->findOne($id), $this);
     }
     public function nav(){

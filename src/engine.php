@@ -439,6 +439,9 @@ function SETPARAMS(){
 
 $start_microtime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
 
+// register autiload function for engine classes
+spl_autoload_register(function ($class_name){$class_file =  ENGINE_DIR . "classes/" . str_replace("\\", DIRECTORY_SEPARATOR , $class_name) . ".class.php"; if (file_exists($class_file)){ require_once $class_file; }});
+
 // register_shutdown_function("shutdown");
 session_start();
 

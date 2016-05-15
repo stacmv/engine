@@ -1,4 +1,10 @@
 <?php
+
+function _quote($str){
+    
+    return "&laquo;" . $str . "&raquo;";
+    
+}
 function _t($msg){
     static $tsv;
     

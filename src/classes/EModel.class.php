@@ -9,6 +9,8 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     protected $data;
     protected $data_before_changes;
     
+    protected $one2many; // array($db_table => null | ERepository::create($db_table)
+    
 
     
     public function __construct(array $data){
@@ -24,6 +26,22 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         };
         
         $this->data_before_changes = $this->data;
+        
+        // Related tables from the same db
+        $db_table = $this->db_table;
+        $tables = db_get_tables_list($this->db_table, $skipHistory = true);
+
+        $foreight_key = db_get_obj_name($db_table) . "_id";
+        $one2many = array_filter($tables, function($dbt) use ($foreight_key){
+            $fields = form_get_fields($dbt,"all");
+            return isset($fields[$foreight_key]);
+        });
+        
+        $this->one2many = array_map(function($db_table){
+            return ERepository::create($db_table);
+        }, $one2many);
+        
+        
     }
 
     public static function prepare_view($itemData, $fields, $strict = false){
@@ -95,6 +113,9 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
             return HistoryManager::getHistory($this);
         };
     }
+    protected function getName(){
+        return issset($this->data["name"]) ? $this->data["name"] : (isset($this->data["title"]) ? $this->data["title"] : _t("Unknown name"));
+    }
     public function getLink($id = ""){
         if ($id){
             return UrlManager::getLink($this, array("id"=>$id));
@@ -126,9 +147,10 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     }
     
     public function __get($key){
-        if ($key == "db_table") return $this->db_table;
+        if ($key == "db_table")   return $this->db_table;
         if ($key == "model_name") return $this->model_name;
-        if ($key == "fields") return $this->fields;
+        if ($key == "fields")     return $this->fields;
+        if ($key == "name")       return $this->getName();
         
         dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");
         die("Code: ".__CLASS__."-".__LINE__."-".$key);

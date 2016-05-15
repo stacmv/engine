@@ -22,7 +22,15 @@ function db_get_obj_name($db_table){
         dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Parameter 'db_table' should be of type 'string', '" . gettype($db_table). "' given.");
         die("Code: db-".__LINE__);
     };
-    return str_replace(".", "__", substr($db_table, 0, -1));    
+    
+    $aTmp =  explode(".",$db_table);
+
+    if ( (count($aTmp) >=2) && ($aTmp[0] == $aTmp[1]) ){   // main table in db; table name == db name
+        array_shift($aTmp);
+    };
+    $aTmp[ count($aTmp)-1 ] = substr($aTmp[ count($aTmp)-1 ], 0, -1); // strip last symbol (supposed 's');
+
+    return implode(".", $aTmp);
 };
 function db_get_db_table($obj_name){
     // Works only when db_table has plural form - has "s" on end.
@@ -1039,30 +1047,33 @@ function db_get_tables($db_name = ""){
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
+    
     if ($db_name) return $tables_list[$db_name];
     else return $tables_list;
     
 }
 function db_get_tables_list($db_name = "", $skipHistoryTable = true){
-    $db_tables_info = db_get_tables($db_name = "");
+    $db_tables_info = db_get_tables($db_name);
     
-    $db_tables_info = array_map(
-        function($db_name, $tables) use ($skipHistoryTable){
-            return array_map(function($table) use ($db_name){
-                return $db_name . "." . $table;
-            },
-            array_filter($tables, function($table) use ($skipHistoryTable){
-                return ! ($skipHistoryTable && ($table == "history"));
-            }));
-        },
-        array_keys($db_tables_info),
-        $db_tables_info
-    );
+    $full_table_name = function($db_name, $tables) use ($skipHistoryTable){
+        return array_map(function($table) use ($db_name){
+            return $db_name . "." . $table;
+        }, array_filter($tables, function($table) use ($skipHistoryTable){
+            return !($skipHistoryTable && ($table == "history"));
+        }));
+    };
     
-    $db_tables = array_reduce($db_tables_info, function($acc, $tables){
-        return array_merge($acc,$tables);
-    }, array());
-
+    if ($db_name){
+        $db_tables = $full_table_name($db_name, $db_tables_info);
+    }else{
+        
+        $db_tables = array();
+        foreach($db_tables_info as $db_name => $tables){
+            $db_tables = array_merge($db_tables, $full_table_name($db_name, $tables));
+        };
+        
+    }
+    
     return $db_tables;
 }
 function db_get_tables_list_from_xml($db_name=""){
