@@ -13,17 +13,7 @@ class Model extends EModel
         parent::__construct($data);
     }
     
-    public function addState($state_value){
-        $this->state = $this->state | $state_value;
-        return $this;
-    }
-    public function inState($state_value){
-        return $this->state & $state_value;
-    }
-    public function removeState($state_value){
-        $this->state = $this->state & ~$state_value;
-        return $this;
-    }    
+    
     protected function _get_repo_name_for_model_name($model_name){
         return _plural($model_name);
     }

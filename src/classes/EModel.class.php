@@ -126,6 +126,9 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     protected function getName(){
         return issset($this->data["name"]) ? $this->data["name"] : (isset($this->data["title"]) ? $this->data["title"] : _t("Unknown name"));
     }
+    public function getChanges(){
+        return new ChangesSet($this->data, $this->data_before_changes);
+    }
     public function getLink($id = ""){
         if ($id){
             return UrlManager::getLink($this, array("id"=>$id));
@@ -134,12 +137,12 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         };
     }
     public function getState(){
-        
-                
-        if (!$this->state_field || empty($this->data[$this->state_field]))  return static::default_state;
-
-        
+        if (!$this->state_field || empty($this->data[$this->state_field]))  return $this->default_state;
         return $this->data[$this->state_field];
+    }
+    public function setState($state_value){
+        if ($this->state_field) $this->data[$this->state_field] = $state_value;
+        return isset($this->state_field);
     }
     
     public function modify(array $to, array $from){
@@ -155,11 +158,14 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         $repository = Repository::create($this->repo_name);
         
         if (!empty($this->data["id"])){
-            $res = $repository->update($this);
-            
+            try{
+                $repository->update($this);
+            }catch(Exception $e){
+                throw $e;
+            }
             
         }else{
-            dump($this->data);die();
+            dump($this->data,"data ".__FUNCTION__);die();
             $res = $repository->insert($this);
             $res = db_add($this->db_table, new ChangesSet($this->data), $comment);
             if ($res){
@@ -171,11 +177,12 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     }
     
     public function __get($key){
-        if ($key == "repo_name")  return $this->repo_name;
-        if ($key == "model_name") return $this->model_name;
-        if ($key == "fields")     return $this->fields;
-        if ($key == "name")       return $this->getName();
-        if ($key == "state")      return $this->getState();
+        if ($key == "repo_name")   return $this->repo_name;
+        if ($key == "model_name")  return $this->model_name;
+        if ($key == "fields")      return $this->fields;
+        if ($key == "name")        return $this->getName();
+        if ($key == "state")       return $this->getState();
+        if ($key == "state_field") return $this->state_field;
         
         dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");
         die("Code: ".__CLASS__."-".__LINE__."-".$key);

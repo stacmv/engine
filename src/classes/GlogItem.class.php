@@ -2,10 +2,11 @@
 class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorAggregate
 {
     private $id;
-    private $glog;
     private $model;
-    private $statesData;
     private $editable;
+    private $glog;
+    
+    
            
     
     
@@ -14,7 +15,7 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
     public function historyBuilder(EModel $item = null, $options = ""){
         
     }
-    public function __construct(EModel $model, Glog $glog){
+    public function __construct(Model $model, Glog $glog){
         $this->model = $model;
         $this->glog = $glog;
         $this->id = $model["id"];
@@ -25,14 +26,8 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
         $this->fields     = $this->model->fields;
         
         
-        $stateField = $this->model->state_field;
-        
-        $file = cfg_get_filename("settings", $stateField . ".tsv");
-        $tsv  = import_tsv($file);
-        $this->statesData = arr_index($tsv, "value");
-        
         $this->editable = true;
-        $this->stateData = $this->getStateData();
+        $this->state    = new GlogState($model->state_field, $model->state);
         
         HistoryManager::setHistoryBuilder($this->glog->repository->model_name, array($this, "historyBuilder"));
         
@@ -43,9 +38,11 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
     public function controls(){
         $item = $this;
         
-        return array_filter($this->statesData, function($state) use ($item){
+        $controls =  arr_index(array_filter($this->state->config(), function($state) use ($item){
             return $item->checkACL($state["action"]);
-        });
+        }), "action");
+        
+        return $controls;
     }
     public function history(){
         static $fields = null;
@@ -118,30 +115,34 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
     }
 
     public function addState($state_value){
-        $this->model = $this->model->addState($state_value);
+        $this->state->add($state_value);
+        $this->model["state"] = $this->state->value();
         return $this;
     }
     public function inState($state_value){
-        return $this->model->inState($state_value);
+        return $this->state->has($state_value);
     }
     public function removeState($state_value){
-        $this->model = $this->model->removeState($state_value);
+        $this->state = $this->state->remove($state_value);
+        $this->model["state"] = $this->state->value();
         return $this;
     }    
     
     public function save($comment=""){
-        $this->model = $this->model->save($comment);
+        try{
+            $this->model = $this->model->save($comment);
+        }catch(Exception $e){
+            $err_msg = "Ошибка при сохранении данных. Код: ".$e->getMessage();
+            dosyslog(__METHOD__.get_callee().": ERROR: ".$err_msg);
+            set_session_msg($err_msg, "fail");
+        };
         return $this;
     }
-    
-    public function getStateData(){
-        return $this->statesData[$this->model->state];
-    }
-    public function setStateData($state_value){
+
+    public function setState($state_value){
         
-        if (isset($this->statesData[$state_value])){
-            $this->model->state = $this->statesData[$state_value];
-        }
+        $this->state->set($state_value);
+        $this->model["state"] = $state_value;
         
         // TODO Handle error here
         
@@ -159,7 +160,7 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
             case "repo_name": return $this->repo_name; break;
             case "model_name": return $this->model_name; break;
             case "fields": return $this->model->fields; break;
-            case "state": return $this->getStateData();break;
+            case "state": return $this->state;break;
         }
         
         dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");

@@ -193,10 +193,14 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     }
     public function update(EModel $model, $comment=""){
         // TODO error handling
-        list($res, $reason) = db_edit($this->repo_name, $model->data["id"], new ChangesSet($this->model->data, $this->model->data_before_changes), $comment);
+        list($res, $reason) = db_edit($this->repo_name, $model["id"], $model->getChanges(), $comment);
+        
+        if (!$res){
+            throw new Exception($reason);
+        };
         return $res;
     }
-   public function where($whereClause){
+    public function where($whereClause){
         $this->sql_where = $whereClause;
         $this->sql_result = null;
         return $this;

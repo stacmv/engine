@@ -91,7 +91,7 @@ function show_glog_item_action(){
         $_DATA["item"] = $view->prepare();
                 
         $_DATA["repo_name"]  = $glogItem->repo_name;
-        $_DATA["model"]  = $glogItem->model_name;
+        $_DATA["model_name"]  = $glogItem->model_name;
         $_DATA["fields"] = $view->getFields("item");
         
         // Навигация

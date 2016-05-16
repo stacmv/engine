@@ -288,7 +288,6 @@ function form_action($is_public=false){
     global $_PAGE;
     global $_DATA;
     
-    if (function_exists("set_topmenu_action")) set_topmenu_action();
     
     $action      = ! empty($_PARAMS["action"])   ? $_PARAMS["action"]     : null;
     $object_name = ! empty($_PARAMS["object"])   ? $_PARAMS["object"]     : null;
@@ -546,26 +545,26 @@ function show_data_action(){
     global $_DATA;
     global $_PAGE;
     
-    $db_table = ! empty($_PARAMS["model"]) ? $_PARAMS["model"] : null; 
-    if (!$db_table) {
+    $repo_name = ! empty($_PARAMS["model"]) ? $_PARAMS["model"] : null; 
+    if (!$repo_name) {
         die("Code: ea-".__LINE__."-model");
     };
     
     $id    = ! empty($_PARAMS["id"]) ? (int) $_PARAMS["id"] : null; 
     $mode  = $id ? "item" : "list";
-    $obj_name = db_get_obj_name($db_table);
-    $form_name = $id ? "show_".$obj_name : "list_".$db_table;
+    $obj_name = db_get_obj_name($repo_name);
+    $form_name = $id ? "show_".$obj_name : "list_".$repo_name;
     
-    $repository = ERepository::create($db_table, $form_name);
+    $repository = Repository::create($repo_name, $form_name);
     if ($mode == "list"){ // 
         $_DATA["items"] = $repository->fetchAll();
     }else{
         $_DATA["items"] = $repository->load($id)->fetchAll();
     };
     
-    $_DATA["fields"] = array_filter(form_get_fields($db_table, $form_name), "check_form_field_acl");
-    $_DATA["items"]  = array_filter($_DATA["items"], function($item) use ($db_table){
-            return check_data_item_acl($item, $db_table);
+    $_DATA["fields"] = array_filter(form_get_fields($repo_name, $form_name), "check_form_field_acl");
+    $_DATA["items"]  = array_filter($_DATA["items"], function($item) use ($repo_name){
+            return check_data_item_acl($item, $repo_name);
     });
         
     
@@ -575,16 +574,16 @@ function show_data_action(){
     },$_DATA["items"]);
     
     if (empty($_PAGE["title"])){
-        $_PAGE["title"] = $_PAGE["header"] = db_get_meta($db_table, "comment");
+        $_PAGE["title"] = $_PAGE["header"] = db_get_meta($repo_name, "comment");
     };
     
     if ( empty($_PAGE["templates"]["content"]) && ! empty($_PAGE["templates"][$mode]) ){
         set_template_file("content", $_PAGE["templates"][$mode]);
     };
     
-    $_DATA["item_name"] = $obj_name;
+    $_DATA["model_name"] = $obj_name;
     $_DATA["form_name"] = $form_name;
-    $_DATA["db_table"]  = $db_table;
+    $_DATA["repo_name"]  = $repo_name;
 
 }
 function show_login_form_action(){

@@ -553,12 +553,12 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
             continue;
         }
         
-        if (isset($changes->from[$key]) &&  ($changes->from[$key] != db_prepare_value($object[$key], $field_type))){ 
+        if (isset($changes->from[$key]) &&  (db_prepare_value($changes->from[$key], $field_type) != db_prepare_value($object[$key], $field_type))){ 
             // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
-            if (preg_replace('~\R~u', "\n", $changes->from[$key]) == preg_replace('~\R~u', "\n", $object[$key])){
+            if (is_string($changes->from[$key]) && is_string($object[$key]) && (preg_replace('~\R~u', "\n", $changes->from[$key]) == preg_replace('~\R~u', "\n", $object[$key])) ){
                 // Это не конфликт.
             }else{
-                $conflicted[] = $key . "(passed 'from': '".$changes->from[$key]."', in db: '".$object[$key]."')";
+                $conflicted[] = $key . "(passed 'from': '".(is_string($changes->from[$key]) ? $changes->from[$key] : json_encode($changes->from[$key]))."', in db: '".(is_string($object[$key]) ? $object[$key] : json_encode($object[$key]))."')";
             };
         };
     };

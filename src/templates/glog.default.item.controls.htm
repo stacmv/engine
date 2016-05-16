@@ -18,31 +18,36 @@ foreach(@array(
 			</div>
 			<div class="span10" style="text-align:center">
 					
-					<?php if(!empty($controls[128])):?>
+					<?php if(!empty($controls["ok"])):?>
 						<form action method="get" style="display:inline-block">
-							<input type="hidden" name="action" value="<?=$controls[128]["action"];?>">
-							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"><i class="icon icon-ok"></i> <?=$controls[128]["action_caption"];?></button>
+							<input type="hidden" name="action" value="<?=$controls["ok"]["action"];?>">
+							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"><i class="icon icon-ok"></i> <?=$controls["ok"]["action_caption"];?></button>
 						</form>
 					<?php endif;?>
 					
-					<?php foreach($controls as $state):?>
-						<?php if (in_array($state["value"], array(0,32,128))) continue;?>
+					<?php foreach($controls as $control):?>
+						<?php if (in_array($control["action"], array("cancel","delete","ok"))) continue;?>
 						<form action method="get" style="display:inline-block">
-							<input type="hidden" name="action" value="<?=$state["action"];?>">
-							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"> <?=$state["action_caption"];?></button>
+							<input type="hidden" name="action" value="<?=$control["action"];?>">
+							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>">
+								<?php if (!empty($control["action_icon"])):?>
+									<i class="icon icon-<?=$control["action_icon"];?>"></i>
+								<?php endif;?>
+								<?=$control["action_caption"];?>
+							</button>
 						</form>
 					<?php endforeach;?>
 					
-					<?php if(!empty($controls[0])):?>
+					<?php if(!empty($controls["cancel"])):?>
 						<form action method="get" style="display:inline-block">
-							<input type="hidden" name="action" value="<?=$controls[0]["action"];?>">
-							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"> <?=$controls[0]["action_caption"];?></button>
+							<input type="hidden" name="action" value="<?=$controls["cancel"]["action"];?>">
+							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"> <?=$controls["cancel"]["action_caption"];?></button>
 						</form>
 					<?php endif;?>
-					<?php if(!empty($controls[32])):?>
+					<?php if(!empty($controls["delete"])):?>
 						<form action method="get" style="display:inline-block">
-							<input type="hidden" name="action" value="<?=$controls[32]["action"];?>">
-							<button type="submit"class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"><i class="icon icon-trash"></i> <?=$controls[32]["action_caption"];?></button>
+							<input type="hidden" name="action" value="<?=$controls["delete"]["action"];?>">
+							<button type="submit"class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"><i class="icon icon-trash"></i> <?=$controls["delete"]["action_caption"];?></button>
 						</form>
 					<?php endif;?>
 			

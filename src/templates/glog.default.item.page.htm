@@ -3,60 +3,66 @@ foreach(@array(
 	$CFG["URL"]["base"],
 	$CFG["URL"]["ext"],
 	$CFG["GENERAL"]["app_name"],
-	$model,
+	$model_name,
+	$repo_name,
 	$item,
 
 
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 ?>
 
-<article class="app_content">
-	<div class="page-header">
-		%%glog.default.item.header%%
-	</div>
-		
-	<?php if(empty($item)):?>
-		<div class="alert alert-warning">
-			Нет данных.
+<?php if (file_exists(cfg_get_filename("templates", "glog.".$repo_name.".item.page.htm"))):?>
+	<?php include cfg_get_filename("templates", "glog.".$repo_name.".item.page.htm");?>
+<?php else:?>
+
+	<article class="app_content">
+		<div class="page-header">
+			%%glog.default.item.header%%
 		</div>
-	<?php else:?>
 			
-		
-		<div class="row-fluid">
-			<div class="span6">
-				<div style="height:40px;">
-					&nbsp;
-					<?php if($item["editable"]):?>
-						<div class="pull-right">
-							<a href="form/edit/<?=$model;?>/<?=$item["id"];?><?=$CFG["URL"]["ext"];?>">Редактировать</a>
-						</div>
-					<?php endif;?>
+		<?php if(empty($item)):?>
+			<div class="alert alert-warning">
+				Нет данных.
+			</div>
+		<?php else:?>
+				
+			
+			<div class="row-fluid">
+				<div class="span6">
+					<div style="height:40px;">
+						&nbsp;
+						<?php if($item["editable"]):?>
+							<div class="pull-right">
+								<a href="form/edit/<?=$model;?>/<?=$item["id"];?><?=$CFG["URL"]["ext"];?>">Редактировать</a>
+							</div>
+						<?php endif;?>
+					</div>
+					%%glog.default.item.details%%
 				</div>
-				%%glog.default.item.details%%
+				
+				<div class="span6">
+					<fieldset>
+						<legend>Статус: <?=$item["state"]["caption"];?></legend>
+					</fieldset>
+					
+					%%glog.default.item.moderation%%
+					
+					<fieldset>
+						%%glog.default.item.controls%%
+					</fieldset>
+					
+					<fieldset>
+						<legend>История</legend>
+						%%glog.default.item.history%%
+					</fieldset>
+					
+					
+				</div>
 			</div>
-			
-			<div class="span6">
-				<fieldset>
-					<legend>Статус: <?=$item["state"]["caption"];?></legend>
-				</fieldset>
-				
-				%%glog.default.item.moderation%%
-				
-				<fieldset>
-					%%glog.default.item.controls%%
-				</fieldset>
-				
-				<fieldset>
-					<legend>История</legend>
-					%%glog.default.item.history%%
-				</fieldset>
-				
-				
-			</div>
-		</div>
-	<?php endif;?>
-</article> <!-- /.app_content -->
-<?php
-	unset($_SESSION["msg"]);
-	unset($_SESSION["to"]);
-?>
+		<?php endif;?>
+	</article> <!-- /.app_content -->
+	<?php
+		unset($_SESSION["msg"]);
+		unset($_SESSION["to"]);
+	?>
+<?php endif;?>

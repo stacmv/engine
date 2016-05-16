@@ -5,7 +5,7 @@ foreach(@array(
 	$CFG["GENERAL"]["app_name"],
 	$items,
 	$fields,
-	$item_name,
+	$model_name,
 	$form_name,
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
@@ -18,7 +18,7 @@ foreach(@array(
 	<div class="row">
 		<div class="form-actions">
 			<div class="pull-right">
-				<a href="form/add/<?=$item_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> Добавить</a>
+				<a href="form/add/<?=$model_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> Добавить</a>
 			</div>
 		</div>
 	</div>

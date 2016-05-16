@@ -1,7 +1,7 @@
 <?php // !!! Don't use double quotes in output since in may be embedded in HTML attribute (double-quoted);?>
 
 <table class='table table-bordered table-striped table-condensed'>
-<thead><tr><th>Дата-время</th><th>Статус</th><th>Оператор</th><th>Комментарий</th></tr></thead>
+<thead><tr><th>Дата-время</th><th>Статус</th><th>Пользователь</th><th>Комментарий</th></tr></thead>
 <tbody>
 <?php foreach($item["history"] as $hist):?>
 	<?php $state_name = isset($states[$hist["state"]]) ? $states[$hist["state"]]["caption"] : $hist["state"];?>

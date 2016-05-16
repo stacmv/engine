@@ -13,9 +13,8 @@ final class Glog
     private $groupValue;
     private $id;
     private $model_name;
-    private $model;
     private $repository;
-    private $states;
+
 
     
     public function urlBuilder(EModel $item = null, $options = ""){

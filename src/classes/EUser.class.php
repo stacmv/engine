@@ -1,5 +1,5 @@
 <?php
-class EUser extends EModel implements ArrayAccess
+class EUser extends Model implements ArrayAccess
 {
     protected $db_table = "users";
     protected $model_name = "user";
