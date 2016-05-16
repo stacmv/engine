@@ -76,17 +76,22 @@ function db_get_meta($db_table, $attr){
     
     $tables = $db["table"];
     
-    $table = array_reduce($tables, function($acc, $table) use ($db_table){
-        if (!is_null($acc)) return $acc;
-        if ($table["@attributes"]["name"] == db_get_table($db_table)){
-           $acc = $table;
-        };
-        return $acc;
-    }, null);
+    if ($tables){
     
-    $table_meta = $table["@attributes"];
+        $table = array_reduce($tables, function($acc, $table) use ($db_table){
+            if (!is_null($acc)) return $acc;
+            if ($table["@attributes"]["name"] == db_get_table($db_table)){
+               $acc = $table;
+            };
+            return $acc;
+        }, null);
+        
+        $table_meta = $table["@attributes"];
     
-    return isset($table_meta[$attr]) ? $table_meta[$attr] : "";
+        return isset($table_meta[$attr]) ? $table_meta[$attr] : "";
+    };
+    
+    return "";
 }
 /* ***********************************************************
 **  DATABASE FUNCTIONS

@@ -4,7 +4,7 @@ foreach(@array(
     $CFG["URL"]["ext"],
     $CFG["GENERAL"]["app_name"],
     $action,
-	$db_table,
+	$repo_name,
 	$object_name,
 	$object,
 	$_PAGE["header"],
@@ -39,7 +39,7 @@ foreach(@array(
 				
 				<div class="form-actions">
 					<input class="btn btn-danger" type="submit" value="Удалить">
-					<a class="btn btn-default" href="<?=( !empty($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : $db_table . $CFG["URL"]["ext"] );?>">Отменить</a>
+					<a class="btn btn-default" href="<?=( !empty($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : $repo_name . $CFG["URL"]["ext"] );?>">Отменить</a>
 				</div>
 			</form>
 		</div>

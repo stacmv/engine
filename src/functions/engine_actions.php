@@ -298,7 +298,7 @@ function form_action($is_public=false){
         die("Code: ea-".__LINE__);
     };
     
-    $db_table    = db_get_db_table($object_name);
+    $repo_name    = db_get_db_table($object_name);
     $id          = ! empty($_PARAMS["id"])       ? $_PARAMS["id"]         : null;
     $form_name   = ! empty($_PARAMS["form_name"]) ? $_PARAMS["form_name"] : $action."_".$object_name;
 
@@ -308,21 +308,21 @@ function form_action($is_public=false){
     
     
     $_DATA["action"]      = $action;
-    $_DATA["db_table"]    = $db_table;
+    $_DATA["repo_name"]    = $repo_name;
     $_DATA["object_name"] = $object_name;
     $_DATA["form_name"]   = $form_name;
     $_DATA["form_action_link"] = form_get_action_link($form_name, $is_public);
     
         
     if ($id && ($action != "add") ){
-        $_DATA["object"] = db_get($db_table, $id, DB_RETURN_DELETED);
+        $_DATA["object"] = db_get($repo_name, $id, DB_RETURN_DELETED);
     }else{
         $_DATA["object"] = array();
     };
     
     if ($id) $_DATA["id"] = $id;
     
-    $_DATA["fields_form"] = form_prepare($db_table, $form_name, $_DATA["object"]);
+    $_DATA["fields_form"] = form_prepare($repo_name, $form_name, $_DATA["object"]);
     // if ($_DATA["object"]){
         // $_DATA["object"] = form_prepare_view_item($_DATA["object"], $_DATA["fields_form"]);
     // }
@@ -337,6 +337,9 @@ function form_action($is_public=false){
     //    
     
     $_DATA["fields_form"][] = form_prepare_field( array("type"=>"string", "form_template"=>"hidden", "name"=>"form_name"), true, $form_name);
+    
+    // ACL
+    $_DATA["fields_form"] = array_filter($_DATA["fields_form"], "check_form_field_acl");
     
     
     $form_template = !empty($_PAGE["templates"][$form_name]) ? $_PAGE["templates"][$form_name] : null;

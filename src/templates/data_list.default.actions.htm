@@ -1,6 +1,13 @@
+<?php
+foreach(@array(
+	$model_name,
+	$item,
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+
+?>
 <?php if (userHasRight("access,owner|manager","",$item)):?>
-	<a href="form/edit/<?=$item_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small"><i class="icon-edit"></i>Ред.</a>
-	<a href="form/delete/<?=$item_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small btn-danger">&times;</a>
+	<a href="form/edit/<?=$model_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small"><i class="icon-edit"></i>Ред.</a>
+	<a href="form/delete/<?=$model_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small btn-danger">&times;</a>
 <?php else:?>
 	&nbsp;
 <?php endif;?>

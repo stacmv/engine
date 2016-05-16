@@ -22,7 +22,7 @@ final class Glog
         
         
         $a_link = array();
-        $a_link[] = $this->repository->uri_prefix . $this->repository->db_table;
+        $a_link[] = $this->repository->uri_prefix . $this->repository->repo_name;
         
         if ($this->filter){
             $a_link[] = $this->filter;
@@ -56,7 +56,7 @@ final class Glog
     
     public function __construct(array $params = array()){
         foreach($params as $k=>$v){
-            if ($k == "db_table"){
+            if ($k == "repo_name"){
                 $this->repository = ERepository::create($v);
             }elseif (property_exists(__CLASS__, $k)){
                 $this->$k = $v;
@@ -79,7 +79,7 @@ final class Glog
         $this->dateField      = isset($this->fields[$this->model_name . "_date"]) ? $this->model_name . "_date" : (isset($this->fields["date"]) ? "date" : "created");
         $this->dateFieldType = $this->fields[$this->dateField]["type"];
         
-        $this->fields = form_get_fields($this->repository->db_table, "list_" . $this->repository->db_table);
+        $this->fields = form_get_fields($this->repository->repo_name, "list_" . $this->repository->repo_name);
                 
         $this->filterClause = $this->_filterClause();
         
@@ -134,7 +134,7 @@ final class Glog
         if (! $group_field ) return array(
             "all" => array(
                 "value"   => "all",
-                "caption" => _t("All ". $this->repository->db_table),
+                "caption" => _t("All ". $this->repository->repo_name),
             ),
         );
         
@@ -167,10 +167,10 @@ final class Glog
     }
     public function getHeader(){
         
-        $header = _t(ucfirst($this->repository->db_table));
+        $header = _t(ucfirst($this->repository->repo_name));
         
         if ($this->filter == "all"){
-            $header = _t("All " . $this->repository->db_table);
+            $header = _t("All " . $this->repository->repo_name);
         };
         
         switch ($this->group){
@@ -206,7 +206,7 @@ final class Glog
             case "filter": return $this->filter; break;
             case "filterValue": return $this->filterValue; break;
             case "filterClause": return $this->filterClause; break;
-            case "db_table": return $this->repository->db_table;break;
+            case "repo_name": return $this->repository->repo_name;break;
             case "model_name": return $this->model_name;break;
             case "repository": return $this->repository; break;
             

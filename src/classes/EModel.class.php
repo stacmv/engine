@@ -2,7 +2,9 @@
 abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregate
 {
     protected $common_fields = array("id", "created", "modified", "deleted");
-    protected $db_table;
+    protected $default_state = 0;
+    protected $state_field;
+    protected $repo_name;
     protected $model_name;
     
     protected $fields;
@@ -15,7 +17,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     
     public function __construct(array $data){
         
-        $this->fields = form_get_fields($this->db_table, "all");
+        $this->fields = Repository::fields($this->repo_name);
         $this->data = array();
         foreach($data as $k=>$v){
             if (in_array($k, array_merge(array_keys($this->fields), $this->common_fields))){
@@ -27,23 +29,31 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         
         $this->data_before_changes = $this->data;
         
+        $this->state_field = isset($this->fields[$this->model_name . "_state"]) ? $this->model_name . "_state" : (isset($this->fields["state"]) ? "state" : null);
+        
         // Related tables from the same db
-        $db_table = $this->db_table;
-        $tables = db_get_tables_list($this->db_table, $skipHistory = true);
+        $db_table = $this->repo_name;
+        $tables = db_get_tables_list($db_table, $skipHistory = true);
 
-        $foreight_key = db_get_obj_name($db_table) . "_id";
-        $one2many = array_filter($tables, function($dbt) use ($foreight_key){
-            $fields = form_get_fields($dbt,"all");
-            return isset($fields[$foreight_key]);
+        $foreign_key = $this->model_name . "_id";
+        $one2many = array_filter($tables, function($dbt) use ($foreign_key){
+            $fields = Repository::fields($dbt);
+            return isset($fields[$foreign_key]);
         });
         
-        $this->one2many = array_map(function($db_table){
-            return ERepository::create($db_table);
+        $this->one2many = array_map(function($repo_name){
+            return ERepository::create($repo_name);
         }, $one2many);
         
         
     }
+    
+    public function checkACL($right){
+        if ( ! userHasRight("access,owner|manager", "", $this)) return false;
 
+        return userHasRight($right,"", $this);
+    }
+    
     public static function prepare_view($itemData, $fields, $strict = false){
         
         static $tsv = array();
@@ -123,6 +133,14 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
             return UrlManager::getLink($this);
         };
     }
+    public function getState(){
+        
+                
+        if (!$this->state_field || empty($this->data[$this->state_field]))  return static::default_state;
+
+        
+        return $this->data[$this->state_field];
+    }
     
     public function modify(array $to, array $from){
         foreach($to as $k=>$v){
@@ -134,9 +152,15 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     
     public function save($comment=""){
         
+        $repository = Repository::create($this->repo_name);
+        
         if (!empty($this->data["id"])){
-            list($res, $reason) = db_edit($this->db_table, $this->data["id"], new ChangesSet($this->data, $this->data_before_changes), $comment);
+            $res = $repository->update($this);
+            
+            
         }else{
+            dump($this->data);die();
+            $res = $repository->insert($this);
             $res = db_add($this->db_table, new ChangesSet($this->data), $comment);
             if ($res){
                 $this->data["id"] = $res;
@@ -147,10 +171,11 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     }
     
     public function __get($key){
-        if ($key == "db_table")   return $this->db_table;
+        if ($key == "repo_name")  return $this->repo_name;
         if ($key == "model_name") return $this->model_name;
         if ($key == "fields")     return $this->fields;
         if ($key == "name")       return $this->getName();
+        if ($key == "state")      return $this->getState();
         
         dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");
         die("Code: ".__CLASS__."-".__LINE__."-".$key);
@@ -205,8 +230,9 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         
         $item = $this->data;
                 
-        if (empty($this->data["link"]))     $item["link"]  = $this->getLink();
+        if (empty($this->data["link"]))     $item["link"]     = $this->getLink();
         if (empty($this->data["history"]))  $item["history"]  = $this->getHistory();
+        if (empty($this->data["state"]))    $item["state"]    = $this->getState();
                 
         return $item;
         

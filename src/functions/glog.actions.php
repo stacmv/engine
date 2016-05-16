@@ -2,12 +2,15 @@
 function show_glog_action(){
     global $_PARAMS;
     
+    $repo_name = ! empty($_PARAMS["repo_name"]) ? $_PARAMS["repo_name"] : null;
     $filter = ! empty($_PARAMS["filter"]) ? $_PARAMS["filter"] : null;
     $filterValue = ! is_null($_PARAMS["filterValue"]) ? $_PARAMS["filterValue"] : null;
     $group = ! empty($_PARAMS["group"]) ? $_PARAMS["group"] : null;
     $groupValue = ! is_null($_PARAMS["groupValue"]) ? $_PARAMS["groupValue"] : null;
     
     $id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
+    
+    $action = ! empty($_PARAMS["action"]) ? $_PARAMS["action"] : null;
     
     if ( ! $id && ! $filterValue && is_numeric($filter) ){  // uri: model/id
         $id = $filter;
@@ -23,7 +26,14 @@ function show_glog_action(){
     
     
     if ($id){
-        show_glog_item_action();
+        $action_function = $repo_name . "_" . $action . "_action";
+
+        if ($action && function_exists($action_function)){
+            
+            call_user_func($action_function);
+        }else{
+            show_glog_item_action();
+        };
     }else{
         show_glog_list_action();
     }
@@ -37,7 +47,7 @@ function show_glog_list_action(){
                     
     $glog = new Glog($_PARAMS);
         
-    $_DATA["db_table"]      = $glog->db_table;
+    $_DATA["repo_name"]      = $glog->repo_name;
     $_DATA["fields"]        = $glog->fields;
     $_DATA["model_name"]  = $glog->model_name;
     $_DATA["filter"]     = $glog->filter;
@@ -80,7 +90,7 @@ function show_glog_item_action(){
         $view = View::getView($glogItem);
         $_DATA["item"] = $view->prepare();
                 
-        $_DATA["db_table"]  = $glogItem->db_table;
+        $_DATA["repo_name"]  = $glogItem->repo_name;
         $_DATA["model"]  = $glogItem->model_name;
         $_DATA["fields"] = $view->getFields("item");
         

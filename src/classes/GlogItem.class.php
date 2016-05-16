@@ -1,24 +1,15 @@
 <?php
-class GlogItem extends EModel implements ArrayAccess, jsonSerializable, IteratorAggregate
+class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorAggregate
 {
     private $id;
     private $glog;
     private $model;
     private $statesData;
     private $editable;
-    private $state;
-       
+           
     
     
-    private function stateField(){
-        $stateField = isset($this->fields[$this->model_name . "_state"]) ? $this->model_name . "_state" : (isset($this->fields["state"]) ? "state" : null);
-                
-        if (!$stateField) {
-            die("Code: ".__CLASS__."-".__LINE__."-stateField");
-        };
-        
-        return $stateField;
-    }
+    
 
     public function historyBuilder(EModel $item = null, $options = ""){
         
@@ -29,32 +20,31 @@ class GlogItem extends EModel implements ArrayAccess, jsonSerializable, Iterator
         $this->id = $model["id"];
         
         $this->common_fields = $this->model->common_fields;
-        $this->db_table = $this->model->db_table;
+        $this->repo_name = $this->model->repo_name;
         $this->model_name = $this->model->model_name;
         $this->fields     = $this->model->fields;
         
         
-        $stateField = $this->stateField();
+        $stateField = $this->model->state_field;
         
         $file = cfg_get_filename("settings", $stateField . ".tsv");
         $tsv  = import_tsv($file);
         $this->statesData = arr_index($tsv, "value");
         
         $this->editable = true;
-        $this->state = $this->statesData[$this->model[$stateField]];
+        $this->stateData = $this->getStateData();
         
         HistoryManager::setHistoryBuilder($this->glog->repository->model_name, array($this, "historyBuilder"));
         
     }
     public function checkACL($right){
-        return $this->glog->repository->checkACL($this,$right);
+        return $this->model->checkACL($right);
     }
     public function controls(){
         $item = $this;
         
         return array_filter($this->statesData, function($state) use ($item){
-            $right = $state["action"];
-            return $item->glog->repository->checkACL($item->model,$right);
+            return $item->checkACL($state["action"]);
         });
     }
     public function history(){
@@ -63,7 +53,7 @@ class GlogItem extends EModel implements ArrayAccess, jsonSerializable, Iterator
         if (is_numeric($item)) $id = $item;
         else $id = $item["id"];
         
-        $history = db_find($this->repository->db_table.".history", "objectId", $id, DB_RETURN_ROW);
+        $history = db_find($this->repository->repo_name.".history", "objectId", $id, DB_RETURN_ROW);
         $history = array_reverse($history);
         
         
@@ -84,7 +74,7 @@ class GlogItem extends EModel implements ArrayAccess, jsonSerializable, Iterator
             }else{
                 $state = _t(ucfirst($this->repository->model_name) . " changed");
                 $comment = $hist_rec["comment"];
-                if (is_null($fields)) $fields = form_get_fields($this->repository->db_table, "all");
+                if (is_null($fields)) $fields = form_get_fields($this->repository->repo_name, "all");
                 $comment .= "\nБыло:\n" . $hist_rec["changes_from"] . "\n\nСтало:\n" . $hist_rec["changes_to"];
 
                 $labels = array_map(function($field){
@@ -126,19 +116,34 @@ class GlogItem extends EModel implements ArrayAccess, jsonSerializable, Iterator
         return $this;
         
     }
-    public function save($comment = ""){
-        $this->model[$this->stateField()] = $this->state["value"];
-        $this->model->save($comment);
+
+    public function addState($state_value){
+        $this->model = $this->model->addState($state_value);
+        return $this;
+    }
+    public function inState($state_value){
+        return $this->model->inState($state_value);
+    }
+    public function removeState($state_value){
+        $this->model = $this->model->removeState($state_value);
+        return $this;
+    }    
+    
+    public function save($comment=""){
+        $this->model = $this->model->save($comment);
         return $this;
     }
     
-    public function setState($state_value){
+    public function getStateData(){
+        return $this->statesData[$this->model->state];
+    }
+    public function setStateData($state_value){
         
         if (isset($this->statesData[$state_value])){
-            $this->state = $this->statesData[$state_value];
+            $this->model->state = $this->statesData[$state_value];
         }
         
-        // TODO Handle erroe here
+        // TODO Handle error here
         
         return $this;
     }
@@ -151,9 +156,10 @@ class GlogItem extends EModel implements ArrayAccess, jsonSerializable, Iterator
     public function __get($key){
         switch ($key){
             case "id": return $this->id; break;
-            case "db_table": return $this->db_table; break;
+            case "repo_name": return $this->repo_name; break;
             case "model_name": return $this->model_name; break;
             case "fields": return $this->model->fields; break;
+            case "state": return $this->getStateData();break;
         }
         
         dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");

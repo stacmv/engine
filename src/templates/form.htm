@@ -2,7 +2,7 @@
 foreach(@array(
 	$CFG["URL"]["ext"],
 	$action,
-	$db_table,
+	$repo_name,
 	$object,
 	$object_name,
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
@@ -17,7 +17,7 @@ foreach(@array(
 	<div class="pull-right">
 		<input class="btn btn-success" type="submit" value="Сохранить">
 		<?php if (!isset($cancel_btn) || ($cancel_btn !== false)):?>
-			<a class="btn btn-default" href="<?=( !empty($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : $db_table . $CFG["URL"]["ext"] );?>">Отменить</a>
+			<a class="btn btn-default" href="<?=( !empty($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : $repo_name . $CFG["URL"]["ext"] );?>">Отменить</a>
 		<?php endif;?>
 	</div>
 </form>

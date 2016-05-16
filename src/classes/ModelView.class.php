@@ -11,11 +11,11 @@ class ModelView extends View
         
         switch ($view_name){
             case "listView":
-                return form_get_fields($this->model->db_table, "list_".$this->model->db_table);
+                return array_filter(form_get_fields($this->model->repo_name, "list_".$this->model->repo_name),"check_form_field_acl");
                 break;
             case "itemView":
             default:
-                return form_get_fields($this->model->db_table, "show_".$this->model->model_name);
+                return array_filter(form_get_fields($this->model->repo_name, "show_".$this->model->model_name),"check_form_field_acl");
         };
     }
     
@@ -25,7 +25,7 @@ class ModelView extends View
     }
     
     protected function itemView(array $options = array()){
-        
+         
         $view =  $this->prepare_view($this->data, $this->getFields(__FUNCTION__));
         
         return $view;

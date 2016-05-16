@@ -1,7 +1,7 @@
 <?php
 foreach(@array(
 	$fields,
-	$db_table,
+	$repo_name,
 	$item,
 
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
@@ -14,12 +14,12 @@ foreach(@array(
 				<th><?=$field["label"];?></th>
 			<?php endif;?>
 			<td <?php if ( ! $field["label"] ):?>colspan="2"<?php endif;?>>
-				<?php if (file_exists( cfg_get_filename("templates", "glog." . $db_table . "." . $field["name"] .".htm") )):?>
-					<?php include cfg_get_filename("templates", "glog." . $db_table . "." . $field["name"] .".htm") ;?>
+				<?php if (file_exists( cfg_get_filename("templates", "glog." . $repo_name . "." . $field["name"] .".htm") )):?>
+					<?php include cfg_get_filename("templates", "glog." . $repo_name . "." . $field["name"] .".htm") ;?>
 				<?php elseif (file_exists( cfg_get_filename("templates", "glog.default." . $field["name"] .".htm") )):?>
 					<?php include cfg_get_filename("templates", "glog.default." . $field["name"] .".htm") ;?>
-				<?php elseif (file_exists( cfg_get_filename("templates", "glog." . $db_table . "." . $field["type"] .".htm") )):?>
-					<?php include cfg_get_filename("templates", "glog." . $db_table . "." . $field["type"] .".htm");?>
+				<?php elseif (file_exists( cfg_get_filename("templates", "glog." . $repo_name . "." . $field["type"] .".htm") )):?>
+					<?php include cfg_get_filename("templates", "glog." . $repo_name . "." . $field["type"] .".htm");?>
 				<?php elseif (file_exists( cfg_get_filename("templates", "glog.default." . $field["type"] .".htm") )):?>
 					<?php include cfg_get_filename("templates", "glog.default." . $field["type"] .".htm");?>
 				<?php elseif (isset($item["_" . $field["name"]])):?>

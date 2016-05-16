@@ -1,7 +1,7 @@
 <?php 
 abstract class ERepository implements IteratorAggregate, jsonSerializable
 {
-    protected $db_table;
+    protected $repo_name;
     protected $fields;
     protected $id;
     protected $model_name;
@@ -15,26 +15,29 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     protected $sql_limit;
     protected $uri_prefix;
     
-    abstract public function checkACL($model, $right);
+    // abstract public function checkACL($model, $right);
     
     public static function create($repository_name, $form_name = "all"){
         $class_name = self::_class_name($repository_name);
         $repo =  new $class_name;
-        $repo->db_table = $repository_name;
+        $repo->repo_name = $repository_name;
         $repo->model_name = db_get_obj_name($repository_name);
         $repo->fields   = form_get_fields($repository_name, $form_name);
         $repo->uri_prefix = db_get_meta($repository_name, "model_uri_prefix");
         return $repo;
     }
+    public static function fields($repository_name, $form_name = "all"){
+        return form_get_fields($repository_name, $form_name);
+    }
     public function load($id){
-        $item =  self::create($this->db_table);
+        $item =  self::create($this->repo_name);
         $item->select("*")->where("id = $id");
         
         return $item;
     }
     public function history(){
         
-        $history = db_find(db_get_name($this->db_table).".history", "objectId", $id, DB_RETURN_ROW);
+        $history = db_find(db_get_name($this->repo_name).".history", "objectId", $id, DB_RETURN_ROW);
         $history = array_reverse($history);
         
         $hist = array();
@@ -101,7 +104,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     public function fetchAssoc(){
         if ( ! $this->sql_result){
             $this->createSql();
-            $this->sql_result = db_select($this->db_table, $this->sql_query);
+            $this->sql_result = db_select($this->repo_name, $this->sql_query);
         };
                 
         
@@ -125,7 +128,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     public function fetchAllAssoc(){
         if ( ! $this->sql_result){
             $this->createSql();
-            $this->sql_result = db_select($this->db_table, $this->sql_query);
+            $this->sql_result = db_select($this->repo_name, $this->sql_query);
         };
         
         if ($this->sql_result){
@@ -134,16 +137,17 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
             return false;
         }
     }
+    
     public function findOne($id){
         $res = $this->where("id = " . (int) $id)->fetchAll();
         return array_shift($res);
     }
     public function findWhere($whereClause){
-        $db_table = $this->db_table;
-        $sql = "SELECT * FROM " . db_get_table($db_table) . " WHERE " . $whereClause . ";";
+        $repo_name = $this->repo_name;
+        $sql = "SELECT * FROM " . db_get_table($repo_name) . " WHERE " . $whereClause . ";";
         
-        return array_filter(db_select($db_table, $sql), function($item) use ($db_table){
-            return check_data_item_acl($item, $db_table);
+        return array_filter(db_select($repo_name, $sql), function($item) use ($repo_name){
+            return check_data_item_acl($item, $repo_name);
         });
     }
     public function groupBy($groupBy){
@@ -187,13 +191,18 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         
         return $this;
     }
-    public function where($whereClause){
+    public function update(EModel $model, $comment=""){
+        // TODO error handling
+        list($res, $reason) = db_edit($this->repo_name, $model->data["id"], new ChangesSet($this->model->data, $this->model->data_before_changes), $comment);
+        return $res;
+    }
+   public function where($whereClause){
         $this->sql_where = $whereClause;
         $this->sql_result = null;
         return $this;
     }
     public function __get($key){
-        if ($key == "db_table") return $this->db_table;
+        if ($key == "repo_name") return $this->repo_name;
         if ($key == "model_name") return $this->model_name;
         if ($key == "fields") return $this->fields;
         if ($key == "uri_prefix") return $this->uri_prefix;
@@ -218,7 +227,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         }else{
             $sql .= "*";
         }
-        $sql .= " FROM " . db_get_table($this->db_table) ." ";
+        $sql .= " FROM " . db_get_table($this->repo_name) ." ";
         
         // Where
         if ( ! userHasRight("manager") ){
