@@ -11,7 +11,7 @@
     "require": {
 		"php": ">=5.3",
 		"optimit/glog_util": "dev-master",
-		"erusev/parsedown": "dev-master",
+		"erusev/parsedown": "dev-master"
 	},
 	"suggest": {
 		"giggsey/libphonenumber-for-php": "Allows validating international phone numbers"
