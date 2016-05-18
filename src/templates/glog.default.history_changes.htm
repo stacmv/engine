@@ -1,0 +1,36 @@
+<?php
+foreach(@array(
+	$changes_to,
+	$changes_from,
+	$fields,
+
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+
+?>
+
+<?php // !!! Don't use double quotes in output since in may be embedded in HTML attribute (double-quoted);?>
+
+<?php if (!empty($changes_to) && array_intersect(array_keys($changes_to), array_keys($fields))):?>
+	<table class='table table-bordered table-condensed table-striped table_history_changes'>
+		<caption>Изменения</caption>
+		<thead>
+			<tr><th colspan='2'>&nbsp;</th><th>Было</th><th>Стало</th></tr>
+		</thead>
+		<?php foreach($changes_to as $k=>$v):?>
+			<?php if (!empty($fields[$k])):?>
+				<tr>
+					<?php if (!empty($fields[$k]["label"])):?>
+						<th colspan='2'><?=$fields[$k]["label"];?></th>
+						<td><?=$changes_from[$k];?></td>
+						<td><?=$v;?></td>
+					<?php else:?>
+						<td colspan='2'><?=$changes_from[$k];?></td>
+						<td colspan='2'><?=$v;?></td>
+					<?php endif;?>
+				</tr>
+			<?php endif;?>
+		<?php endforeach;?>
+	</table>
+<?php else:?>
+	<div class='alert alert-warning'>Нет данных об изменениях!</div>
+<?php endif;?>

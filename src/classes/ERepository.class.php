@@ -18,7 +18,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     // abstract public function checkACL($model, $right);
     
     public static function create($repository_name, $form_name = "all"){
-        $class_name = self::_class_name($repository_name);
+        $class_name = static::_getRepositoryClassName($repository_name);
         $repo =  new $class_name;
         $repo->repo_name = $repository_name;
         $repo->model_name = db_get_obj_name($repository_name);
@@ -35,67 +35,35 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         
         return $item;
     }
-    public function history(){
-        
-        $history = db_find(db_get_name($this->repo_name).".history", "objectId", $id, DB_RETURN_ROW);
-        $history = array_reverse($history);
-        
-        $hist = array();
-        foreach($history as $hist_rec){
-            $timestamp  = $hist_rec["timestamp"];
-            $subjectId  = $hist_rec["subjectId"];
-            
-            
-            $m = array();
-            if ($hist_rec["action"] == "db_add"){
-                $state = "0";
-                $comment = _t(ucfirst($this->item_name) . " created");
-            }elseif(!empty($hist_rec["comment"]) && preg_match('/'.$this->item_name.'_state = "(\d+)"/', $hist_rec["changes_to"], $m)){
-                
-                $state = $m[1];
-                $comment = $hist_rec["comment"];
-
-            }else{
-                $state = _t(ucfirst($this->item_name) . " changed");
-                $comment = $hist_rec["comment"];
-                if (is_null($fields)) $fields = form_get_fields(LEADS_DB_NAME, "all");
-                $comment .= "\nБыло:\n" . $hist_rec["changes_from"] . "\n\nСтало:\n" . $hist_rec["changes_to"];
-                
-                
-                // $comment = htmlentities($comment);
-                
-                // dump(array_keys($fields), "keys");
-                // dump(array_values(array_map(function($field){
-                    // return $field["label"];
-                // }, $fields)), "values");
-                $labels = array_map(function($field){
-                    return $field["label"];
-                }, array_filter($fields, function($field){
-                    return $field["label"];
-                }));
-                $comment = str_replace(array_keys($labels), array_values($labels), $comment);
-            };
-            
-            $hist[] = array(
-                "timestamp" => $timestamp,
-                "state"     => $state,
-                "subjectId" => $subjectId,
-                "comment"   => $comment,
-            );
-            
-        }
-                
-        return $hist;
     
+    protected static function _getRepositoryClassName($repository_name){
+        $a = explode(".", $repository_name);
+
+        if ( (count($a) >=2 ) && ( $a[0] == $a[1] ) ){   // main table in db; table name == db name
+            array_shift($a);
+        };
+        $a = array_map("ucfirst", $a);
+        
+        return implode("", $a);
 
     }
-    private static function _class_name($repository_name){
-        return str_replace(" ","_", ucfirst(str_replace("."," ", $repository_name)));
+    protected static function _getModelClassName($repository_name){
+        $a = explode(".", $repository_name);
+
+        if ( (count($a) >=2 ) && ( $a[0] == $a[1] ) ){   // main table in db; table name == db name
+            array_shift($a);
+        };
+        
+        $a = array_map("_singular", $a);
+        $a = array_map("ucfirst", $a);
+        
+        return implode("", $a);
+
     }
     public function fetch(){
         $row = $this->fetchAssoc();
         if (is_array($row) && !empty($row)){
-            $modelClass = self::_class_name($this->model_name);
+            $modelClass = static::_getModelClassName($this->repo_name);
             return new $modelClass($row);
         }else{
             return null;
@@ -120,7 +88,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         $this->fetchAllAssoc();
         
         return array_map(function($row){
-                $modelClass = self::_class_name($this->model_name);
+                $modelClass = static::_getModelClassName($this->repo_name);
                 return new $modelClass($row);
             }, $this->sql_result);
         
@@ -234,7 +202,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         $sql .= " FROM " . db_get_table($this->repo_name) ." ";
         
         // Where
-        if ( ! userHasRight("manager") ){
+        if ( ! userHasRight("manager") && isset($this->fields["use_id"])){
             $where_acl_addon = " (user_id = " . (int) $_USER["id"] . ") ";
         }        
         if ($this->sql_where || !empty($where_acl_addon))  $sql .= " WHERE ";

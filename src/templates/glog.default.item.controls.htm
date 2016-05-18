@@ -8,7 +8,7 @@ foreach(@array(
 
 
 	
-<div class="form-actions">
+<div class="form-actions controls">
 	
 		<div class="row-fluid">
 			<div class="span1">
@@ -19,7 +19,7 @@ foreach(@array(
 			<div class="span10" style="text-align:center">
 					
 					<?php if(!empty($controls["ok"])):?>
-						<form action method="get" style="display:inline-block">
+						<form class="form_ok" action method="get" style="display:inline-block">
 							<input type="hidden" name="action" value="<?=$controls["ok"]["action"];?>">
 							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"><i class="icon icon-ok"></i> <?=$controls["ok"]["action_caption"];?></button>
 						</form>
@@ -27,7 +27,7 @@ foreach(@array(
 					
 					<?php foreach($controls as $control):?>
 						<?php if (in_array($control["action"], array("cancel","delete","ok"))) continue;?>
-						<form action method="get" style="display:inline-block">
+						<form class="form_<?=$control["action"];?>" action method="get" style="display:inline-block">
 							<input type="hidden" name="action" value="<?=$control["action"];?>">
 							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>">
 								<?php if (!empty($control["action_icon"])):?>
@@ -39,13 +39,13 @@ foreach(@array(
 					<?php endforeach;?>
 					
 					<?php if(!empty($controls["cancel"])):?>
-						<form action method="get" style="display:inline-block">
+						<form class="form_cancel" action method="get" style="display:inline-block">
 							<input type="hidden" name="action" value="<?=$controls["cancel"]["action"];?>">
 							<button type="submit" class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"> <?=$controls["cancel"]["action_caption"];?></button>
 						</form>
 					<?php endif;?>
 					<?php if(!empty($controls["delete"])):?>
-						<form action method="get" style="display:inline-block">
+						<form class="form_delete" action method="get" style="display:inline-block">
 							<input type="hidden" name="action" value="<?=$controls["delete"]["action"];?>">
 							<button type="submit"class="btn <?php if(count($controls)<=3):?>btn-large<?php endif;?>"><i class="icon icon-trash"></i> <?=$controls["delete"]["action_caption"];?></button>
 						</form>

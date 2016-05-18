@@ -69,7 +69,7 @@ class GlogState implements ArrayAccess, jsonSerializable
         };
     }
     
-    public function _toString(){
+    public function __toString(){
         return $this->meta("caption");
     }
 

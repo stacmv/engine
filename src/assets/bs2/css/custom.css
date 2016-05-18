@@ -113,3 +113,9 @@ th.sort.sorted-desc {
     background-color: #ddd; 
     text-decoration: none;
   }
+  
+/* Glog item history */
+table.table_history th,
+table.table_history td {
+	vertical-align: middle;
+}

@@ -17,24 +17,33 @@ $_DB = array();
 
 /* *********************************************************** */
 function db_get_obj_name($db_table){
-    // Works only when db_table has plural form - has "s" on end.
     if ( ! is_string($db_table) ){
         dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Parameter 'db_table' should be of type 'string', '" . gettype($db_table). "' given.");
         die("Code: db-".__LINE__);
     };
     
-    $aTmp =  explode(".",$db_table);
+    $a =  explode(".",$db_table);
 
-    if ( (count($aTmp) >=2) && ($aTmp[0] == $aTmp[1]) ){   // main table in db; table name == db name
-        array_shift($aTmp);
+    if ( (count($a) >=2) && ($a[0] == $a[1]) ){   // main table in db; table name == db name
+        array_shift($a);
     };
-    $aTmp[ count($aTmp)-1 ] = substr($aTmp[ count($aTmp)-1 ], 0, -1); // strip last symbol (supposed 's');
+    $a = array_map("_singular", $a);
 
-    return implode(".", $aTmp);
+    return implode(".", $a);
 };
 function db_get_db_table($obj_name){
-    // Works only when db_table has plural form - has "s" on end.
-    return str_replace("__", ".", $obj_name . "s");
+    if ( ! is_string($obj_name) ){
+        dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Parameter 'obj_name' should be of type 'string', '" . gettype($obj_name). "' given.");
+        die("Code: db-".__LINE__);
+    };
+    $a =  explode(".",$obj_name);
+
+    if (count($a) == 1){   // main table in db; table name == db name
+        array_push($a, $a[0]);
+    };
+    $a = array_map("_plural", $a);
+
+    return implode(".", $a);
 };
 function db_get_name($db_table){
 
@@ -129,7 +138,6 @@ function db_add($db_table, ChangesSet $data, $comment=""){
 };
 function db_add_history($db_table, $objectId, $subjectId, $action, $comment, ChangesSet $changes){
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $res = true;
      
     $db_name =  db_get_name($db_table);
@@ -182,14 +190,14 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, Cha
     $history_record["changes_from"] = implode("\n",$changes_from);
     $history_record["changes_to"]   = implode("\n",$changes_to);
         
+    
+    $res = db_add($db_name . ".history", new ChangesSet($history_record));
         
-    if (!db_add($db_name . ".history", new ChangesSet($history_record))){
+    if (!$res){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Can not add history record into '".$db_name."' db.");
         $res = false;
     };
 
-
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $res;
 };
 function db_check_schema($db_table){ // проверяет схему таблицы $db_table базыданных $db_name на соответствие файлу db.xml
@@ -1049,9 +1057,14 @@ function db_get_tables($db_name = ""){
             };
         };
     };
+       
     
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    
+    if (!isset($tables_list[$db_name])){
+        // dump($db_name,"db_name");
+        // dump(get_callee(), "stack");
+        // dump($tables_list,"tables_list");
+        // die();
+    }
     
     if ($db_name) return $tables_list[$db_name];
     else return $tables_list;

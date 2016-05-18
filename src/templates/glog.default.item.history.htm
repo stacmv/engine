@@ -1,28 +1,51 @@
 <?php // !!! Don't use double quotes in output since in may be embedded in HTML attribute (double-quoted);?>
 
-<table class='table table-bordered table-striped table-condensed'>
+<style>
+	.popover {
+		max-width: inherit;
+	}
+</style>
+<table class='table table-bordered table-striped table-condensed table_history'>
 <thead><tr><th>Дата-время</th><th>Статус</th><th>Пользователь</th><th>Комментарий</th></tr></thead>
 <tbody>
-<?php foreach($item["history"] as $hist):?>
-	<?php $state_name = isset($states[$hist["state"]]) ? $states[$hist["state"]]["caption"] : $hist["state"];?>
+<?php foreach($history as $hist):?>
+	<?php $state_value   = $hist['state']['value'];?>
+	<?php $state_caption = $hist['state']['caption'];?>
 	<tr>
-		<td><?=show_date($hist["timestamp"], SHOW_DATE_AGO);?></td>
+		<td><?=show_date($hist['timestamp'], SHOW_DATE_AGO);?></td>
 		<td>
-			<?php if ($hist["state"] == 0):?>
-				<span class='lead_state_<?=$hist["state"];?> label label-warning'><?=$state_name;?></span>
-			<?php elseif ($hist["state"] == 160):?>
-				<span class='lead_state_<?=$hist["state"];?> label'><?=$state_name;?></span>
-			<?php elseif ($hist["state"] & 128):?>
-				<span class='lead_state_<?=$hist["state"];?> label label-success'><?=$state_name;?></span>
-			<?php elseif ($hist["state"] & 32):?>
-				<span class='lead_state_<?=$hist["state"];?> label label-important'><?=$state_name;?>	</span>
+			<?php if ($hist['state']['value'] == 0):?>
+				<span class='state_<?=$hist['state']['value'];?> label label-warning'><?=$state_caption;?></span>
+			<?php elseif ($hist['state']['value'] == 160):?>
+				<span class='state_<?=$hist['state']['value'];?> label'><?=$state_caption;?></span>
+			<?php elseif ($hist['state']['value'] & 128):?>
+				<span class='state_<?=$hist['state']['value'];?> label label-success'><?=$state_caption;?></span>
+			<?php elseif ($hist['state']['value'] & 2):?>
+				<span class='state_<?=$hist['state']['value'];?> label label-success'><?=$state_caption;?></span>
+			<?php elseif ($hist['state']['value'] & 32):?>
+				<span class='state_<?=$hist['state']['value'];?> label label-important'><?=$state_caption;?>	</span>
 			<?php else:?>
-				<span class='lead_state_<?=$hist["state"];?>'><?=$state_name;?></span>
+				<span class='state_<?=$hist['state']['value'];?>'><?=$state_caption;?></span>
 			<?php endif;?>
 		</td>
-		<td><?=EUsers::get_username_by_id($hist["subjectId"]);?></td>
-		<td><?=nl2br($hist["comment"]);?></td>
+		<td><?=EUsers::get_username_by_id($hist['subjectId']);?></td>
+		<td>
+			<?=nl2br($hist['comment']);?>
+			<?php if (!empty($hist['changes_html'])):?>
+				<a class='int' href='#' data-content="<?=unescape_template_data($hist["changes_html"]);?>">Изменения</a>
+			<?php endif;?>
+				
+		</td>
 	</tr>
 <?php endforeach;?>
 </tbody>
 </table>
+<script>
+	$(function(){
+		$('.table_history a.int').popover({
+			html: true,
+			placement: 'top',
+			trigger: 'click'
+		}).on('click', function(e){e.preventDefault();});
+	});
+</script>

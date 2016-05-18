@@ -80,16 +80,14 @@ function show_glog_item_action(){
     global $CFG;
     
     $id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
-        
+    
     if ($id){
 
-        
         $glogItem = (new Glog($_PARAMS))->getItem($id);
-        
         
         $view = View::getView($glogItem);
         $_DATA["item"] = $view->prepare();
-                
+        
         $_DATA["repo_name"]  = $glogItem->repo_name;
         $_DATA["model_name"]  = $glogItem->model_name;
         $_DATA["fields"] = $view->getFields("item");
@@ -108,7 +106,8 @@ function show_glog_item_action(){
         // Операции
         $_DATA["controls"] = $glogItem->controls();
         
-        // dump($_DATA["controls"]);die();
+        // История
+        $_DATA["history"] = $view->prepare("history");
         
         
         // Заголовок страницы

@@ -47,51 +47,12 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
     public function history(){
         static $fields = null;
         
-        if (is_numeric($item)) $id = $item;
-        else $id = $item["id"];
-        
-        $history = db_find($this->repository->repo_name.".history", "objectId", $id, DB_RETURN_ROW);
+        $history = $this->getHistory();
+                
         $history = array_reverse($history);
         
+        return $history;
         
-        $hist = array();
-        foreach($history as $hist_rec){
-            $timestamp  = $hist_rec["timestamp"];
-            $subjectId  = $hist_rec["subjectId"];
-            
-            $m = array();
-            if ($hist_rec["action"] == "db_add"){
-                $state = "0";
-                $comment = _t(ucfirst($this->repository->model_name) . " created");
-            }elseif(!empty($hist_rec["comment"]) && preg_match('/'.$this->repository->model_name.'_state = "(\d+)"/', $hist_rec["changes_to"], $m)){
-                
-                $state = $m[1];
-                $comment = $hist_rec["comment"];
-
-            }else{
-                $state = _t(ucfirst($this->repository->model_name) . " changed");
-                $comment = $hist_rec["comment"];
-                if (is_null($fields)) $fields = form_get_fields($this->repository->repo_name, "all");
-                $comment .= "\nБыло:\n" . $hist_rec["changes_from"] . "\n\nСтало:\n" . $hist_rec["changes_to"];
-
-                $labels = array_map(function($field){
-                    return $field["label"];
-                }, array_filter($fields, function($field){
-                    return $field["label"];
-                }));
-                $comment = str_replace(array_keys($labels), array_values($labels), $comment);
-            };
-            
-            $hist[] = array(
-                "timestamp" => $timestamp,
-                "state"     => $state,
-                "subjectId" => $subjectId,
-                "comment"   => $comment,
-            );
-            
-        }
-                
-        return $hist;
     }
     
     public function nav(){
@@ -108,7 +69,7 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
         return $nav;
     }
     
-    public function modify(array $to, array $from){
+    public function modify(array $to, array $from = array()){
         $this->model = $this->model->modify($to, $from);
         return $this;
         
@@ -161,6 +122,7 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
             case "model_name": return $this->model_name; break;
             case "fields": return $this->model->fields; break;
             case "state": return $this->state;break;
+            case "state_field": return $this->model->state_field;break;
         }
         
         dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");

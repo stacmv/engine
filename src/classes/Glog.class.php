@@ -56,7 +56,7 @@ final class Glog
     public function __construct(array $params = array()){
         foreach($params as $k=>$v){
             if ($k == "repo_name"){
-                $this->repository = ERepository::create($v);
+                $this->repository = Repository::create($v);
             }elseif (property_exists(__CLASS__, $k)){
                 $this->$k = $v;
             };
