@@ -192,9 +192,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
                 }
                 
             }else{
-                dump($this->data,"data ".__FUNCTION__);die();
                 $res = $repository->insert($this);
-                $res = db_add($this->db_table, new ChangesSet($this->data), $comment);
                 if ($res){
                     $this->data["id"] = $res;
                 };
@@ -253,6 +251,8 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
             return $this->data["extra"][$offset];
         }elseif (method_exists($this, "get".ucfirst($offset)) ){
             return call_user_func(array("get".ucfirst($offset), $this));
+        }elseif (in_array($offset, array_keys($this->fields))){
+            return null;
         }else{
             if (DEV_MODE){
                 dosyslog(__METHOD__.get_callee().": FATAL ERROR: Neither property '".$offset."' nor method '"."get".ucfirst($offset)."' are exists in class '".__CLASS__."'.");

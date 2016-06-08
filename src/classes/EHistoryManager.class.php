@@ -11,8 +11,9 @@ abstract class EHistoryManager
             
             
             $repo = self::getHistoryRepository($model);
-                        
-            $history = $repo->where("objectId = ".$model["id"])->orderBy(array("id"=>"DESC"))->fetchAll();
+            
+            $history = $repo->where("objectId",$model["id"])->orderBy(array("id"=>"DESC"))->fetchAll();
+            
 
             return $history;
         };

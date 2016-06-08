@@ -97,7 +97,7 @@ function db_get_meta($db_table, $attr){
         
         $table_meta = $table["@attributes"];
     
-        return isset($table_meta[$attr]) ? $table_meta[$attr] : "";
+        return isset($table_meta[$attr]) ? $table_meta[$attr] : (isset($db["@attributes"][$attr]) ? $db["@attributes"][$attr] : "");
     };
     
     return "";
