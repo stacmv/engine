@@ -30,7 +30,9 @@ foreach(@array(
 						<input name="login" type="text" required class="input span2" value="" id="UserEmail" placeholder="Логин" autofocus/>
 						<input name="pass" type="password" required class="input span2" value="" id="pass" placeholder="Пароль"/>
 						<input type="submit" class="btn btn-primary btn-large btn-block" id="loginButton" value="Войти" />
-						<a href="form/signup<?=$CFG["URL"]["ext"];?>" class="btn btn-block">Регистрация</a>
+						<?php if (find_page("form/signup")["uri"] == "form/signup"):?>
+							<a href="form/signup<?=$CFG["URL"]["ext"];?>" class="btn btn-block">Регистрация</a>
+						<?php endif;?>
 					</form>
 				</div>
 			</div>

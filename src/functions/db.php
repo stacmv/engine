@@ -1511,13 +1511,12 @@ function db_prepare_value($value, $field_type){
                 $res = null;
                 break;
             };
-            // dump($value,"value");
+            
             if ( ! is_array($value)){
                 $res = db_parse_value($value, $field_type);
-                // dump($res,"res_parsed");
+            
                 if ( ! is_array($res)){
                     $res = (array) $value;
-                    // dump($res,"res_reseted");
                 };
                 if (empty($res)){
                     $res = null;
@@ -1527,10 +1526,7 @@ function db_prepare_value($value, $field_type){
             
             array_unshift($res,"");// добавим в начало и конец массива пустые строки, чтобы можно было искать отдельные значения массива с помощью SQL выражения LIKE "%||value||%"
             array_push($res,"");
-            // dump($res,"res_unshfted_pushed");
             $res = implode(DB_LIST_DELIMITER, $res); 
-            // dump($res,"res_imploded");
-            // die(__FUNCTION__);
             break;
         case "json":
             if (empty($value)){
@@ -1591,13 +1587,13 @@ function db_prepare_value($value, $field_type){
             $res = $value;
     };
     
-    if ( $res != $value){
-        if ($field_type == "password"){
-            dosyslog(__FUNCTION__.": ".get_callee().": DEBUG: value='".substr($value,0,2)."...cut', result='".substr($res,0,5)."...cut'.");
-        }else{
-            dosyslog(__FUNCTION__.": ".get_callee().": DEBUG: value='".json_encode_array($value)."', result='".json_encode_array($res)."'.");
-        };
-    };
+    // if ( $res != $value){
+        // if ($field_type == "password"){
+            // dosyslog(__FUNCTION__.": ".get_callee().": DEBUG: value='".substr($value,0,2)."...cut', result='".substr($res,0,5)."...cut'.");
+        // }else{
+            // dosyslog(__FUNCTION__.": ".get_callee().": DEBUG: value='".json_encode_array($value)."', result='".json_encode_array($res)."'.");
+        // };
+    // };
     
     
     return $res;

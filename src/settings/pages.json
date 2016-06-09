@@ -127,17 +127,6 @@
 		"acl":[]
 	},
 	{
-		"uri":"form/signup",
-		"title":"Регистрация",
-		"actions": [ "show_signup_form" ],
-		"templates": {
-			"msg": "message.block.htm",
-			"content":"signup_form.htm",
-			"page":"page.htm"
-		},
-		"acl":[]
-	},
-	{
 		"uri":"user_applications",
 		"title":"Регистрации",
 		"params":{
