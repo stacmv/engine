@@ -70,7 +70,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
         };
     };
     
-    return array($res, $added_id);
+    return array($res, $reason);
 
 };
 function add_user_application_action(){
@@ -534,9 +534,9 @@ function show_data_action(){
     
     if ($model){
         $obj_name = db_get_obj_name($model);
-        $_DATA["fields"] = form_get_fields($model,"show_data");
-        $_DATA["item_name"] = $obj_name;
+        
         if ($mode == "list"){ // 
+            $_DATA["fields"] = form_get_fields($model,"show_data");
             $get_all_function = "get_".$model;
             if (function_exists($get_all_function)){
                 $_DATA["items"] = call_user_func($get_all_function, "all");
@@ -554,6 +554,7 @@ function show_data_action(){
                 set_template_file("content", $_PAGE["templates"]["list"]);
             };
         }else{
+            $_DATA["fields"] = form_get_fields($model,"show_item");
             $get_item_function = "get" . $obj_name;
             if (function_exists($get_item_function)){
                 $_DATA["item"] = call_user_func($get_item_function, $id);
@@ -566,6 +567,8 @@ function show_data_action(){
         }
         
         $_DATA["form_name"] = $model . "_" . $mode;
+        $_DATA["model"] = $model;
+        $_DATA["item_name"] = $obj_name;
         
     }else{
         die("Code: ea-".__LINE__."-model");

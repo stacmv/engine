@@ -81,7 +81,7 @@ th.sort.sorted-desc {
         
   /* add hover effect for table rows */  
   td.hovered {  
-     background-color: lightskyblue; 
+     background-color: #ddd; 
   }
 
     
@@ -90,26 +90,26 @@ th.sort.sorted-desc {
     padding-right: 23px;
     background-repeat: no-repeat;
     background-position: right center;
-    background-image: url('i/bg.gif');
+    background-image: url('../img/sort-bg.gif');
   }
       
   th.sortable.sorted-asc,
   th.sortable.sorted-desc  {
-    color: white;
-    background-color: grey;
+    color: #000;
+    background-color: #ddd;
   }
   
   th.sortable.sorted-asc {
-    background-image: url('i/asc.gif');
+    background-image: url('../img/sort-asc.gif');
   }
 
   th.sortable.sorted-desc {
-    background-image: url('i/desc.gif');
+    background-image: url('../img/sort-desc.gif');
   }
   
 
   th.sortable:hover {
     color: black;
-    background-color: yellow; 
-    text-decoration: underline;    
+    background-color: #ddd; 
+    text-decoration: none;
   }

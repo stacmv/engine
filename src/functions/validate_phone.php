@@ -2,7 +2,7 @@
 function validate_rule_phone($key, $value, $rule_params, FormData $form){
     return validate_field_type_phone($key, $value, $form);
 }
-function validate_rule_phone_international($key, $value, FormData $form){
+function validate_rule_phone_international($key, $value, $rule_params, FormData $form){
     
     $fields = form_get_fields($form->db_table, $form->form_name);
     $field = $fields[$key];
