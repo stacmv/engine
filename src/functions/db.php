@@ -1170,6 +1170,9 @@ function db_insert($db_table, ChangesSet $data){
     
     $insert_data = array();
     $record = db_prepare_record($db_table, $data->to);
+    $keys = array_keys($record);  // db_prepare_record() may delete 'pass' field if it's empty
+
+    
     foreach($keys as $k){
         $insert_data[] = $record[$k];
     };

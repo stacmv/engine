@@ -74,7 +74,7 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     
     // //////
     if (DEV_MODE){
-        if ( ! empty($_USER) ){ // current user (tester) is authenticated
+        if ( $_USER->is_authenticated() ){ // current user (tester) is authenticated
             $message = "Test message for: " . $email . "<hr><br>\n" . $message;
             $to = !empty($_USER["email"]) ? $_USER["email"] : null;
             if (!$to){

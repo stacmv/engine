@@ -186,7 +186,10 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
             
             if (!empty($this->data["id"])){
                 try{
-                    $repository->update($this);
+                    if ($repository->update($this)){
+                        $this->data_before_changes = $this->data;
+                    };
+                    
                 }catch(Exception $e){
                     throw $e;
                 }
@@ -195,6 +198,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
                 $res = $repository->insert($this);
                 if ($res){
                     $this->data["id"] = $res;
+                    $this->data_before_changes = $this->data;
                 };
             }
         }else{

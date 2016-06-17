@@ -62,8 +62,10 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
                 $redirect_uri = db_get_meta($db_table, "add_success_redirect");
             }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
                 $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
+            }elseif(db_get_name($db_table) == db_get_table($db_table)){
+                $redirect_uri = db_get_name($db_table);
             }else{
-                $redirect_uri = str_replace(".","__", $db_table);
+                $redirect_uri = $db_table;
             };
               
             if ($IS_AJAX) $_DATA["redirect_uri"] = $redirect_uri;
@@ -71,13 +73,13 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
         };
     }else{
         if ( ! is_null($redirect_on_fail) ){
-            $redirec_uri = $redirect_on_fail ? $redirect_on_fail : "form/add/".$_PARAMS["object"];
+            $redirect_uri = $redirect_on_fail ? $redirect_on_fail : "form/add/".$_PARAMS["object"];
             if ($IS_AJAX) $_DATA["redirect_uri"] = $redirect_uri;
             else redirect($redirect_uri);
         };
     };
     
-    return array($res, $added_id);
+    return array($res, $reason);
 
 };
 function add_user_application_action(){
@@ -198,8 +200,10 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
                 $redirect_uri = db_get_meta($db_table, "edit_success_redirect");
             }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
                 $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
+            }elseif(db_get_name($db_table) == db_get_table($db_table)){
+                $redirect_uri = db_get_name($db_table);
             }else{
-                $redirect_uri = str_replace(".","__", $db_table);
+                $redirect_uri = $db_table;
             };
             redirect($redirect_uri);
         };
