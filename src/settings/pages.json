@@ -1,5 +1,17 @@
 {"pages":[
 	{
+		"uri": "import",
+        "title": "",
+        "params": {
+            "repo_name": {"type": "string", "source": "get",  "regexp": "/(import)\\/(.+)/", "pos": 2},
+            "action": {"type": "string", "source": "get",  "regexp":"/(import)\\/(.+)/", "pos": 1},
+			"tsv": {"type": "string", "source": "post"},
+			"form_name": {"type": "string", "source": "post"}
+        },
+        "actions":[ "import_data" ],
+        "acl": [ "access","manager" ]
+	},
+	{
 		"uri": "add",
         "title": "",
         "params": {

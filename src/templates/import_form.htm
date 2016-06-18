@@ -1,0 +1,82 @@
+<?php
+foreach(@array(
+	$CFG["URL"]["base"],
+	$CFG["URL"]["ext"],
+	$CFG["GENERAL"]["app_name"],
+	$form_name,
+	$form_action_link,
+	$_PAGE["header"],
+
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+?>
+<article class="app_content container">
+	<div class="row">
+		<div class="col-md-12 span12">
+			<h1><?=unescape_template_data($_PAGE["header"]);?></h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6 col-md-offset-3 span6 offset3">
+			%%form_errors%%
+			
+			<?php if (!empty($fields_form)):?>
+				<h3>Table structure</h3>
+				<table class="table table-bordered table-condensed">
+					<thead>
+						<tr>
+							<?php foreach($fields_form as $field):?>
+								<td><?=$field["name"];?> <?php if(!empty($field["label"])):?> <em><?=_t("or");?></em> <?=$field["label"];?><?php endif;?></td>
+							<?php endforeach;?>
+						</tr>
+					</thead>
+					<tr>
+						<?php foreach($fields_form as $field):?>
+							<td>&hellip;</td>
+						<?php endforeach;?>
+					</tr>
+				</table>
+			
+				<?php $fields_form = array_filter($fields_form, function($field){return $field["name"] == "form_name";}); ?>
+				
+				<hr>
+				
+				<form class="form-horizontal" action="<?=$form_action_link;?>" method="post" enctype="multipart/form-data">
+					
+					<?php
+						$fields_form["tsv"] = form_prepare_field(array(
+							"name"     => "tsv",
+							"label"    => _t("Data for import in TSV format"),
+							"type"     => "string",
+							"required" => "required",
+							"form"     => "import",
+							"form_template" => "textarea",
+							"form_hint" => _t("Copy tabular data from your spreadsheet or table on HTML page and paste in text area above."),
+						), true);
+						
+						include cfg_get_filename("templates", "form_generate.block.htm");
+					?>
+					
+						
+					
+					<div class="pull-right">
+						<input class="btn btn-success" type="submit" value="OK">
+						<?php if (!empty($_SERVER["HTTP_REFERER"])):?>
+							<a class="btn btn-default" href="<?=$_SERVER["HTTP_REFERER"];?>">Отменить</a>
+						<?php endif;?>
+					</div>
+				</form>
+			<?php else:?>
+				<h3><?=_t("Import is disabled.");?></h3>
+			<?php endif;?>
+			
+		</div>
+	</div> <!-- /.row -->
+</article>
+
+<?php if(file_exists("assets/app/".$form_name.".js")):?>
+	<script src="assets/app/<?=$form_name;?>.js"></script>
+<?php endif;?>
+
+<?php
+	unset($_SESSION["msg"]);
+?>

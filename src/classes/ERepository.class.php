@@ -11,14 +11,13 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     // abstract public function checkACL($model, $right);
     
     public static function create($repository_name, $form_name = "all"){
-        $class_name = static::_getRepositoryClassName($repository_name);
-        $repo =  new $class_name;
-        $repo->repo_name = $repository_name;
+        $repo = self::_getInstance($repository_name);
+        $repo->repo_name  = $repository_name;
         $repo->model_name = db_get_obj_name($repository_name);
-        $repo->fields   = form_get_fields($repository_name, $form_name);
+        $repo->fields     = form_get_fields($repository_name, $form_name);
         $repo->uri_prefix = db_get_meta($repository_name, "model_uri_prefix");
         
-        $storage_type = db_get_meta($repository_name, "storage") or $storage_type = "Sqlite";
+        $storage_type  = db_get_meta($repository_name, "storage") or $storage_type = "Sqlite";
         $storage_class = $storage_type . "Storage";
         $repo->storage = new $storage_class($repository_name);
         return $repo;
@@ -50,6 +49,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
 
     }
     protected static function _getModelClassName($repository_name){
+        static $modelClass_exists = false;
         $a = explode(".", $repository_name);
 
         if ( (count($a) >=2 ) && ( $a[0] == $a[1] ) ){   // main table in db; table name == db name
@@ -59,9 +59,26 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         $a = array_map("_singular", $a);
         $a = array_map("ucfirst", $a);
         
-        return implode("", $a);
+        $modelClass = implode("", $a);
+        
+        // Ensure if class is defined
+        if (!$modelClass_exists){
+            $model = engine_utils_get_class_instance($modelClass, "Model");
+            if (is_a($model, $modelClass)) $modelClass_exists = true;
+        };
+        //
+                
+        return $modelClass;
 
     }
+    protected static function _getInstance($repository_name){
+        $class_name = static::_getRepositoryClassName($repository_name);
+        
+        $repo = engine_utils_get_class_instance($class_name, "Repository");
+        
+        return $repo;
+    }
+    
     public function fetch(){
         $row = $this->fetchAssoc();
         if (is_array($row) && !empty($row)){
@@ -103,6 +120,44 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         $this->storage->groupBy();
         return $this;
         
+    }
+    public function import($data, $options = 0){
+        
+        $import_id = uniqid("import");
+        $res = array();
+        
+        $fields_import = self::fields($this->repo_name, "import_".$this->repo_name);
+        
+        // Data may have keys equal to field name or equal to field label
+        $field_names  = array_keys($fields_import);
+        $field_labels = array_map(function($field){
+            return $field["label"];
+        }, $fields_import);
+        $field_labels = array_filter($field_labels); // in case field has no label
+        
+        $map = array_merge( array_combine($field_labels, $field_names), array_combine($field_names, $field_names) );
+        
+        // Map data keys
+        $data = array_map(function($record) use ($map){
+            $mapped = array();
+            foreach($record as $k=>$v){
+                if (!empty($map[$k])){
+                    $mapped[$map[$k]] = $v;
+                };
+            };
+            return $mapped;
+        }, $data);
+        
+        
+        $this->storage->beginTransaction();
+        foreach($data as $k=>$record){
+            $modelClass = static::_getModelClassName($this->repo_name);
+            $model = new $modelClass($record);
+            $res[$k] = $this->insert($model, $import_id);
+        };
+        $this->storage->commit();
+        
+        return $res;
     }
     public function insert(EModel $model, $comment = ""){
         return $this->storage->create($this->repo_name, $model->getChanges(), $comment);

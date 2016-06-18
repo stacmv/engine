@@ -15,7 +15,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     
 
     
-    public function __construct(array $data){
+    public function __construct(array $data = array()){
         
         $this->fields = Repository::fields($this->repo_name);
         $this->data = array();

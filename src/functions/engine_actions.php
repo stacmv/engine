@@ -63,9 +63,9 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
             }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
                 $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
             }elseif(db_get_name($db_table) == db_get_table($db_table)){
-                $redirect_uri = db_get_name($db_table);
+                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . db_get_name($db_table);
             }else{
-                $redirect_uri = $db_table;
+                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . $db_table;
             };
               
             if ($IS_AJAX) $_DATA["redirect_uri"] = $redirect_uri;
@@ -201,9 +201,9 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
                 $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
             }elseif(db_get_name($db_table) == db_get_table($db_table)){
-                $redirect_uri = db_get_name($db_table);
+                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . db_get_name($db_table);
             }else{
-                $redirect_uri = $db_table;
+                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . $db_table;
             };
             redirect($redirect_uri);
         };
@@ -278,7 +278,20 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
     if ($res){
-        redirect($redirect_on_success ? $redirect_on_success : str_replace(".","__", $db_table) );
+       if ( ! is_null($redirect_on_success) ){
+            if ($redirect_on_success){
+               $redirect_uri = $redirect_on_success;
+            }elseif (db_get_meta($db_table, "edit_success_redirect")){
+                $redirect_uri = db_get_meta($db_table, "edit_success_redirect");
+            }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
+                $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
+            }elseif(db_get_name($db_table) == db_get_table($db_table)){
+                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . db_get_name($db_table);
+            }else{
+                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . $db_table;
+            };
+            redirect($redirect_uri);
+        };
     }else{
         redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"]."/".$id);
     };
@@ -356,8 +369,24 @@ function form_action($is_public=false){
 		set_template_file("content", $form_template);
 	}else{
 		dosyslog(__FUNCTION__.": FATAL ERROR: Form template for form '".$form_name."' is not found.");
-		die("Code: ea-".__LINE__."-form_template");
+		die("Code: ea-".__LINE__."-form_template".(DEV_MODE ? "-".$form_template : "") );
 	}
+}
+function import_data_action(){
+    global $_PARAMS;
+    
+    $repo_name = $_PARAMS["repo_name"];
+    $tsv       = $_PARAMS["tsv"];
+    
+    $data = import_tsv_string($tsv);
+    
+    $repository = Repository::create($repo_name);
+    $res = $repository->import($data);
+    
+    $redirect_uri = $repository->uri_prefix . $repository->repo_name;
+    
+    redirect($redirect_uri);
+    
 }
 function import_first_user_action(){
     global $_PARAMS;

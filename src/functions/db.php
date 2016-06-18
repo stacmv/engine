@@ -1580,6 +1580,9 @@ function db_prepare_value($value, $field_type){
                 };
             };
             break;
+        case "boolean":
+            $res = (boolean) $value;
+            break;
         case "password":
             $res = passwords_hash($value);
             if ( ! empty($value) && empty($res) ){

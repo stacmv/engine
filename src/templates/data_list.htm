@@ -15,13 +15,7 @@ foreach(@array(
 		<h1><?=$_PAGE["header"];?></h1>
 	</div>
 	
-	<div class="row">
-		<div class="form-actions">
-			<div class="pull-right">
-				<a href="form/add/<?=$model_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> Добавить</a>
-			</div>
-		</div>
-	</div>
+	%%data_list.default.top_actions%%
 	
 	<?php if(empty($items)):?>
 		<div class="alert alert-warning">

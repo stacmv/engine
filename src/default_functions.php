@@ -12,7 +12,7 @@ if (!function_exists("cfg_get_filename")){
         // scope == ENGINE_SCOPE_ALL - get file from site, then if not found, from app then if not found get it from engine
         
         // Type whitelist
-        $types = array("templates/form", "templates", "settings", "email_templates", "sms_templates" );
+        $types = array("templates/form", "templates", "settings", "email_templates", "sms_templates", "classes" );
         if ( ! in_array($type, $types) ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Unknown type '".$type."' for file '".$filename."'.");
             die("Code: df-".__LINE__);

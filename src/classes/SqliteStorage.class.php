@@ -18,7 +18,13 @@ class SqliteStorage extends EStorage
         $this->repo_name = $repo_name;
         $this->fields = form_get_fields($repo_name, "all");
     }
-    
+
+    public function beginTransaction(){
+        return $this->dbh->beginTransaction();
+    }
+    public function commit(){
+        return $this->dbh->commit();
+    }
     public function create($resource, ChangesSet $changes, $comment=""){
         // TODO error handling
         $db_table = $this->parseResource($resource)["path"];
