@@ -218,7 +218,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
             return $item->jsonSerialize();
         }, $this->fetchAll());
         
-        
+        return $res;
 
     }
     
