@@ -26,6 +26,11 @@ function import_tsv_string($tsv_str, $convertToUTF8=false, $returnHeaderOnly = f
         while ( $n_columns > count($row) ){ // hack for last row which may contain less elements than header
             $row[] = "";
         };
+        
+        if (count($row) > $n_columns){
+            dosyslog(__FUNCTION__.get_callee().": ERROR: Bad TSV: Row contains ".count($row)." columns, while header only ".$n_columns.".");
+            $row = array_slice($row,0, $n_columns);
+        }
        
         return array_combine($header, $row);
     },array_slice($tsv,1));
@@ -46,7 +51,7 @@ function import_tsv_string($tsv_str, $convertToUTF8=false, $returnHeaderOnly = f
 
 // See: http://php.net/manual/ru/function.str-getcsv.php#111665
 function parse_tsv ($tsv_string, $delimiter = ",", $skip_empty_lines = true, $trim_fields = true){
-    $enc = preg_replace('/(?<!")""/', '!!Q!!', $tsv_string);
+    $enc = preg_replace('/(?<!")""/u', '!!Q!!', $tsv_string);
     $enc = preg_replace_callback(
         '/"(.*?)"/s',
         function ($field) {
@@ -54,7 +59,7 @@ function parse_tsv ($tsv_string, $delimiter = ",", $skip_empty_lines = true, $tr
         },
         $enc
     );
-    $lines = preg_split($skip_empty_lines ? ($trim_fields ? '/( *\R)+/s' : '/\R+/s') : '/\R/s', $enc);
+    $lines = preg_split($skip_empty_lines ? ($trim_fields ? '/( *\R)+/su' : '/\R+/su') : '/\R/su', $enc);
     
     
         

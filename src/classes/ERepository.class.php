@@ -117,7 +117,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         });
     }
     public function groupBy($groupBy){
-        $this->storage->groupBy();
+        $this->storage->groupBy($groupBy);
         return $this;
         
     }
