@@ -35,10 +35,10 @@ foreach(@array(
 						<?php continue;?>
 					<?php endif;?>
 					
-					<?php if (file_exists(cfg_get_filename("templates", "data_list.".$repo_name."field_name_".$field["name"].".htm"))):?>
-						<?php include cfg_get_filename("templates", "data_list.".$repo_name."field_name_".$field["name"].".htm");?>
-					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.".$repo_name."field_type_".$field["type"].".htm"))):?>
-						<?php include cfg_get_filename("templates", "data_list.".$repo_name."field_type_".$field["type"].".htm");?>
+					<?php if (file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".field_name_".$field["name"].".htm"))):?>
+						<?php include cfg_get_filename("templates", "data_list.".$repo_name.".field_name_".$field["name"].".htm");?>
+					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".field_type_".$field["type"].".htm"))):?>
+						<?php include cfg_get_filename("templates", "data_list.".$repo_name.".field_type_".$field["type"].".htm");?>
 					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.default.field_name_".$field["name"].".htm"))):?>
 						<?php include cfg_get_filename("templates", "data_list.default.field_name_".$field["name"].".htm");?>
 					

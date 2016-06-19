@@ -6,7 +6,6 @@ abstract class EView
     public static function getView($object){
         
         if (is_a($object, "ERepository")){
-            die("here r");
             return new RepositoryView($object);
         }elseif(is_a($object, "EModel")){
             return new ModelView($object);
@@ -62,8 +61,10 @@ abstract class EView
                 if ( ! isset($tsv[$key]) ){
                     $tsv[$key] = array();
                     $tmp = import_tsv( $tsv_file );
-                    foreach($tmp as $v){
-                        $tsv[$key][ isset($v["value"]) ? $v["value"] : $v[$key] ] = $v["caption"];
+                    if ($tmp){
+                        foreach($tmp as $v){
+                            $tsv[$key][ isset($v["value"]) ? $v["value"] : $v[$key] ] = $v["caption"];
+                        };
                     };
                     unset($tmp, $v);
                 };
