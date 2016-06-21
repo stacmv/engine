@@ -189,7 +189,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
             }
         }else{
             if (is_string($whereClause) && $value){
-                $this->storage->where($whereClause . " = " . db_prepare_value($value, $this->fields[$whereClause]["type"]));
+                $this->storage->where($whereClause . " = " . db_quote(db_prepare_value($value, $this->fields[$whereClause]["type"])));
             }else{
                 $this->storage->where($whereClause);
             }
