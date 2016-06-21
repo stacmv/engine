@@ -440,7 +440,7 @@ function SETPARAMS(){
 $start_microtime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
 
 // register autoload function for engine classes
-spl_autoload_register(function ($class_name){$class_file =  ENGINE_DIR . "classes/" . engine_utils_get_class_filename($class_name); if (file_exists($class_file)){ require_once $class_file; } else throw new Exception($class_name);});
+spl_autoload_register(function ($class_name){$class_file =  ENGINE_DIR . "classes/" . engine_utils_get_class_filename($class_name); if (file_exists($class_file)){ require_once $class_file; } /*else throw new Exception($class_name)*/;});
 
 // register_shutdown_function("shutdown");
 session_start();
