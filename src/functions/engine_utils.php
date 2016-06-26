@@ -4,18 +4,14 @@ function engine_utils_get_class_filename($class_name){
 }
 function engine_utils_get_class_instance($class_name, $class_template){
     
-    try{
+    if (class_exists($class_name)){
         $instance =  new $class_name;
-    }catch(Exception $e){
-        if ($class_name == $e->getMessage()){
-            $class_source = engine_utils_generate_class($class_name, $class_template);
-            if ($class_source  &&
-                engine_utils_deploy_class($class_source, APP_DIR . "classes/".engine_utils_get_class_filename($class_name))
-            ){
-                $instance =  new $class_name;
-            }else{
-                die(__METHOD__."-".__LINE__.(DEV_MODE ? "-".$e->getMessage() : ""));
-            }
+    }else{
+        $class_source = engine_utils_generate_class($class_name, $class_template);
+        if ($class_source  &&
+            engine_utils_deploy_class($class_source, APP_DIR . "classes/".engine_utils_get_class_filename($class_name))
+        ){
+            $instance =  new $class_name;
         }else{
             die(__METHOD__."-".__LINE__.(DEV_MODE ? "-".$e->getMessage() : ""));
         }

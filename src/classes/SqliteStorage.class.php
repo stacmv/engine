@@ -8,10 +8,16 @@ class SqliteStorage extends EStorage
     protected $sql_query;
     protected $sql_result;
     protected $sql_select;
+    protected $sql_from;
+    protected $sql_join;
+    protected $sql_on;
     protected $sql_where;
     protected $sql_group_by;
+    protected $sql_having;
     protected $sql_order_by;
     protected $sql_limit;
+    
+    protected $_sql_in_join; // JOIN method called, ON method not yet called
    
     public function __construct($repo_name){
         $this->dbh = db_set($repo_name);
@@ -116,6 +122,13 @@ class SqliteStorage extends EStorage
             return check_data_item_acl($item, $repo_name);
         });
     }
+    
+    public function from($from){
+        $this->sql_from = $from;
+        
+        $this->sql_result = null;
+        return $this;
+    }
     public function groupBy($groupBy){
         $this->sql_group_by = $groupBy;
 
@@ -123,6 +136,13 @@ class SqliteStorage extends EStorage
         return $this;
         
     }
+    public function having($having){
+        $this->sql_having = $having;
+
+        $this->sql_result = null;
+        return $this;
+    }
+    
     public function insert(EModel $model, $comment = ""){
         // TODO error handling
         $res = db_add($this->repo_name, $model->getChanges(), $comment);
@@ -132,10 +152,43 @@ class SqliteStorage extends EStorage
         };
         return $res;
     }
+    public function join($join){
+        if (!$this->_sql_in_join){
+            $this->sql_join .= " INNER JOIN " . $join;
+            $this->_sql_in_join = true;
+        
+            $this->sql_result = null;
+            return $this;
+        }else{
+            throw new Exception("wrong_call_chain_".__METHOD__);
+        }
+    }
+    public function leftJoin($leftJoin){
+        if (!$this->_sql_in_join){
+            $this->sql_join .= " LEFT JOIN " . $leftJoin;
+            $this->_sql_in_join = true;
+        
+            $this->sql_result = null;
+            return $this;
+        }else{
+            throw new Exception("wrong_call_chain_".__METHOD__);
+        }
+    }
     public function limit($limit){
         $this->sql_limit = (int) $limit;
         $this->sql_result = null;
         return $this;
+    }
+    public function on($on){
+        if ($this->_sql_in_join){
+            $this->sql_join .= " ON " . $on . "";
+            $this->_sql_in_join = false;
+        
+            $this->sql_result = null;
+            return $this;
+        }else{
+            throw new Exception("wrong_call_chain_".__METHOD__);
+        }
     }
     public function orderBy(array $orderBy){
         $fields = $this->fields;
@@ -166,6 +219,7 @@ class SqliteStorage extends EStorage
         
         return $this;
     }
+    
     public function update($resource, ChangesSet $changes, $comment=""){
         // TODO error handling
         
@@ -202,7 +256,21 @@ class SqliteStorage extends EStorage
         }else{
             $sql .= "*";
         }
-        $sql .= " FROM " . db_get_table($this->repo_name) ." ";
+        
+        if (!$this->sql_from){
+            $sql .= " FROM " . db_get_table($this->repo_name) ." ";
+        }else{
+            $sql .= " FROM " . $this->sql_from;
+        };
+        
+        // Join
+        if ($this->sql_join){
+            if (!$this->_sql_in_join){
+                $sql .= $this->sql_join;
+            }else{
+                throw new Exception("wrong_call_chain_".__METHOD__);
+            }
+        }
         
         // Where
         if ( ! userHasRight("manager") && isset($this->fields["use_id"])){
@@ -216,6 +284,11 @@ class SqliteStorage extends EStorage
         // group by
         if ($this->sql_group_by){
             $sql .= " GROUP BY " . $this->sql_group_by . " ";
+        }
+        
+        // Having
+        if ($this->sql_having){
+            $sql .= " HAVING " . $this->sql_having . " ";
         }
         
         // Order by

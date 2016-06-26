@@ -466,14 +466,11 @@ while(HASNEXTACTION()){
 
 };
 
-if ( ! $ISREDIRECT && ! $IS_API_CALL && ! $IS_AJAX ){
-   
-    APPLYPAGETEMPLATE();
-  
-}elseif($IS_AJAX){
-    
+
+if($IS_AJAX && empty($_PAGE["templates"]["page"])){
     SETAJAXRESPONSEBODY();
-    
+}elseif ( ! $ISREDIRECT && ! $IS_API_CALL ){
+    APPLYPAGETEMPLATE();  
 }
 
 
