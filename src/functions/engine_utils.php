@@ -37,6 +37,9 @@ function engine_utils_generate_class($class_name, $class_template){
 function engine_utils_deploy_class($class_source, $class_filename){
     
     if ( ! file_exists($class_filename) ){
+        if (!is_dir(dirname($class_filename))){
+            mkdir(dirname($class_filename), 0777, true);
+        };
         if (file_put_contents($class_filename, $class_source)){
             $msg = "INFO: Class file " . $class_filename . " was deployed.";
             dosyslog(__FUNCTION__ . ": " . $msg);
