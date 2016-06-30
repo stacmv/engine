@@ -7,16 +7,8 @@ abstract class EHistoryManager
         
         if (isset(self::$historyBuilders[$model->repo_name])){
             return call_user_func(self::$historyBuilders[$model->repo_name],$model, $options);
-        }else{
-            
-            
-            $repo = self::getHistoryRepository($model);
-            
-            $history = $repo->where("objectId",$model["id"])->orderBy(array("id"=>"DESC"))->fetchAll();
-            
-
-            return $history;
         };
+        return array();
     }
     
     public static function setHistoryBuilder($repository_name, $func){
@@ -36,4 +28,10 @@ abstract class EHistoryManager
         }
     }
     
+    public static function defaultHistoryBuiler(Model $model, $options = ""){
+        
+        $repo = self::getHistoryRepository($model);
+        $history = $repo->where("objectId",$model["id"])->orderBy(array("id"=>"DESC"))->fetchAll();
+        return $history;
+    }
 }

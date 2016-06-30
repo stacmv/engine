@@ -782,17 +782,21 @@ if (!function_exists("show_page")){
 if (!function_exists("userHasRight")){
     function userHasRight($right, $login="", $object_accessed = null ){
         global $_USER;
+        
+        if (cached()) return cache();
+        
+        
         $user = array();
        
         // проверка комбинации прав
           // ИЛИ - |
         if (strpos($right,"|") > 0){
             $OR_rights = explode("|", $right, 2);
-            return userHasRight($OR_rights[0], $login, $object_accessed) || userHasRight($OR_rights[1], $login, $object_accessed);
+            return cache( userHasRight($OR_rights[0], $login, $object_accessed) || userHasRight($OR_rights[1], $login, $object_accessed) );
           // И - , 
         }elseif(strpos($right,",") > 0){
             $AND_rights = explode(",", $right, 2);
-            return userHasRight($AND_rights[0], $login, $object_accessed) && userHasRight($AND_rights[1], $login, $object_accessed);
+            return cache( userHasRight($AND_rights[0], $login, $object_accessed) && userHasRight($AND_rights[1], $login, $object_accessed) );
         };
         
         $right = trim($right);
@@ -803,7 +807,7 @@ if (!function_exists("userHasRight")){
                 if ( $_USER["authenticated"] ){
                     dosyslog(__FUNCTION__.": ERROR: ".$login.": права не заданы.");
                 };
-                return false;
+                return cache(false);
             };
             
             $login = $_USER->get_login();
@@ -812,10 +816,10 @@ if (!function_exists("userHasRight")){
             $users = EUsers::find("login", $login);
             if (count($users)==0){
                 dosyslog(__FUNCTION__.": WARNING: User with login '".$login."' is not found in DB.");
-                return false;
+                return cache(false);
             }elseif(count($users)>1){
                 dosyslog(__FUNCTION__.": ERROR: More than one user with login '".$login."' is found in DB.");
-                return false;
+                return cache(false);
             }else{
                 $user = $users[0];
             };
@@ -835,7 +839,7 @@ if (!function_exists("userHasRight")){
         
         dosyslog(__FUNCTION__.": DEBUG: ".$login." ".($res?"имеет право " : "не имеет права "). $right);
         
-        return $res;
+        return cache($res);
     };
 };
 if (!function_exists("user_has_access_by_ip")){

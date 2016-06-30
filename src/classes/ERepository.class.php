@@ -63,7 +63,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         
         // Ensure if class is defined
         if (!$modelClass_exists){
-            $model = engine_utils_get_class_instance($modelClass, "Model");
+            $model = engine_utils_get_class_instance($modelClass, "ModelTemplate");
             if (is_a($model, $modelClass)) $modelClass_exists = true;
         };
         //
@@ -74,7 +74,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     protected static function _getInstance($repository_name){
         $class_name = static::_getRepositoryClassName($repository_name);
         
-        $repo = engine_utils_get_class_instance($class_name, "Repository");
+        $repo = engine_utils_get_class_instance($class_name, "RepositoryTemplate");
         
         return $repo;
     }
@@ -96,10 +96,13 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         $res = $this->fetchAllAssoc();
         if (!$res) return array();
         
-        return array_map(function($row){
-                $modelClass = static::_getModelClassName($this->repo_name);
-                return new $modelClass($row);
-            }, $res);
+        $modelClass = static::_getModelClassName($this->repo_name);
+        
+        foreach($res as $k=>$row){
+            $res[$k] = new $modelClass($row);
+        };
+            
+        return $res;
         
     }
     public function fetchAllAssoc(){
@@ -211,8 +214,6 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     
     /* jsonSerializable implementation */
     public function jsonSerialize(){
-        
-        
         
         $res =  array_map(function($item){
             return $item->jsonSerialize();

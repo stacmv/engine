@@ -153,6 +153,8 @@ function form_prepare_view_item(EModel $item, $fields){
 }
 function form_get_fields($db_table, $form_name){
     
+    if (cached()) return cache();
+    
     $schema = db_get_table_schema($db_table);
     
     if ( ! $schema ){
@@ -220,7 +222,7 @@ function form_get_fields($db_table, $form_name){
         
     };
     unset($v, $schema);
-    return $fields;
+    return cache($fields);
 }
 function form_get_field_values($field, $key = "form_values"){
     global $_DATA;

@@ -615,7 +615,7 @@ function show_data_action(){
     };
     
     $_DATA["model_name"] = $obj_name;
-    $_DATA["form_name"] = $form_name;
+    $_DATA["form_name"]  = $form_name;
     $_DATA["repo_name"]  = $repo_name;
 
 }
