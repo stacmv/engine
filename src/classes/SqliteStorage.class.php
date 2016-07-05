@@ -16,6 +16,7 @@ class SqliteStorage extends EStorage
     protected $sql_having;
     protected $sql_order_by;
     protected $sql_limit;
+    protected $sql_offset;
     
     protected $_sql_in_join; // JOIN method called, ON method not yet called
    
@@ -190,6 +191,11 @@ class SqliteStorage extends EStorage
             throw new Exception("wrong_call_chain_".__METHOD__);
         }
     }
+    public function offset($offset){
+        $this->sql_offset = (int) $offset;
+        $this->sql_result = null;
+        return $this;
+    }
     public function orderBy(array $orderBy){
         $fields = $this->fields;
         
@@ -299,6 +305,11 @@ class SqliteStorage extends EStorage
         // Limit
         if ($this->sql_limit){
             $sql .= " LIMIT ".$this->sql_limit;
+        }
+        
+        // Offset
+        if ($this->sql_offset){
+            $sql .= " OFFSET ".$this->sql_offset;
         }
         $sql .= ";";
         

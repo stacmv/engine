@@ -1,5 +1,5 @@
 <?php 
-abstract class ERepository implements IteratorAggregate, jsonSerializable
+abstract class ERepository implements IteratorAggregate, jsonSerializable, Countable
 {
     protected $repo_name;
     protected $fields;
@@ -169,6 +169,10 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
         $this->storage->limit($limit);
         return $this;
     }
+    public function offset($offset){
+        $this->storage->offset($offset);
+        return $this;
+    }
     public function orderBy(array $orderBy){
         $this->storage->orderBy($orderBy);
         return $this;
@@ -227,5 +231,12 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable
     /* IteratorAggregate implementation */
     public function getIterator() {
         return new ArrayIterator($this->fetchAll());
+    }
+    
+    /* Countable implementation */
+    public function count(){
+        $tmp = $this->select("count(*)")->fetchAssoc();
+        $count = $tmp["count(*)"];
+        return $count;
     }
 }
