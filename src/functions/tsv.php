@@ -1,5 +1,6 @@
 <?php
-function import_tsv($filename, $convertToUTF8=false, $returnHeaderOnly = false){
+function import_tsv($filename, $convertToUTF8=false, $returnHeaderOnly = false, $delimiter="\t"){
+    // convertToUTF8 parameter is for compatibility with legacy client code;
 
     $file = glog_file_read($filename);
  
@@ -7,14 +8,14 @@ function import_tsv($filename, $convertToUTF8=false, $returnHeaderOnly = false){
     if (!$file){
         dosyslog(__FUNCTION__."(".__LINE__."): ошибка: не найден или пустой файл '".$filename."'");
     }else{
-        $res = import_tsv_string($file);
+        $res = import_tsv_string($file, $convertToUTF8, $returnHeaderOnly, true, $delimiter);
     };
     
     return $res;
 };
 
-function import_tsv_string($tsv_str, $convertToUTF8=false, $returnHeaderOnly = false, $stripComments = true){
-    $tsv = parse_tsv(trim($tsv_str), "\t"); 
+function import_tsv_string($tsv_str, $convertToUTF8=false, $returnHeaderOnly = false, $stripComments = true, $delimiter="\t"){
+    $tsv = parse_tsv(trim($tsv_str), $delimiter); 
         
     $header = $tsv[0];
     if ($returnHeaderOnly) return $header;

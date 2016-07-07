@@ -193,10 +193,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
             
             if (!empty($this->data["id"])){
                 try{
-                    if ($repository->update($this)){
-                        $this->data_before_changes = $this->data;
-                    };
-                    
+                    $repository->update($this);
                 }catch(Exception $e){
                     throw $e;
                 }
@@ -205,14 +202,13 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
                 $res = $repository->insert($this);
                 if ($res){
                     $this->data["id"] = $res;
-                    $this->data_before_changes = $this->data;
                 };
             }
         }else{
             dosyslog(__METHOD__.get_callee().": WARNING: Model '".$this->model_name."(".$this->data["id"].")' is not changed. Not saved, so.");
         }
         
-        return $this;
+        return $repository->load($this->data["id"])->fetch();
     }
     
     public function __get($key){

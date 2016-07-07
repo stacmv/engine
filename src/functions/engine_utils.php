@@ -13,7 +13,7 @@ function engine_utils_get_class_instance($class_name, $class_template){
         ){
             $instance =  new $class_name;
         }else{
-            die(__METHOD__."-".__LINE__.(DEV_MODE ? "-".$e->getMessage() : ""));
+            die(__METHOD__."-".__LINE__.(DEV_MODE ? "-".$class_name : ""));
         }
     };
     

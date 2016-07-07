@@ -182,26 +182,31 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         $this->storage->select($select);
         return $this;
     }
+    public function set(array $set){
+        return $this->storage->set($set);
+    }
     public function update(EModel $model, $comment=""){
         return $this->storage->update($this->repo_name . "/" . $model["id"], $model->getChanges(), $comment);
     }
-    public function where($whereClause, $value = ""){
-        if (is_a($this->storage, "IniFileStorage")){
-            if (is_string($whereClause) && $value){
-                $this->storage->where(function($record)use($whereClause,$value){
-                    return $record[$whereClause] == $value;
-                });
-            }else{
-                $this->storage->where($whereClause);
-            }
-        }else{
-            if (is_string($whereClause) && $value){
-                $this->storage->where($whereClause . " = " . db_quote(db_prepare_value($value, $this->fields[$whereClause]["type"])));
-            }else{
-                $this->storage->where($whereClause);
-            }
-        }
+    public function where($whereClause, $value = "", $operator = ""){
         
+        if (is_string($whereClause) && $value){
+            switch(strtolower($operator)){
+            case "in":
+                if (is_scalar($value)){
+                    $this->storage->where($whereClause . " IN (" . db_quote($value) . ")");
+                }else{
+                    $this->storage->where($whereClause . " IN (" . implode(", ", array_map("db_quote", $value)) . ")");
+                }
+                break;
+            default:
+                $this->storage->where($whereClause . " = " . db_quote(db_prepare_value($value, $this->fields[$whereClause]["type"])));
+                break;
+            };
+        }else{
+            $this->storage->where($whereClause);
+        }
+
         return $this;
     }
     public function __get($key){

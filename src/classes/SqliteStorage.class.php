@@ -32,6 +32,10 @@ class SqliteStorage extends EStorage
     public function commit(){
         return $this->dbh->commit();
     }
+    public function rollback(){
+        return $this->dbh->rollbak();
+    }
+    
     public function create($resource, ChangesSet $changes, $comment=""){
         // TODO error handling
         $db_table = $this->parseResource($resource)["path"];
@@ -225,7 +229,58 @@ class SqliteStorage extends EStorage
         
         return $this;
     }
-    
+    public function set(array $set){
+        
+        if (!$this->sql_where)  throw new Exception("wrong_call_chain_".__METHOD__);
+        
+                
+        foreach ($set as $field=>$value){
+            if (isset($this->fields[$field])){
+                $set[$field] = db_prepare_value($value, $this->fields[$field]["type"]);
+            }else{
+                throw new Exception("wrong_param_".(string)$field);
+            };
+        };
+        
+        
+        $sql = "UPDATE ";
+        //
+        if (!$this->sql_from){
+            $sql .= db_get_table($this->repo_name) ." ";
+        }else{
+            $sql .= $this->sql_from;
+        };
+        
+        
+        // SET
+        $sql .= " SET " . implode(", ", array_map(function($value, $field){
+            return $field . " = " . db_quote($value);
+        }, $set, array_keys($set)));
+        
+        // Where
+        if ( ! userHasRight("manager") && isset($this->fields["user_id"])){
+            $where_acl_addon = " (user_id = " . (int) $_USER["id"] . ") ";
+        }        
+        if ($this->sql_where || !empty($where_acl_addon))  $sql .= " WHERE ";
+        if ($this->sql_where)                              $sql .= $this->sql_where;
+        if ($this->sql_where && !empty($where_acl_addon))  $sql .= " AND ";
+        if (!empty($where_acl_addon))                      $sql .= $where_acl_addon;
+        
+        
+        $st = $this->dbh->prepare($sql);
+        if ($st){
+            if ($st->execute()){
+                dosyslog(__METHOD__.get_callee().": NOTICE: SQL: ".$sql." ... success");
+            }else{
+                dosyslog(__METHOD__.get_callee().": NOTICE: SQL: ".$sql." ... fail");
+            }
+        }else{
+            throw new Exception("wrong_sql_query");
+        }
+        
+        return $st->rowCount();
+        
+    }
     public function update($resource, ChangesSet $changes, $comment=""){
         // TODO error handling
         
@@ -279,7 +334,7 @@ class SqliteStorage extends EStorage
         }
         
         // Where
-        if ( ! userHasRight("manager") && isset($this->fields["use_id"])){
+        if ( ! userHasRight("manager") && isset($this->fields["user_id"])){
             $where_acl_addon = " (user_id = " . (int) $_USER["id"] . ") ";
         }        
         if ($this->sql_where || !empty($where_acl_addon))  $sql .= " WHERE ";
