@@ -78,6 +78,9 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         
         return $repo;
     }
+    protected static function _methods(){
+        return get_class_methods(get_called_class());
+    }
     
     public function fetch(){
         $row = $this->fetchAssoc();
@@ -216,6 +219,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         if ($key == "uri_prefix") return $this->uri_prefix;
         
         
+        
         dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");
         die("Code: ".__CLASS__."-".__LINE__."-".$key);
         
@@ -227,6 +231,12 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         $res =  array_map(function($item){
             return $item->jsonSerialize();
         }, $this->fetchAll());
+        
+        foreach(static::_methods() as $method){
+            if ("getIterator" == $method) continue; // IteratorAggregate method, not own
+            if ( ! preg_match("/^get([A-Z].+)$/", $method, $matches)) continue;
+            $res[strtolower($matches[1])] = $this->$method();
+        };
         
         return $res;
 

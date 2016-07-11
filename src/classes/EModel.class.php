@@ -124,6 +124,9 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         return $item;
         
     }
+    public static function methods(){
+        return get_class_methods(get_called_class());
+    }
     
     protected function getHistory($id = ""){
 
@@ -134,11 +137,9 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         };
     }
     protected function getName(){
-        return issset($this->data["name"]) ? $this->data["name"] : (isset($this->data["title"]) ? $this->data["title"] : _t("Unknown name"));
+        return isset($this->data["name"]) ? $this->data["name"] : (isset($this->data["title"]) ? $this->data["title"] : _t("Unknown name"));
     }
-    public function getChanges(){
-        return new ChangesSet($this->data, $this->data_before_changes);
-    }
+
     public function getLink($id = ""){
         if ($id){
             return UrlManager::getLink($this, array("id"=>$id));
@@ -257,7 +258,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         } elseif (isset($this->data["extra"][$offset])) {
             return $this->data["extra"][$offset];
         }elseif (method_exists($this, "get".ucfirst($offset)) ){
-            return call_user_func(array("get".ucfirst($offset), $this));
+            return call_user_func(array($this, "get".ucfirst($offset)));
         }elseif (in_array($offset, array_keys($this->fields))){
             return null;
         }else{
@@ -274,11 +275,10 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         
         $item = $this->data;
                 
-        if (empty($this->data["link"]))     $item["link"]     = $this->getLink();
-        if (empty($this->data["state"]))    $item["state"]    = $this->getState();
-        
-        if (empty($this->data["history"]) && ! is_a($this, "HistoryModel")){
-            $item["history"]  = $this->getHistory();
+        foreach(static::methods() as $method){
+            if ("getIterator" == $method) continue; // IteratorAggregate method, not own
+            if ( ! preg_match("/^get([A-Z].+)$/", $method, $matches)) continue;
+            $item[strtolower($matches[1])] = $this->$method();
         };
                 
         return $item;
