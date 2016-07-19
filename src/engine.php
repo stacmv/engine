@@ -467,7 +467,7 @@ while(HASNEXTACTION()){
 };
 
 
-if($IS_AJAX && empty($_PAGE["templates"]["page"])){
+if($IS_AJAX && empty($_PAGE["templates"]["page"]) && !$IS_API_CALL){
     SETAJAXRESPONSEBODY();
 }elseif ( ! $ISREDIRECT && ! $IS_API_CALL ){
     APPLYPAGETEMPLATE();  
