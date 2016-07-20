@@ -166,7 +166,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         return $res;
     }
     public function insert(EModel $model, $comment = ""){
-        return $this->storage->create($this->repo_name, $model->getChanges(), $comment);
+        return $this->storage->create($this->repo_name, $model->changes(), $comment);
     }
     public function limit($limit){
         $this->storage->limit($limit);
@@ -189,7 +189,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         return $this->storage->set($set);
     }
     public function update(EModel $model, $comment=""){
-        return $this->storage->update($this->repo_name . "/" . $model["id"], $model->getChanges(), $comment);
+        return $this->storage->update($this->repo_name . "/" . $model["id"], $model->changes(), $comment);
     }
     public function where($whereClause, $value = "", $operator = ""){
         

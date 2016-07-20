@@ -275,6 +275,7 @@ class SqliteStorage extends EStorage
                 dosyslog(__METHOD__.get_callee().": NOTICE: SQL: ".$sql." ... fail");
             }
         }else{
+            dosyslog(__METHOD__.get_callee().": NOTICE: Wrong SQL: ".$sql.". Error: ".db_error($this->dbh));
             throw new Exception("wrong_sql_query");
         }
         
@@ -337,11 +338,25 @@ class SqliteStorage extends EStorage
         if ( ! userHasRight("manager") && isset($this->fields["user_id"])){
             $where_acl_addon = " (user_id = " . (int) $_USER["id"] . ") ";
         }        
-        if ($this->sql_where || !empty($where_acl_addon))  $sql .= " WHERE ";
-        if ($this->sql_where)                              $sql .= $this->sql_where;
-        if ($this->sql_where && !empty($where_acl_addon))  $sql .= " AND ";
-        if (!empty($where_acl_addon))                      $sql .= $where_acl_addon;
+        $sql_where = "";
+        if ($this->sql_where || !empty($where_acl_addon))  $sql_where .= " WHERE ";
+        if ($this->sql_where)                              $sql_where .= $this->sql_where;
+        if ($this->sql_where && !empty($where_acl_addon))  $sql_where .= " AND ";
+        if (!empty($where_acl_addon))                      $sql_where .= $where_acl_addon;
         
+        // Do not return 'marked as deleted' records by default
+        if (isset($this->fields["deleted"])){
+            if (strpos($sql_where, "deleted") === false){
+                if (!$sql_where) $sql_where .= " WHERE deleted IS NULL";
+                else $sql_where .= " AND deleted IS NULL";
+            };
+        };
+        
+        $sql .= $sql_where;
+        
+        // dump($sql_where,"sql_where");
+        // die($sql);
+            
         // group by
         if ($this->sql_group_by){
             $sql .= " GROUP BY " . $this->sql_group_by . " ";
