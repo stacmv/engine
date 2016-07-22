@@ -13,7 +13,7 @@ class Model extends EModel
     
     
     protected function _get_repo_name_for_model_name($model_name){
-        return _plural($model_name);
+        return implode(".", array_map("_plural", explode(".", $model_name)));
     }
     protected function _get_model_name_for_class($class_name){
         return strtolower(implode(".", preg_split("/([[:upper:]][[:lower:]]+)/", $class_name, null, PREG_SPLIT_DELIM_CAPTURE|PREG_SPLIT_NO_EMPTY )));

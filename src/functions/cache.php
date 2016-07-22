@@ -5,10 +5,7 @@ define("CACHE_DELETE_FLAG", uniqid("cache_del"));
 function cache($value = null){
     if ( ! CACHE_ENABLED ) return null;
         
-    $dbt = debug_backtrace(false, 2);
-    $function = $dbt[1]["function"];
-    $args     = $dbt[1]["args"];
-    $key      = $function . "::" . md5(serialize($args));
+    $key = _cache_key();
             
     if ( is_null($value) ){  // get from cache 
         return _cache($key);
@@ -30,12 +27,7 @@ function cached($key = null){
     if ( ! CACHE_ENABLED ) return null;
         
     if ( is_null($key) ){
-        $dbt = debug_backtrace(false, 2);
-        
-        $function = $dbt[1]["function"];
-        $args     = $dbt[1]["args"];
-        
-        $hash     = $function . "::" . md5(serialize($args));
+        $hash = _cache_key();
     }else{
         $hash = $key;
     }
@@ -66,5 +58,15 @@ function _cache($key, $value = null){
         return $value;
     };
 }
-
+function _cache_key(){
+    
+    $dbt = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 3);
+    $function    = $dbt[2]["function"];
+    $args_hash   = !empty($dbt[2]["args"]) ? md5(serialize($dbt[2]["args"])) : "";
+    $object_hash = !empty($dbt[2]["object"]) ? md5($dbt[2]["class"] . spl_object_hash($dbt[2]["object"])) : "";  // possible risk: spl_object_hash() can reuse hash for another object after deleting the first one.
+    
+    $key         = $function . "::" . $object_hash . $args_hash;
+    
+    return $key;
+}
 
