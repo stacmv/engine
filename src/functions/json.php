@@ -1,6 +1,7 @@
 <?php
+// require PHP >= 5.4
 function json_encode_array($arr){
-    return urldecode(json_encode( json_array_urlencode($arr) ));
+    return urldecode(json_encode( json_array_urlencode($arr), JSON_UNESCAPED_UNICODE ));
 };
 function json_decode_array($str, $urldecode = true){
     $arr = @json_decode($str , true);
