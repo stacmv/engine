@@ -1,0 +1,46 @@
+<article class="app_content">
+	<?php if(empty($items)):?>
+		<div class="alert alert-warning">
+			Нет данных.
+		</div>
+	<?php else:?>
+		<?php foreach($items as $item):?>
+			<div class="page-header">
+				<div class="pull-left"><a href="<?=@$_PAGE["model_uri_prefix"];?><?=$repo_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-large">&larr; к списку</a></div>
+				<h1><?=$item["name"];?></h1>
+			</div>
+		
+		
+				
+			<div class="row-fluid">
+				<div class="span6">
+
+						<table class="table">
+							<?php foreach($fields as $field):?>
+								<tr>
+									<th><?=$field["label"];?></th>
+									<td>
+										<?php if ( DEV_MODE &&! isset($item[$field["name"]]) ):?>
+											<div class="alert alert-danger">Не актуальная структура БД! <em>Сделай миграцию базы данных!</em></div>
+										<?php else:?>
+											
+											<?php include cfg_get_filename("templates", "data_cell.htm");?>
+											
+										<?php endif;?>
+									</td>
+								</tr>
+							<?php endforeach;?>
+						</table>
+				</div>
+				<div class="span6">
+					
+					
+				</div>
+			</div>
+		<?php endforeach;?>
+	<?php endif;?>
+</article> <!-- /.app_content -->
+
+<?php if (file_exists("assets/app/" . $form_name . ".js")):?>
+	<script src="assets/app/<?=$form_name;?>.js"></script>
+<?php endif;?>

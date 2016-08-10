@@ -35,46 +35,8 @@ foreach(@array(
 						<?php continue;?>
 					<?php endif;?>
 					
-					<?php if (file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".field_name_".$field["name"].".htm"))):?>
-						<?php include cfg_get_filename("templates", "data_list.".$repo_name.".field_name_".$field["name"].".htm");?>
-					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".field_type_".$field["type"].".htm"))):?>
-						<?php include cfg_get_filename("templates", "data_list.".$repo_name.".field_type_".$field["type"].".htm");?>
-					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.default.field_name_".$field["name"].".htm"))):?>
-						<?php include cfg_get_filename("templates", "data_list.default.field_name_".$field["name"].".htm");?>
+					<?php include cfg_get_filename("templates", "data_cell.htm");?>
 					
-					<?php elseif (file_exists(cfg_get_filename("templates", "data_list.default.field_type_".$field["type"].".htm"))):?>
-						<?php include cfg_get_filename("templates", "data_list.default.field_type_".$field["type"].".htm");?>
-						
-					<?php elseif ($field["type"] == "password"):?>
-						<?php if(!empty($item[ $field["name"] ])):?>
-							Ok
-						<?php else:?>
-							<span class="label label-danger">NO!<span>
-						<?php endif;?>
-					<?php elseif ($field["type"] == "timestamp"):?>
-						<?=show_date($item[ $field["name"] ], SHOW_DATE_TIME_DIFF | SHOW_DATE_AGO);?>
-					<?php elseif ($field["type"] == "date"):?>
-						<?=($item[$field["name"]]  ? glog_rusdate($item[$field["name"]]) : "");?>
-					<?php elseif($field["type"] == "file"):?>
-						<?php if (!empty($item[ $field["name"] ])):?>
-							<?php if(in_array( strtolower(substr($item[ $field["name"] ], -4)), array(".png", ".gif", ".jpg") )):?>
-								<div style='width:64px'>
-									<img class="img-responsive" src="<?=$item[ $field["name"] ];?>">
-								</div>
-							<?php else:?>
-								<a href="<?=$item[ $field["name"] ];?>" target="_blank">link</a>
-							<?php endif;?>
-						<?php endif;?>
-					<?php else:?>
-						<?php if (isset($item["_".$field["name"]])):?>
-							<?=$item["_".$field["name"]];?>
-						<?php elseif(is_string($item[ $field["name"] ])):?>
-							<?=glog_str_limit( $item[ $field["name"] ], 140);?>
-						<?php else:?>
-							<?=json_encode_array($item[ $field["name"] ]);?>
-						<?php endif;?>
-
-					<?php endif;?>
 				</td>
 			<?php endforeach;?>
 			<td>

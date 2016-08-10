@@ -5,12 +5,19 @@ abstract class EView
     
     public static function getView($object){
         
-        if (is_a($object, "ERepository")){
-            return new RepositoryView($object);
-        }elseif(is_a($object, "EModel")){
-            return new ModelView($object);
+        $custom_class_name = get_class($object) . "View";
+        if (class_exists($custom_class_name, true)){
+            return new $custom_class_name($object);
         }else{
-            return null;
+        
+            if (is_a($object, "ERepository")){
+                return new RepositoryView($object);
+            }elseif(is_a($object, "EModel")){
+                return new ModelView($object);
+            }else{
+                return null;
+            };
+            
         };
     }
     public function __construct (array $data){

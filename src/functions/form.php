@@ -259,7 +259,7 @@ function form_get_field_values($field, $key = "form_values"){
         if (isset($_DATA[$field["name"]])){
             $values = $_DATA[$field["name"]];
         }else{
-            dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _DATA.");
+            dosyslog(__FUNCTION__.": WARNING: Not values for field '" . $field["name"] . "' are in _DATA.");
             $values = "";
         }
         break;
@@ -267,7 +267,7 @@ function form_get_field_values($field, $key = "form_values"){
         if (isset($_DATA["id"])){
             $values = array($_DATA["id"]);
         }else{
-            dosyslog(__FUNCTION__.": WANING: There are NO 'id' value for field '" . $field["name"] . "' in _DATA.");
+            dosyslog(__FUNCTION__.": WARNING: There are NO 'id' value for field '" . $field["name"] . "' in _DATA.");
             $values = "";
         }
         break;

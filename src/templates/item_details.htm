@@ -5,56 +5,18 @@ foreach(@array(
 	$CFG["GENERAL"]["app_name"],
 	$items,
 	$fields,
-	$item_name,
 	$form_name,
-	$model,
+	$repo_name,
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
 ?>
-<article class="app_content">
-	<?php if(empty($items)):?>
-		<div class="alert alert-warning">
-			Нет данных.
-		</div>
-	<?php else:?>
-		<?php foreach($items as $item):?>
-			<div class="page-header">
-				<div class="pull-left"><a href="<?=@$_PAGE["model_uri_prefix"];?><?=$model;?><?=$CFG["URL"]["ext"];?>" class="btn btn-large">&larr; к списку</a></div>
-				<h1><?=$item["name"];?></h1>
-			</div>
-		
-		
-				
-			<div class="row-fluid">
-				<div class="span6">
 
-						<table class="table">
-							<?php foreach($fields as $field):?>
-								<tr>
-									<th><?=$field["label"];?></th>
-									<td>
-										<?php if ( DEV_MODE &&! isset($item[$field["name"]]) ):?>
-											<div class="alert alert-danger">Не актуальная структура БД! <em>Сделай миграцию базы данных!</em></div>
-										<?php else:?>
-											<?=$item[$field["name"]];?>
-										<?php endif;?>
-									</td>
-								</tr>
-							<?php endforeach;?>
-						</table>
-				</div>
-				<div class="span6">
-					
-					
-				</div>
-			</div>
-		<?php endforeach;?>
-	<?php endif;?>
-</article> <!-- /.app_content -->
-
-<?php if (file_exists("assets/app/" . $form_name . ".js")):?>
-	<script src="assets/app/<?=$form_name;?>.js"></script>
+<?php if (file_exists( cfg_get_filename("templates", "item_details.".$repo_name.".layout.htm")) ):?>
+	<?php include cfg_get_filename("templates", "item_details.".$repo_name.".layout.htm");?>
+<?php else:?>
+	<?php include cfg_get_filename("templates", "item_details.default.layout.htm");?>
 <?php endif;?>
+
 <?php
 	unset($_SESSION["msg"]);
 	unset($_SESSION["to"]);
