@@ -780,7 +780,7 @@ if (!function_exists("show_page")){
     };
 };
 if (!function_exists("userHasRight")){
-    function userHasRight($right, $login="", $object_accessed = null ){
+    function userHasRight($right, $login="", $object_accessed = null, $object_acl_field = "user_id"){
         global $_USER;
         
         if (cached()) return cache();
@@ -792,11 +792,11 @@ if (!function_exists("userHasRight")){
           // ИЛИ - |
         if (strpos($right,"|") > 0){
             $OR_rights = explode("|", $right, 2);
-            return cache( userHasRight($OR_rights[0], $login, $object_accessed) || userHasRight($OR_rights[1], $login, $object_accessed) );
+            return cache( userHasRight($OR_rights[0], $login, $object_accessed, $object_acl_field) || userHasRight($OR_rights[1], $login, $object_accessed, $object_acl_field) );
           // И - , 
         }elseif(strpos($right,",") > 0){
             $AND_rights = explode(",", $right, 2);
-            return cache( userHasRight($AND_rights[0], $login, $object_accessed) && userHasRight($AND_rights[1], $login, $object_accessed) );
+            return cache( userHasRight($AND_rights[0], $login, $object_accessed, $object_acl_field) && userHasRight($AND_rights[1], $login, $object_accessed, $object_acl_field) );
         };
         
         $right = trim($right);
@@ -829,8 +829,7 @@ if (!function_exists("userHasRight")){
         
         // Ownership of object_accessed
         if ($object_accessed){
-            
-            if (! empty($object_accessed["user_id"]) && ($object_accessed["user_id"] == $user["id"])){
+            if (! empty($object_accessed[$object_acl_field]) && ($object_accessed[$object_acl_field] == $user["id"])){
                 $user_rights[] = "owner";
             };
         };

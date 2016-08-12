@@ -59,10 +59,16 @@ function _cache($key, $value = null){
     };
 }
 function _cache_key(){
+    global $_PARAMS;
     
     $dbt = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 3);
     $function    = $dbt[2]["function"];
-    $args_hash   = !empty($dbt[2]["args"]) ? md5(serialize($dbt[2]["args"])) : "";
+    if (substr($function, -1*strlen("_action")) == "_action"){
+        $args = $_PARAMS;
+    }else{
+        $args  = $dbt[2]["args"];
+    };
+    $args_hash   = !empty($args) ? md5(serialize($args)) : "";
     $object_hash = !empty($dbt[2]["object"]) ? md5($dbt[2]["class"] . spl_object_hash($dbt[2]["object"])) : "";  // possible risk: spl_object_hash() can reuse hash for another object after deleting the first one.
     
     $key         = $function . "::" . $object_hash . $args_hash;

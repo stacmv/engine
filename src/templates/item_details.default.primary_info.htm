@@ -1,0 +1,16 @@
+<table class="table">
+	<?php foreach($fields as $field):?>
+		<tr>
+			<th><?=$field["label"];?></th>
+			<td>
+				<?php if ( DEV_MODE &&! isset($item[$field["name"]]) ):?>
+					<div class="alert alert-danger">Не актуальная структура БД! <em>Сделай миграцию базы данных!</em></div>
+				<?php else:?>
+					
+					<?php include cfg_get_filename("templates", "data_cell.htm");?>
+					
+				<?php endif;?>
+			</td>
+		</tr>
+	<?php endforeach;?>
+</table>
