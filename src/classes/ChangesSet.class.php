@@ -42,7 +42,7 @@ class ChangesSet {
     public function __construct(array $to = array(), array $from = null ){
         
         $this->to = $to;
-        $this->from = $from;
+        $this->from = $from ? $from : array();
         
     }
     
