@@ -21,6 +21,9 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         $this->fields = Repository::fields($this->repo_name);
         $this->data = array();
         $db_fields = array_merge(array_keys($this->fields), $this->common_fields);
+        foreach($db_fields as $v){
+            $this->data[$v] = null;
+        };
         foreach($data as $k=>$v){
             if (in_array($k, $db_fields)){
                 $this->data[$k] = $v;

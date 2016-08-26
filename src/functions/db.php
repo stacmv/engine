@@ -1134,7 +1134,6 @@ function db_get_tables_list_from_xml($db_name=""){
     
 };
 function db_insert($db_table, ChangesSet $data){
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     $result = false;
     
     $dbh = db_set($db_table);
@@ -1149,6 +1148,7 @@ function db_insert($db_table, ChangesSet $data){
     };
     unset($schema, $f);
     
+    // created
     if ( isset($fields["created"]) && ! isset($data->to["created"]) ){
         $data->to["created"] = $timestamp;
     };
@@ -1163,39 +1163,35 @@ function db_insert($db_table, ChangesSet $data){
         return ( isset($fields[$k]) && ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "deleted") );
     });
     
-    $query = db_create_insert_query($db_table, $keys);
-        
-    $statement = db_prepare_query($db_table, $query);
-    
     
     $insert_data = array();
     $record = db_prepare_record($db_table, $data->to);
     $keys = array_keys($record);  // db_prepare_record() may delete 'pass' field if it's empty
+    
+    $query = db_create_insert_query($db_table, $keys);
+    $statement = db_prepare_query($db_table, $query);
 
     
     foreach($keys as $k){
         $insert_data[] = $record[$k];
     };
         
-
     if ( $statement ){    
         $res = $statement->execute($insert_data);
     }else{
         $res = false;
     };
     
-    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Inserted " . count($data) . " records." : "Insert failed.") . " Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'.");
-    
-    
     if ($res){
-        
         $result = $dbh->lastInsertId();
         
+        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Inserted " . count($data) . " records." : "Insert failed.") . " Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
+
     }else{
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query."'.");
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($statement)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
         $result = false;
     };
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
     
     return $result;
 };

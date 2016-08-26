@@ -140,20 +140,30 @@ function render_template($template_file, $data = array() ){
     
     $template_file_name = cfg_get_filename("templates", $template_file);
     
+    $cacheable = strpos($template_file_name, ".cacheable") > 0 ? true : false;
+    
+    
     if ( ! file_exists( $template_file_name )){
         dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template_file."' is not found.");
         die("Code: et-".__LINE__."-".$template_file);
     };
     
-    if (is_array($data)) extract($data);
+    if ($cacheable && file_cached($template_file)){
+        $HTML = file_cache_get($template_file);
+    }else{
+        if (is_array($data)) extract($data);
+        
+        dosyslog(__FUNCTION__.": DEBUG: Rendering template file '".$template_file."'.");
+        // dosyslog(__FUNCTION__.": NOTICE: Rendering template file '".$template_file."' with data '" . json_encode($data) . "'.");
+        
+        ob_start();
+            include $template_file_name;
+            $HTML = ob_get_contents();
+        ob_end_clean();
+        
+        if ($cacheable) file_cache_set($template_file, $HTML);
+    };
     
-    dosyslog(__FUNCTION__.": DEBUG: Rendering template file '".$template_file."'.");
-    // dosyslog(__FUNCTION__.": NOTICE: Rendering template file '".$template_file."' with data '" . json_encode($data) . "'.");
-    
-    ob_start();
-        include $template_file_name;
-        $HTML = ob_get_contents();
-    ob_end_clean();
     return $HTML;
 }
 function set_content($block_name, $content){

@@ -19,7 +19,7 @@ function xml_load($resource_type, $resource, $dont_stop_on_errors = false){
         foreach(libxml_get_errors() as $error) {
             $error_type = $dont_stop_on_errors ? "ERROR:" : "FATAL ERROR:";
             if ($resource_type == "file"){
-                dosyslog(__FUNCTION__.": ".$error_type . get_callee() .": XML ERROR in file '".$file."': " . trim($error->message) );
+                dosyslog(__FUNCTION__.": ".$error_type . get_callee() .": XML ERROR in file '".$resource."': " . trim($error->message) );
             }else{
                 dosyslog(__FUNCTION__.": ".$error_type . get_callee() .": XML ERROR in string: " . trim($error->message) );
             };
