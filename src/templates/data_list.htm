@@ -15,7 +15,11 @@ foreach(@array(
 		<h1><?=$_PAGE["header"];?></h1>
 	</div>
 	
-	%%data_list.default.top_actions%%
+	<?php if(file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".top_actions.htm"))):?>
+		<?php include cfg_get_filename("templates", "data_list.".$repo_name.".top_actions.htm");?>
+	<?php else:?>
+		%%data_list.default.top_actions%%
+	<?php endif;?>
 	
 	<?php if(empty($items)):?>
 		<div class="alert alert-warning">

@@ -804,8 +804,8 @@ if (!function_exists("userHasRight")){
         
         if ( ! $login ){
             if ( empty($_USER["acl"]) ){
-                if ( $_USER["authenticated"] ){
-                    dosyslog(__FUNCTION__.": ERROR: ".$login.": права не заданы.");
+                if ( $_USER->is_authenticated() ){
+                    dosyslog(__FUNCTION__.": ERROR: ".$_USER["login"].": права не заданы.");
                 };
                 return cache(false);
             };
@@ -824,7 +824,7 @@ if (!function_exists("userHasRight")){
                 $user = $users[0];
             };
         };
-        
+
         $user_rights = !empty($user) ? $user["acl"] : array();
         
         // Ownership of object_accessed
