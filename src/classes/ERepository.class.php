@@ -181,6 +181,10 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         return $this;
         
     }
+    public function reset(){
+        $this->storage->reset();
+        return $this;
+    }
     public function select($select){
         $this->storage->select($select);
         return $this;

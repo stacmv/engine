@@ -121,6 +121,16 @@ function month_name($month_num, $genitive = false){
     return $month_name;    
 }
 
+function clear_actions(){
+    global $_ACTIONS;
+    
+    if (DEV_MODE){
+        dosyslog(__FUNCTION__.get_callee().": DEBUG: Further ACTIONS cleared: '".json_encode($_ACTIONS)."'.");
+    }else{
+        dosyslog(__FUNCTION__.get_callee().": NOTICE: Further ACTIONS cleared.");
+    };
+    $_ACTIONS = array();
+}
 function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     global $_RESPONSE;
     global $CFG;

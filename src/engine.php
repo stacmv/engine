@@ -142,8 +142,6 @@ function GETURI(){
 };
 function HASNEXTACTION(){
     global $_ACTIONS;
-    global $S;
-    
     
     if (isset($_ACTIONS)){
         if (isset($_ACTIONS[0])){

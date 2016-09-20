@@ -79,3 +79,38 @@ function parse_tsv ($tsv_string, $delimiter = ",", $skip_empty_lines = true, $tr
         $lines
     );
 }
+
+function save_tsv($filename, $tsv, $delimeter = "\t"){
+
+    // header
+    $header = array();
+    foreach($tsv as $record){
+        foreach($record as $k=>$v){
+            $header[$k] = true;
+        }
+    }
+    $header = array_keys($header);
+    //
+    
+    $f = fopen($filename, "w");
+    $res_total = fputcsv($f, $header, $delimeter);
+    
+    // data
+    foreach($tsv as $record){
+        $item = array();
+        foreach($header as $field){
+            $item[] = !empty($record[$field]) ? $record[$field] : "";
+        }
+        
+        $res = fputcsv($f, $item, $delimeter);
+        if ($res){
+            $res_total += $res;
+        }else{
+            break;
+        }
+    }
+
+    fclose($f);
+    
+    return $res ? $res_total : false;
+}

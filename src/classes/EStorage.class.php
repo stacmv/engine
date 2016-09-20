@@ -7,6 +7,9 @@ abstract class EStorage
     abstract public function update($resource, ChangesSet $changes, $comment = "");
     abstract public function delete($resource, $comment = "");
     
+    abstract public function reset();
+    
+    
     protected function parseResource($resource){
         $a = explode("/", $resource);
         if (is_numeric($a[count($a)-1])){ // id provided
@@ -18,6 +21,13 @@ abstract class EStorage
         }
         
         return array("path"=>$path, "id"=>$id);        
+    }
+    
+    public function __get($key){
+        if (isset($this->$key)) return $this->$key;
+        
+        dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");
+        die("Code: ".__CLASS__."-".__LINE__."-".$key);
     }
     
 }

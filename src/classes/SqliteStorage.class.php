@@ -304,6 +304,18 @@ class SqliteStorage extends EStorage
         return $this;
     }
     
+    public function reset(){
+        // reset all sql attributes
+        $properties = get_class_vars(__CLASS__);
+        
+        foreach($properties as $k=>$v){
+            if (substr($k, 0, 4) == "sql_"){
+                $this->$k = null;
+            };
+        };
+        
+    }
+    
     protected function createSql(){
         global $_USER;
         
@@ -388,5 +400,5 @@ class SqliteStorage extends EStorage
         
         return $sql;
     }
-    
+
 }
