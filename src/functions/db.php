@@ -1,7 +1,6 @@
 <?php
-
 if (!defined("TEST_MODE")) define ("TEST_MODE", false);
-define("DB_NOTICE_QUERY",true); // писать запросы в лог
+if (!defined("DB_NOTICE_QUERY")) define("DB_NOTICE_QUERY",false); // писать запросы в лог
 define("DB_LIST_DELIMITER", "||"); // разделитель элементов в полях типа list
 define("DB_MONEY_PRECISION", 2);  // количество знаков после запятой для значений типа money
 define("DB_PREPARE_VALUE", 32); // флаг для db_get(), что надо вернуть поля типа list, json и др. в виде готовом для записи в БД, т.е. в виде строки, возвращаемой db_prepare_value()
@@ -1276,7 +1275,7 @@ function db_search_substr($db_table, $field, $search_query, $limit=100, $flags =
 }
 function db_set($db_table){
     global $_DB;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+
     if ( ! defined("DATA_DIR") ) {
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " DATA_DIR is not defined.");
         die("platform_db:db-set-1");
@@ -1288,7 +1287,7 @@ function db_set($db_table){
         die("platform_db:db-set-2");
     };
         
-	$db_name = db_get_name($db_table);
+    $db_name = db_get_name($db_table);
     $table_name = db_get_table($db_table);
     
     if ( empty($_DB[$db_name]) ) $_DB[$db_name] = array("handler"=>null, "tables"=>array());
@@ -1317,7 +1316,7 @@ function db_set($db_table){
         if ( ! (int) ($dbh->query($query_table_check)->fetchColumn()) ){  // создаем таблицу, если она не сущестует
             $query = db_create_table_query($db_table);
             // dump($query,"q");
-            dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Creating table ".$db_table.".");
+            dosyslog(__FUNCTION__.": INFO: " . get_callee() . " Creating table ".$db_table.".");
             
             if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
             $res = $dbh->query($query);
@@ -1333,16 +1332,8 @@ function db_set($db_table){
             $_DB[$db_name]["tables"][] = $table_name;
         };
     };
-    
-    
-    
-    $S["_DB"] = $dbh;
-    $S["_DB_NAME"] = $db_name;
-    $S["_DB_TABLE"] = $db_table;
-    
-    
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-	return $dbh;
+
+    return $dbh;
 };
 function db_select($db_table, $select_query, $flags=0){
 
