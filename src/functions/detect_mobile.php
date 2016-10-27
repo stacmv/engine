@@ -9,6 +9,11 @@ function detect_mobile(){
     };
 
 }
+function detect_mobile2(){
+    $detect = new Mobile_Detect;
+    
+    return $detect->isMobile();
+}
 function is_mobile(){
    
     if ( isset($_GET["m"]) ){
@@ -18,7 +23,7 @@ function is_mobile(){
             $is_mobile = false;
         }
     }else{
-        $is_mobile = detect_mobile();
+        $is_mobile = detect_mobile2();
     }
     
     return $is_mobile;
