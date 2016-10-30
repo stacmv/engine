@@ -31,7 +31,9 @@ function apply_template($template_name, $content_block = ""){
         };
     };
     
+    dosyslog(__FUNCTION__.": DEBUG: Start rendering template '".$template_name."'.");
     $HTML = render_template($template_file, array_map("escape_template_data", (array) $_DATA) );
+    dosyslog(__FUNCTION__.": DEBUG: Finish rendering template '".$template_name."'.");
 
     set_content($content_block, $HTML);  
     
@@ -47,9 +49,6 @@ function escape_template_data($data_item){
             return array_map("escape_template_data", $data_item->jsonSerialize());
         }else{
             dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: Class '".get_class($data_item)." has not method 'jsonSerialize'.");
-            if(DEV_MODE){
-                dump($data_item,"data_item");
-            };
             die("Code: et-".__LINE__."-".get_class($data_item)."-jsonSerialize");
         };
         

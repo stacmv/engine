@@ -588,6 +588,7 @@ function show_data_action(){
     $obj_name = db_get_obj_name($repo_name);
     $form_name = $id ? "show_".$obj_name : "list_".$repo_name;
     
+    dosyslog(__FUNCTION__.": DEBUG: Start getting data from DB.");
     $repository = Repository::create($repo_name, $form_name);
     if ($mode == "list"){ // 
         $_DATA["items"] = $repository->fetchAll();
@@ -595,16 +596,24 @@ function show_data_action(){
         $_DATA["items"] = $repository->load($id)->fetchAll();
     };
     
+    dosyslog(__FUNCTION__.": DEBUG: Got data from DB.");
+    
     $_DATA["fields"] = array_filter(form_get_fields($repo_name, $form_name), "check_form_field_acl");
+    
+    dosyslog(__FUNCTION__.": DEBUG: Field filtered.");
     $_DATA["items"]  = array_filter($_DATA["items"], function($item) use ($repo_name){
             return check_data_item_acl($item, $repo_name);
     });
+    
+    dosyslog(__FUNCTION__.": DEBUG: Items ACL checked.");
         
     
     $_DATA["items"] = array_map(function($item) use ($mode){
         $view = View::getView($item);
         return $view->prepare($mode);
     },$_DATA["items"]);
+    
+    dosyslog(__FUNCTION__.": DEBUG: Data view prepared.");
     
     if (empty($_PAGE["title"])){
         $_PAGE["title"] = $_PAGE["header"] = db_get_meta($repo_name, "comment");
@@ -617,6 +626,8 @@ function show_data_action(){
     $_DATA["model_name"] = $obj_name;
     $_DATA["form_name"]  = $form_name;
     $_DATA["repo_name"]  = $repo_name;
+    
+    dosyslog(__FUNCTION__.": DEBUG: Finished.");
 
 }
 function show_login_form_action(){
