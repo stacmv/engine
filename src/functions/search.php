@@ -1,7 +1,7 @@
 <?php
 function search(array $fields_to_search, $query, $max_results = 100){
     
-    $limit = 500; // íå çàïðàøèâàòü èç ÁÄ áîëåå $limit íåçàâèñèìî îò $max_results;
+    $limit = 500; // Ð½Ðµ Ð·Ð°Ð¿Ñ€Ð°ÑˆÐ¸Ð²Ð°Ñ‚ÑŒ Ð¸Ð· Ð‘Ð” Ð±Ð¾Ð»ÐµÐµ $limit Ð½ÐµÐ·Ð°Ð²Ð¸ÑÐ¸Ð¼Ð¾ Ð¾Ñ‚ $max_results;
     $all_found_ids = array();
     $res = array();
     
