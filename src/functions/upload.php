@@ -1,14 +1,14 @@
 <?php
 function upload_get_dir($storage_name, $folder = "", $user_id = ""){
        
-    $dir = FILES_DIR . glog_codify($storage_name) ."/";
+    $dir = FILES_DIR . glog_codify($storage_name, GLOG_CODIFY_FILENAME) ."/";
         
     if ( ! empty($user_id) ){
         $dir .= glog_codify($user_id) . "/";
     };
     
     if ( $folder ){
-        $dir .= glog_codify($folder) . "/";
+        $dir .= glog_codify($folder, GLOG_CODIFY_FILENAME) . "/";
     };
     
    
@@ -38,33 +38,8 @@ function upload_file($param_name, $storage_name){
         
         $uploaded_files = array();
         
-        // Previously uploaded files or remote urls
-        if ( ! empty($_PARAMS["to"][$param_name]) ){
-            
-            if(is_array($_PARAMS["to"][$param_name])){
-                foreach($_PARAMS["to"][$param_name] as $k=>$v){
-                    $res = false;
-                    if ( filter_var($v, FILTER_VALIDATE_URL) ){   // передан URL
-                        list($res, $dest_name) = upload_remote_file($v, $upload_dir);
-                    }elseif( file_exists($v) && (strpos($v, FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
-                        list($res, $dest_name) = upload_local_file($v, $upload_dir);
-                    };
-                    if ($res) $uploaded_files[] = $dest_name;
-                };
-            }else{
-                $res = false;
-                if ( filter_var($_PARAMS["to"][$param_name], FILTER_VALIDATE_URL) ){   // передан URL
-                    list($res, $dest_name) =  upload_remote_file($_PARAMS["to"][$param_name], $upload_dir);
-                }elseif( file_exists($_PARAMS["to"][$param_name]) && (strpos($_PARAMS["to"][$param_name], FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
-                    list($res, $dest_name) = upload_local_file($_PARAMS["to"][$param_name], $upload_dir);
-                };
-                if ($res) $uploaded_files[] = $dest_name;
-            }
-        };
-        
-        
         // New uploaded files.
-        if ( ! empty($_FILES["to"]["name"][$param_name]) ){            
+        if ( ! empty($_FILES["to"]["name"][$param_name]) ){
             
             if (is_array($_FILES["to"]["name"][$param_name])){
                 
@@ -96,6 +71,27 @@ function upload_file($param_name, $storage_name){
                 };
             }
             
+        } elseif ( ! empty($_PARAMS["to"][$param_name]) ){ // Previously uploaded files or remote urls
+            
+            if(is_array($_PARAMS["to"][$param_name])){
+                foreach($_PARAMS["to"][$param_name] as $k=>$v){
+                    $res = false;
+                    if ( filter_var($v, FILTER_VALIDATE_URL) ){   // передан URL
+                        list($res, $dest_name) = upload_remote_file($v, $upload_dir);
+                    }elseif( file_exists($v) && (strpos($v, FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
+                        list($res, $dest_name) = upload_local_file($v, $upload_dir);
+                    };
+                    if ($res) $uploaded_files[] = $dest_name;
+                };
+            }else{
+                $res = false;
+                if ( filter_var($_PARAMS["to"][$param_name], FILTER_VALIDATE_URL) ){   // передан URL
+                    list($res, $dest_name) =  upload_remote_file($_PARAMS["to"][$param_name], $upload_dir);
+                }elseif( file_exists($_PARAMS["to"][$param_name]) && (strpos($_PARAMS["to"][$param_name], FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
+                    list($res, $dest_name) = upload_local_file($_PARAMS["to"][$param_name], $upload_dir);
+                };
+                if ($res) $uploaded_files[] = $dest_name;
+            }
         };
         
         

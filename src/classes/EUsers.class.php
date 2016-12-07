@@ -14,15 +14,16 @@ class EUsers extends ERepository{
         $users = db_get(self::DB_TABLE, "all");
         return $users;
     }
-    static public function get_for_select(){
+    static public function get_for_select(array $users = array()){
         
-        $users = self::get_list();
+        if (empty($users)) $users = self::get_list();
+        
         $values = array();
         
-        foreach($users as $id=>$user){
+        foreach($users as $user){
             $values[] = array(
-                "caption"=> get_username_by_id($id),
-                "value"  => $id,
+                "caption"=> !empty($user["name"]) ? $user["name"] : (!empty($user["id"]) ? get_username_by_id($user["id"]) : _t("Unknown")), // id might not be set if $user have not been read from db.
+                "value"  => !empty($user["id"]) ? $user["id"] : "null",
             );
         };
        
@@ -32,7 +33,7 @@ class EUsers extends ERepository{
     static public function get_username_by_id($user_id, $getLogin=false){
         $user = db_get(self::DB_TABLE, $user_id);
         if ( ! $user){
-            dosyslog(__FUNCTION__.get_callee() . ": ERROR: User with id '".$user_id."' is not found in DB.");
+            dosyslog(__FUNCTION__.get_callee() . ": WARNING: User with id '".$user_id."' is not found in DB.");
             return "";
         } else {
             if ($getLogin){
