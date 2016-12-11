@@ -3,6 +3,7 @@ class SqliteStorage extends EStorage
 {
     protected $dbh;
     protected $repo_name;
+    protected $db_table;
     protected $fields;
     protected $sql_hash;
     protected $sql_query;
@@ -23,6 +24,7 @@ class SqliteStorage extends EStorage
     public function __construct($repo_name){
         $this->dbh = db_set($repo_name);
         $this->repo_name = $repo_name;
+        $this->db_table = db_get_table($this->repo_name);
         $this->fields = form_get_fields($repo_name, "all");
     }
 
@@ -332,7 +334,7 @@ class SqliteStorage extends EStorage
         }
         
         if (!$this->sql_from){
-            $sql .= " FROM " . db_get_table($this->repo_name) ." ";
+            $sql .= " FROM " . $this->db_table ." ";
         }else{
             $sql .= " FROM " . $this->sql_from;
         };
@@ -359,8 +361,8 @@ class SqliteStorage extends EStorage
         // Do not return 'marked as deleted' records by default
         if (isset($this->fields["deleted"])){
             if (strpos($sql_where, "deleted") === false){
-                if (!$sql_where) $sql_where .= " WHERE deleted IS NULL";
-                else $sql_where .= " AND deleted IS NULL";
+                if (!$sql_where) $sql_where .= " WHERE ".$this->db_table.".deleted IS NULL";
+                else $sql_where .= " AND ".$this->db_table.".deleted IS NULL";
             };
         };
         

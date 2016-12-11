@@ -416,6 +416,7 @@ function db_create_table_query($db_table){
         switch ($type){
             case "autoincrement": $tmp .= " INTEGER PRIMARY KEY"; break;
             case "number":        $tmp .= " NUMERIC NOT NULL ON CONFLICT REPLACE DEFAULT 0"; break;
+            case "money":         $tmp .= " NUMERIC NOT NULL ON CONFLICT REPLACE DEFAULT 0"; break;
             case "timestamp":     $tmp .= " NUMERIC"; break;
             case "string":        $tmp .= " TEXT"; break;
             case "json": $tmp .=" TEXT"; break;
@@ -1421,6 +1422,13 @@ function db_parse_result($db_table, $result){
 function db_parse_value($value, $field_type){
     
     switch($field_type){
+    case "money":
+        if (is_int($value)){ 
+            $value = (string) bcadd($value/100, 0, DB_MONEY_PRECISION);
+        }else{  // for backward compatibility
+            $value = $value;
+        }
+        break;
     case "list":
         if (isset($value) ){
             if (strpos($value, DB_LIST_DELIMITER) !== false){
@@ -1540,9 +1548,9 @@ function db_prepare_value($value, $field_type){
             };
             break;
         case "money":
-            if ($value === "") $res = null;
+            if ($value === "") $res = 0;
             elseif ( ! is_null($value) ){
-                $res = (string) bcadd($value, 0, DB_MONEY_PRECISION);
+                $res = (int) ($value*100);
             };
             break;
         case "date":

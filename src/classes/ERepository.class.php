@@ -182,12 +182,20 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
     public function insert(EModel $model, $comment = ""){
         return $this->storage->create($this->repo_name, $model->changes(), $comment);
     }
+    public function join($join){
+        $this->storage->join($join);
+        return $this;
+    }
     public function limit($limit){
         $this->storage->limit($limit);
         return $this;
     }
     public function offset($offset){
         $this->storage->offset($offset);
+        return $this;
+    }
+    public function on($on){
+        $this->storage->on($on);
         return $this;
     }
     public function orderBy(array $orderBy){
