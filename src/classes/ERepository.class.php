@@ -36,6 +36,20 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         
         return $item;
     }
+    public function delete($id){
+        return $this->storage->delete($this->repo_name."/".$id);
+    }
+    
+    public function beginTransaction(){
+        return $this->storage->beginTransaction();
+    }
+    public function commit(){
+        return $this->storage->commit();
+    }
+    public function rollback(){
+        return $this->storage->rollback();
+    }
+    
     
     protected static function _getRepositoryClassName($repository_name){
         $a = explode(".", $repository_name);
