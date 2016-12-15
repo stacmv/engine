@@ -98,8 +98,7 @@ class ModelView extends View
     }
     
     protected function listView(array $options = array()){
-        
-        
+
         $view =  $this->prepare_view($this->data, $this->getFields(__FUNCTION__));
         
         return $view;

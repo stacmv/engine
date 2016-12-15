@@ -600,6 +600,7 @@ function show_data_action(){
     
     $_DATA["fields"] = array_filter(form_get_fields($repo_name, $form_name), "check_form_field_acl");
     
+    
     dosyslog(__FUNCTION__.": DEBUG: Field filtered.");
     $_DATA["items"]  = array_filter($_DATA["items"], function($item) use ($repo_name){
             return check_data_item_acl($item, $repo_name);

@@ -11,6 +11,13 @@ class Model extends EModel
         parent::__construct($data);
     }
     
+    public function getName(){
+        if (isset($this->data["name"])){
+            return $this->data["name"];
+        }else{
+            return "N/A". (!empty($this->data["id"]) ? " (id:".$this->data["id"].")": "");
+        }
+    }
     
     protected function _get_repo_name_for_model_name($model_name){
         return implode(".", array_map("_plural", explode(".", $model_name)));

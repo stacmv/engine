@@ -86,7 +86,7 @@
         },
 		"templates": {
 			"msg": "message.block.htm",
-			"page": "page.htm"
+			"page": "page_fluid.htm"
 		},
         "actions":[ "form" ],
         "acl": ["access"]

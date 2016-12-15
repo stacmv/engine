@@ -55,12 +55,17 @@ function _plural($word){
     
     if (cached()) return cache();
     
-    foreach ($_plural as $rule => $replacement) {
-        if (preg_match($rule, $word)) {
-            $plural_word = preg_replace($rule, $replacement, $word);
-            return cache($plural_word);
+    if ($ir = _irregular($word, false)){
+        return cache($ir);
+    }else{
+        
+        foreach ($_plural as $rule => $replacement) {
+            if (preg_match($rule, $word)) {
+                $plural_word = preg_replace($rule, $replacement, $word);
+                return cache($plural_word);
+            }
         }
-    }
+    };
     
 }
 
@@ -105,75 +110,98 @@ function _singular($word){
     
     if (cached()) return cache();
     
-    foreach ($_singular as $rule => $replacement) {
-        if (preg_match($rule, $word)) {
-            $singular_word = preg_replace($rule, $replacement, $word);
-            return cache($singular_word);
+    if ($ir = _irregular($word, true)){
+        return cache($ir);
+    }else{
+        
+        foreach ($_singular as $rule => $replacement) {
+            if (preg_match($rule, $word)) {
+                $singular_word = preg_replace($rule, $replacement, $word);
+                return cache($singular_word);
+            }
         }
-    }
-    
+    };
 };
     
+function _irregular($word, $get_singular = false){
     
-// TODO  Implement irregular words support
-    
+        
     /**
      * Irregular rules
      *
      * @var array
      */
-    // protected static $_irregular = [
-        // 'atlas' => 'atlases',
-        // 'beef' => 'beefs',
-        // 'brief' => 'briefs',
-        // 'brother' => 'brothers',
-        // 'cafe' => 'cafes',
-        // 'child' => 'children',
-        // 'cookie' => 'cookies',
-        // 'corpus' => 'corpuses',
-        // 'cow' => 'cows',
-        // 'criterion' => 'criteria',
-        // 'ganglion' => 'ganglions',
-        // 'genie' => 'genies',
-        // 'genus' => 'genera',
-        // 'graffito' => 'graffiti',
-        // 'hoof' => 'hoofs',
-        // 'loaf' => 'loaves',
-        // 'man' => 'men',
-        // 'money' => 'monies',
-        // 'mongoose' => 'mongooses',
-        // 'move' => 'moves',
-        // 'mythos' => 'mythoi',
-        // 'niche' => 'niches',
-        // 'numen' => 'numina',
-        // 'occiput' => 'occiputs',
-        // 'octopus' => 'octopuses',
-        // 'opus' => 'opuses',
-        // 'ox' => 'oxen',
-        // 'penis' => 'penises',
-        // 'person' => 'people',
-        // 'sex' => 'sexes',
-        // 'soliloquy' => 'soliloquies',
-        // 'testis' => 'testes',
-        // 'trilby' => 'trilbys',
-        // 'turf' => 'turfs',
-        // 'potato' => 'potatoes',
-        // 'hero' => 'heroes',
-        // 'tooth' => 'teeth',
-        // 'goose' => 'geese',
-        // 'foot' => 'feet',
-        // 'foe' => 'foes',
-        // 'sieve' => 'sieves'
-    // ];
+    $_irregular = array(
+        'atlas' => 'atlases',
+        'beef' => 'beefs',
+        'brief' => 'briefs',
+        'brother' => 'brothers',
+        'cafe' => 'cafes',
+        'child' => 'children',
+        'cookie' => 'cookies',
+        'corpus' => 'corpuses',
+        'cow' => 'cows',
+        'criterion' => 'criteria',
+        'ganglion' => 'ganglions',
+        'genie' => 'genies',
+        'genus' => 'genera',
+        'graffito' => 'graffiti',
+        'hoof' => 'hoofs',
+        'loaf' => 'loaves',
+        'man' => 'men',
+        'money' => 'monies',
+        'mongoose' => 'mongooses',
+        'move' => 'moves',
+        'mythos' => 'mythoi',
+        'niche' => 'niches',
+        'numen' => 'numina',
+        'occiput' => 'occiputs',
+        'octopus' => 'octopuses',
+        'opus' => 'opuses',
+        'ox' => 'oxen',
+        'penis' => 'penises',
+        'person' => 'people',
+        'sex' => 'sexes',
+        'soliloquy' => 'soliloquies',
+        'testis' => 'testes',
+        'trilby' => 'trilbys',
+        'turf' => 'turfs',
+        'potato' => 'potatoes',
+        'hero' => 'heroes',
+        'tooth' => 'teeth',
+        'goose' => 'geese',
+        'foot' => 'feet',
+        'foe' => 'foes',
+        'sieve' => 'sieves'
+    );
+    
     /**
      * Words that should not be inflected
      *
      * @var array
      */
-    // protected static $_uninflected = [
-        // '.*[nrlm]ese', '.*data', '.*deer', '.*fish', '.*measles', '.*ois',
-        // '.*pox', '.*sheep', 'people', 'feedback', 'stadia', '.*?media',
-        // 'chassis', 'clippers', 'debris', 'diabetes', 'equipment', 'gallows',
-        // 'graffiti', 'headquarters', 'information', 'innings', 'news', 'nexus',
-        // 'proceedings', 'research', 'sea[- ]bass', 'series', 'species', 'weather'
-    // ];
+     
+    $_uninflected = array(
+        '.*[nrlm]ese', '.*data', '.*deer', '.*fish', '.*measles', '.*ois',
+        '.*pox', '.*sheep', 'people', 'feedback', 'stadia', '.*?media',
+        'chassis', 'clippers', 'debris', 'diabetes', 'equipment', 'gallows',
+        'graffiti', 'headquarters', 'information', 'innings', 'news', 'nexus',
+        'proceedings', 'research', 'sea[- ]bass', 'series', 'species', 'weather'
+    );
+    
+    $_uninflected_custom = array("crm");
+    
+    //
+    
+    
+    if (in_array($word, $_uninflected) || in_array($word, $_uninflected_custom)){
+        return $word;
+    };
+    
+    if ($get_singular){
+        return  array_search($word, $_irregular);
+    }else{
+        return isset($_irregular[$word]) ? $_irregular[$word] : false;
+    };
+    
+};

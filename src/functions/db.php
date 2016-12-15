@@ -26,6 +26,7 @@ function db_get_obj_name($db_table){
     if ( (count($a) >=2) && ($a[0] == $a[1]) ){   // main table in db; table name == db name
         array_shift($a);
     };
+
     $a = array_map("_singular", $a);
 
     return implode(".", $a);
@@ -201,8 +202,6 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, Cha
 };
 function db_check_schema($db_table){ // проверяет схему таблицы $db_table базыданных $db_name на соответствие файлу db.xml
 
-	if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-	
     $db_name = db_get_name($db_table);
     $table = db_get_table($db_table);
     
@@ -218,15 +217,14 @@ function db_check_schema($db_table){ // проверяет схему табли
         return;
     };
     $dbh = db_set($db_table);
-    $tmp = $dbh->query("SELECT * FROM ".$table." LIMIT 1")->fetchAll(PDO::FETCH_ASSOC);
-    if (!empty($tmp[0])){
-        $columns[$table] = array_keys($tmp[0]);
+    
+    
+    if (db_is_exists($db_table)){
+        $columns[$table] = array_keys(db_get_table_columns($db_table));
     }else{ // таблица не существует в БД
         echo "Таблица ".$table." отсутствует в БД ".$db_name.". Она будет создана движком при первом реальном использовании. <br>";
         return;                 // на надо создавать таблицу в ходе миграции, она будет создана движком при первом реальном использовании.
     };
-        
-    // dump($columns,$table);
 
     $fields_to_add[$table] = array();
     $fields_to_be[$table] = array();
@@ -983,6 +981,21 @@ function db_get_list($db_table, array $fields = array("id"), $limit=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     return $result;
 }
+function db_get_table_columns($db_table){
+    
+    $dbh = db_set($db_table);
+    $table = db_get_table($db_table);
+    
+    
+    $res = $dbh->query("PRAGMA table_info('".$table."');")->fetchAll(PDO::FETCH_ASSOC);
+        
+    // $res record keys for sqlite: cid	name	type	notnull	dflt_value	pk
+    
+    if ($res) $res = arr_index($res, "name");
+    
+    return $res;
+    
+}
 function db_get_table_schema($db_table){
     
     global $CFG;
@@ -1188,13 +1201,28 @@ function db_insert($db_table, ChangesSet $data){
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Inserted " . count($data) . " records." : "Insert failed.") . " Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
 
     }else{
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($statement)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
         $result = false;
     };
     
     
     return $result;
 };
+function db_is_exists($db_table){
+    
+    $dbh = db_set($db_table);
+    $table = db_get_table($db_table);
+    
+
+    
+    $res = db_select($db_table, "SELECT count(*) as c FROM sqlite_master WHERE type='table' AND name='".$table."'");
+    
+    if (isset($res[0]["c"])){
+        return (boolean) $res[0]["c"];
+    }else{
+        return false;
+    };
+}
 function db_last_modified($db_table){
 	
 	$table_name = db_get_table($db_table);

@@ -121,7 +121,11 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         $field["template_file"] = form_get_template_file($template);
         if ( ! file_exists($field["template_file"]) ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template."' is not found.");
-            die("Code: efrm-".__LINE__."-".$template);
+            if (DEV_MODE){
+                die("Form template not exists: ".basename($field["template_file"]));
+            }else{
+                die("Code: efrm-".__LINE__."-".$template);
+            };
         };
         
         // Убрать не нужные на форме свойства
