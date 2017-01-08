@@ -256,7 +256,7 @@ class SqliteStorage extends EStorage
         
         // SET
         $sql .= " SET " . implode(", ", array_map(function($value, $field){
-            return $field . " = " . db_quote($value);
+            return $field . " = " . (is_null($value) ? "NULL" : db_quote($value));
         }, $set, array_keys($set)));
         
         // Where

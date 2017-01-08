@@ -136,6 +136,10 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
             return check_data_item_acl($item, $repo_name);
         });
     }
+    public function from($from){
+        $this->storage->from($from);
+        return $this;
+    }
     public function groupBy($groupBy){
         $this->storage->groupBy($groupBy);
         return $this;
@@ -229,7 +233,10 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
                 }
                 break;
             default:
-                $this->storage->where($whereClause . " = " . db_quote(db_prepare_value($value, $this->fields[$whereClause]["type"])));
+                if (!empty($this->fields[$whereClause]) && ! empty($this->fields[$whereClause]["type"])){
+                    $value = db_prepare_value($value, $this->fields[$whereClause]["type"]);
+                }
+                $this->storage->where($whereClause . " = " . db_quote($value));
                 break;
             };
         }else{

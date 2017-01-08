@@ -13,14 +13,14 @@
 			<?php endif;?>
 
 			<div class="row-fluid">
-				<div class="span6">
+				<div class="span5">
 					<?php if (file_exists(cfg_get_filename("templates", "item_details.".$repo_name.".primary_info.htm"))):?>
 						<?php include cfg_get_filename("templates", "item_details.".$repo_name.".primary_info.htm");?>
 					<?php else:?>
 						<?php include cfg_get_filename("templates", "item_details.default.primary_info.htm");?>
 					<?php endif;?>
 				</div>
-				<div class="span6">
+				<div class="span7">
 					<?php if (file_exists(cfg_get_filename("templates", "item_details.".$repo_name.".secondary_info.htm"))):?>
 						<?php include cfg_get_filename("templates", "item_details.".$repo_name.".secondary_info.htm");?>
 					<?php else:?>

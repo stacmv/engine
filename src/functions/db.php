@@ -1380,14 +1380,13 @@ function db_select($db_table, $select_query, $flags=0){
     
     if ($res){
         while ( ($row = $res->fetch(PDO::FETCH_ASSOC) ) !== false) {
-            
             if ( $flags & DB_RETURN_ID ){
                 $result[] = $row["id"];
             }elseif ( $flags & DB_PREPARE_VALUE ){
                 $result[] = db_prepare_record(db_parse_result($db_table, $row));
             }elseif ( $flags & DB_DONT_PARSE ){
                 $result[] = $row;
-            }else{                
+            }else{
                 $result[] = db_parse_result($db_table, $row);
             };
         };
@@ -1451,10 +1450,10 @@ function db_parse_value($value, $field_type){
     
     switch($field_type){
     case "money":
-        if (is_int($value)){ 
+        if (substr($value, -3) === ".00"){ // for backward compatibility
+            // do nothing
+        }else{
             $value = (string) bcadd($value/100, 0, DB_MONEY_PRECISION);
-        }else{  // for backward compatibility
-            $value = $value;
         }
         break;
     case "list":
