@@ -1,6 +1,6 @@
 <?php
 if (!defined("TEST_MODE")) define ("TEST_MODE", false);
-if (!defined("DB_NOTICE_QUERY")) define("DB_NOTICE_QUERY",false); // писать запросы в лог
+if (!defined("DB_NOTICE_QUERY")) define("DB_NOTICE_QUERY",true); // писать запросы в лог
 define("DB_LIST_DELIMITER", "||"); // разделитель элементов в полях типа list
 define("DB_MONEY_PRECISION", 2);  // количество знаков после запятой для значений типа money
 define("DB_PREPARE_VALUE", 32); // флаг для db_get(), что надо вернуть поля типа list, json и др. в виде готовом для записи в БД, т.е. в виде строки, возвращаемой db_prepare_value()
@@ -1450,7 +1450,7 @@ function db_parse_value($value, $field_type){
     
     switch($field_type){
     case "money":
-        if (substr($value, -3) === ".00"){ // for backward compatibility
+        if (preg_match("/\.\d\d$/", $value)){ // for backward compatibility
             // do nothing
         }else{
             $value = (string) bcadd($value/100, 0, DB_MONEY_PRECISION);
