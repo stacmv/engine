@@ -1,0 +1,122 @@
+<input type="hidden" name="<?=$field["name_to"];?>" id='<?=$field["id"];?>' value='<?=$field["value"];?>'>
+<div class="profile_work_hours">
+	<div class="row">
+		<div class="span6">
+			<table class="table table-bordered schedule">
+				<thead>
+					<tr><th>День недели</th><th>Часы работы</th></tr>
+				</thead>
+				<tbody>
+					<?php foreach(glog_weekdays() as $wd=>$day):?>
+						<tr>
+							<th><?=$day;?></th>
+							<td class="wd_<?=$wd;?>">
+								<a href="#" class="pull-right add_period btn btn-small"><i class="icon icon-plus"></i></a>
+								
+								<p class="time_row" data-wd="<?=$wd;?>">
+									<input type="text" class="span1 from" vaule="">
+									&ndash;
+									<input type="text" class="span1 till" vaule="">
+								</p>
+								
+							</td>
+						</tr>
+					<?php endforeach;?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script>
+$(function(){
+	$('.schedule input').mask("99:99");
+	$('.schedule a.add_period').on("click", function(e){
+		e.preventDefault();
+		
+		var $tmpl = $(this).parent().find(".time_row").first();
+		var $row = $tmpl.clone();
+		$row.data("wd" , $tmpl.data("wd"));
+		$row.find("input").val("").mask("99:99");
+
+		$(this).parent().append($row);
+		
+		return false;
+	})
+		
+	$('.schedule input').on("keydown", function(e){
+		if (e.keyCode == 13){
+			e.preventDefault();
+			return false;
+		};
+	});
+	
+	//
+	
+	var id = 'work_hours',
+		json_str = $("#"+id).val(),
+		json;
+		
+	try{
+		json = JSON.parse( json_str );
+	}catch(e){
+		json = {};
+	}
+		
+		
+	if ( json ){
+		
+		var $row_tmpl = $(".time_row").first().clone();
+		$row_tmpl.data("wd","").removeAttr("data-wd");
+		$row_tmpl.find("input").val("");
+		
+		$(".time_row").remove();
+		
+		for(var wd=0; wd < 7; wd++){
+			var $wd_td = $(".wd_"+wd),
+				$row;
+			
+			if (json[wd]){
+				if ( json[wd]["from"] ) json[wd] = [ json[wd] ]; // support for old schema - one period per day
+				
+				for(var i = 0; i < json[wd].length; i++){
+					$row = $row_tmpl.clone();
+					$row.data("wd", wd);
+					$row.find("input.from").val( json[wd][i]["from"] );
+					$row.find("input.till").val( json[wd][i]["till"] );
+					
+					$row.find("input").mask("99:99");
+					
+					$wd_td.append( $row );
+				};
+			}else{
+				$row = $row_tmpl.clone();
+				$row.data("wd", wd);
+				$row.find("input").mask("99:99");
+				$wd_td.append( $row );
+			};
+		};
+		
+	};
+	
+	$(".schedule").on("change",".time_row input", function(){
+		var id = 'work_hours',
+			json = {};
+		
+		$(".time_row").each(function(i){
+			var wd   = $(this).data("wd"),
+				from = $(this).find("input.from").val(),
+				till = $(this).find("input.till").val();
+				
+			if (from && till){
+				if ( ! json[wd] ) json[wd] = [];
+				json[wd].push( {from: from, till: till} );
+			};
+			
+		});
+		
+		$("#"+id).val( JSON.stringify(json));
+	});
+
+});
+
+</script>
