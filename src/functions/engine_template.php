@@ -190,6 +190,13 @@ function set_template_file($template_name,$template_file){
 /* *** */
 function expand_youtube_links($data_item){
     
-    return preg_replace("/https:\/\/(youtu\.be|www\.youtube\.com\/embed)\/(\w+)/", "\n<iframe width=\"100%\" src=\"https://www.youtube.com/embed/$2\" frameborder=\"0\" allowfullscreen></iframe>", $data_item);    
+    /* Place these styles in your app CSS:
+    
+    <style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style>
+    */
+    
+    
+    
+    return preg_replace("/https:\/\/(youtu\.be|www\.youtube\.com\/embed)\/(\w+)/", "\n<div class='embed-container'><iframe src='http://www.youtube.com/embed/$2' frameborder='0' allowfullscreen></iframe></div>", $data_item);
     
 }
