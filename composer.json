@@ -12,6 +12,9 @@
 		"php": ">=5.3",
 		"optimit/glog_util": "dev-master",
 		"erusev/parsedown": "dev-master",
-        "giggsey/libphonenumber-for-php": "^7.2"
+		"mobiledetect/mobiledetectlib": "^2.8"
+	},
+	"suggest": {
+		"giggsey/libphonenumber-for-php": "Allows validating international phone numbers"
 	}
 }
