@@ -6,5 +6,10 @@
 		<templates><content>empty.htm</content><page>html.htm</page></templates>
 		<acl>access</acl>
 	</page>
+	<page uri="engine_api/upload" title="API: Загрузить файл">
+		<params/>
+		<actions>engine_api_upload</actions>
+		<acl>access</acl>
+	</page>
 </pages>
 		

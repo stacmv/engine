@@ -1,0 +1,8 @@
+<?php if (empty($item[$field["name"]])):?>
+	<span class="label label-important">Нет</span>
+<?php else:?>
+	<span class="label label-success"><?=count($item[$field["name"]]);?></span>
+<?php endif;?>
+
+
+

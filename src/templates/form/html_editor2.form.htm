@@ -1,0 +1,24 @@
+<?php
+assets("add","css-file","assets/trumbowyg/ui/trumbowyg.css");
+assets("add","js-file", "assets/trumbowyg/trumbowyg.js");
+assets("add","js-file", "assets/trumbowyg/langs/ru.min.js");
+?>
+
+<textarea name="<?=$field["name_to"];?>" id="<?=$field["name"];?>" class="input-xxlarge"
+	<?php if ($field["required"]):?>required<?php endif;?>
+><?php if (isset($field["value"])):?><?=$field["value"];?><?php endif;?></textarea> <?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
+
+<?php if(!empty($field["hint"])):?>
+	<span class="help-block"><?=$field["hint"];?></span>
+<?php endif;?>
+
+<script>
+$(function(){
+
+$('#<?=$field["name"];?>').trumbowyg({
+	lang: "ru",
+	removeformatPasted: true
+});
+
+});
+</script>
