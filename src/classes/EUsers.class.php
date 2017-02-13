@@ -22,7 +22,7 @@ class EUsers extends ERepository{
         
         foreach($users as $user){
             $values[] = array(
-                "caption"=> !empty($user["name"]) ? $user["name"] : (!empty($user["id"]) ? get_username_by_id($user["id"]) : _t("Unknown")), // id might not be set if $user have not been read from db.
+                "caption"=> !empty($user["name"]) ? $user["name"] : (!empty($user["id"]) ? self::get_username_by_id($user["id"]) : _t("Unknown")), // id might not be set if $user have not been read from db.
                 "value"  => !empty($user["id"]) ? $user["id"] : "null",
             );
         };
