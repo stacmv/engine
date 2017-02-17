@@ -92,7 +92,7 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
                 $field["value"] = $field["value"][0];
             }else{
                 // Несколько выбранных значений, при том, что может быть только одно. Не устанавливаем значение по умолчанию, перекладываем выбор на пользователя
-                dosyslog(__FUNCTION__.": WARNING: Value of array type for " . $template . " field '".$field["name"]."' in form '".$form_name."'. Field[value]: '".json_encode($field["value"])."'. Check form config.");
+                dosyslog(__FUNCTION__.": WARNING: Value of array type for " . $template . " field '".$field["name"]."' in form. Field[value]: '".json_encode($field["value"])."'. Check form config.");
             };
         }
         

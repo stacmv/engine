@@ -37,9 +37,6 @@ function add_data(FormData $data, $comment = null){
     else return array(false, "fail");
     
 }
-function dosyslog($message, $file="") {								// Пишет сообщение в системный лог при включенной опции DO_SYSLOG.
-    glog_dosyslog($message, $file);
-};
 function dosyslog_data_changes($data_before){
     global $_DATA;
     
