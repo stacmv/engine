@@ -85,11 +85,6 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
             }else{
                 $field["value"] = db_prepare_value($value, $type);
             };
-        }elseif(!empty($field["form_value_default"])){
-            $field["value"] = form_get_field_values($field, "form_value_default");
-            if (is_array($field["value"])){
-                $field["value"] = $field["value"][0];
-            };
         };
         
         if ( ($type !== "list") && is_array($field["value"]) ){
@@ -144,56 +139,58 @@ function form_prepare_view($items, $fields){
     return $items;
 }
 function form_prepare_view_item($item, $fields){
-    static $tsv = array();
-    
-    foreach($item as $key => $value){
-        if (empty($fields[$key])) continue;
+        static $tsv = array();
         
-        if ( (substr($key,-3) == "_id") || (substr($key,-4) == "_ids") ){
-            $obj_name = (substr($key,-4) == "_ids") ? substr($key, 0,-4) : substr($key, 0,-3);
-            $get_name_function = "get_".$obj_name."_name";
-            if (function_exists($get_name_function)){
+        foreach($item as $key => $value){
+        if (empty($fields[$key])) continue;
+            
+            if ( (substr($key,-3) == "_id") || (substr($key,-4) == "_ids") ){
+                $obj_name = (substr($key,-4) == "_ids") ? substr($key, 0,-4) : substr($key, 0,-3);
+                $get_name_function = "get_".$obj_name."_name";
+                if (function_exists($get_name_function)){
+                    if ($fields[$key]["type"] == "list"){
+                        $item["_".$key] = array_map(function($v) use($get_name_function){
+                            return $v ? call_user_func($get_name_function, $v) : "";
+                        }, $value);
+                    }else{
+                        $item["_".$key] = $value ? call_user_func($get_name_function, $value) : "";
+                    };
+                };
+            }elseif(isset($fields[$key]["form_values"]) && ($fields[$key]["form_values"] == "tsv")){
+                $tsv_file = cfg_get_filename("settings", $key.".tsv");
+                
+                if ( ! isset($tsv[$key]) ){
+                    $tsv[$key] = array();
+                    $tmp = import_tsv( $tsv_file );
+                    if (!empty($tmp)){
+                        foreach($tmp as $v){
+                            $tsv[$key][ isset($v["value"]) ? $v["value"] : $v[$key] ] = $v["caption"];
+                        };
+                        unset($tmp, $v);
+                    };
+                };
+                    
                 if ($fields[$key]["type"] == "list"){
-                    $item["_".$key] = array_map(function($v) use($get_name_function){
-                        return $v ? call_user_func($get_name_function, $v) : "";
+                    $item["_".$key] = array_map(function($v)use($tsv, $key, $tsv_file){
+                        if (isset($tsv[$key][$v])){
+                            return $tsv[$key][$v];
+                        }else{
+                            dosyslog(__FUNCTION__.get_callee().": WARNING: Caption for value '".json_encode_array($v)."' of field '".$key."' is not defined in '".$tsv_file."'.");
+                            return $v;
+                        };
                     }, $value);
                 }else{
-                    $item["_".$key] = $value ? call_user_func($get_name_function, $value) : "";
-                };
-            };
-        }elseif(isset($fields[$key]["form_values"]) && ($fields[$key]["form_values"] == "tsv")){
-            $tsv_file = cfg_get_filename("settings", $key.".tsv");
-            
-            if ( ! isset($tsv[$key]) ){
-                $tsv[$key] = array();
-                $tmp = import_tsv( $tsv_file );
-                foreach($tmp as $v){
-                    $tsv[$key][ isset($v["value"]) ? $v["value"] : $v[$key] ] = $v["caption"];
-                };
-                unset($tmp, $v);
-            };
                 
-            if ($fields[$key]["type"] == "list"){
-                $item["_".$key] = array_map(function($v)use($tsv, $key, $tsv_file){
-                    if (isset($tsv[$key][$v])){
-                        return $tsv[$key][$v];
+                    if (isset($tsv[$key][$value])){
+                        $item["_".$key] = $tsv[$key][$value];
                     }else{
-                        dosyslog(__FUNCTION__.get_callee().": WARNING: Caption for value '".json_encode_array($v)."' of field '".$key."' is not defined in '".$tsv_file."'.");
-                        return $v;
-                    };
-                }, $value);
-            }else{
-            
-                if (isset($tsv[$key][$value])){
-                    $item["_".$key] = $tsv[$key][$value];
-                }else{
-                    dosyslog(__FUNCTION__.get_callee().": WARNING: Caption for value '".json_encode_array($value)."' of field '".$key."' is not defined in '".$tsv_file."'.");
-                }
-            };
+                        dosyslog(__FUNCTION__.get_callee().": WARNING: Caption for value '".json_encode_array($value)."' of field '".$key."' is not defined in '".$tsv_file."'.");
+                    }
+                };
+            }
         }
-    }
 
-    return $item;
+        return $item;
 
     
 }
@@ -303,7 +300,7 @@ function form_get_field_values($field, $key = "form_values"){
         if (isset($_DATA[$field["name"]])){
             $values = $_DATA[$field["name"]];
         }else{
-            dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _DATA.");
+            dosyslog(__FUNCTION__.": WARNING: Not values for field '" . $field["name"] . "' are in _DATA.");
             $values = "";
         }
         break;
@@ -319,7 +316,7 @@ function form_get_field_values($field, $key = "form_values"){
         if (isset($_USER["profile"]["id"])){
             $values = $_USER["profile"]["id"];
         }else{
-            dosyslog(__FUNCTION__.": WANING: Not values for field '" . $field["name"] . "' are in _USER.");
+            dosyslog(__FUNCTION__.": WARNING: Not values for field '" . $field["name"] . "' are in _USER.");
             $values = "";
         }
         break;
