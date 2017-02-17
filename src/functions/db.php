@@ -835,13 +835,17 @@ function db_get($db_table, $ids, $flags=0, $limit="", $offset = 0){
 
     return $result;
 };
-function db_get_count($db_table){
+function db_get_count($db_table, $where_clause = ""){
     $dbh = db_set($db_table);
     
     $table_name = db_get_table($db_table);
     
     $query = "SELECT count(*) as c FROM " . $table_name;
-    $query .= " WHERE (isDeleted = '' OR isDeleted IS NULL)";
+    if ($where_clause){
+        $query .= $where_clause;
+    }else{
+        $query .= " WHERE (isDeleted = '' OR isDeleted IS NULL)";
+    }
     $query .= ";";
     
     $res = db_select($db_table, $query);
@@ -1082,7 +1086,7 @@ function db_get_tables_list_from_xml($db_name=""){
     };
         
     return $dbs;
-    
+                
 };
 function db_insert($db_table, ChangesSet $data){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
