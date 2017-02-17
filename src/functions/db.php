@@ -190,7 +190,7 @@ function db_add_history($db_table, $objectId, $subjectId, $action, $comment, Cha
     $history_record["changes_from"] = implode("\n",$changes_from);
     $history_record["changes_to"]   = implode("\n",$changes_to);
         
-    
+        
     $res = db_add($db_name . ".history", new ChangesSet($history_record));
         
     if (!$res){
@@ -232,9 +232,9 @@ function db_check_schema($db_table){ // проверяет схему табли
     foreach($schema as $field){
         $fields_to_be[$table][] = (string) $field["name"];
         if ( ! in_array($field["name"], $columns[$table]) ){ // поле есть в xml, но нет в реальной БД.
-            $fields_to_add[$table][] = $field["name"];
-        };
-    };
+				$fields_to_add[$table][] = $field["name"];
+			};
+		};
     foreach($columns[$table] as $k=>$v){
         if (!in_array($v, $fields_to_be[$table])) $fields_to_del[$table][] = $v;
     };
@@ -287,46 +287,46 @@ function db_check_schema($db_table){ // проверяет схему табли
                     $dbh->beginTransaction();
                     dosyslog(__FUNCTION__.": INFO: Begin SQL transaction.");
                     try{
-                        foreach($query as $q){
-                            set_time_limit(300);
-                            echo "<li>".$q;
-                            if ($q=="backup"){
+					foreach($query as $q){
+                        set_time_limit(300);
+						echo "<li>".$q;
+						if ($q=="backup"){
                                 if (in_array("extra", $columns)){
-                                    $qb = "SELECT id, ".implode(", ",$fields_to_del[$table]).", extra FROM ".$temp_table.";";
-                                    echo "<p>$qb</p>";
-                                    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$qb."'.");
-                                    $res_b = $dbh->query($qb);
-                                    if ($res_b){
-                                        echo "<ol>";
-                                        while ( ($row = $res_b->fetch(PDO::FETCH_ASSOC)) !== false){
-                                            if (!empty($row["extra"])){
-                                                $extra_decoded = json_decode_array($row["extra"],true);
-                                                if ($extra_decoded && is_array($extra_decoded)){
-                                                    $extra = $extra_decoded;
-                                                }else{
-                                                    $extra["_invalid__extra_".date("Y-m-d")] = $row["extra"];
-                                                };
-                                            }else{
-                                                $extra = array();
-                                            };
-                                            
-                                            foreach($fields_to_del[$table] as $ftd){
-                                                if ( ($row[$ftd]!=="") && ($row[$ftd] !== NULL) ){
-                                                    $extra[$ftd."__".date("Y-m-d")] = $row[$ftd];
-                                                };
-                                            };
-                                            $extra_encoded = json_encode_array($extra);
-                                            
-                                            if (!empty($extra) && ($extra_encoded != $row["extra"]) ){
-                                                $qu = "UPDATE ".$temp_table." SET extra = ".$dbh->quote($extra_encoded)." WHERE id=".(int) $row["id"].";";
-                                                echo "<li>$qu</li>";
-                                                if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$qu."'.");
-                                                $res_u = $dbh->exec($qu);
+							$qb = "SELECT id, ".implode(", ",$fields_to_del[$table]).", extra FROM ".$temp_table.";";
+							echo "<p>$qb</p>";
+                            if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$qb."'.");
+							$res_b = $dbh->query($qb);
+							if ($res_b){
+								echo "<ol>";
+								while ( ($row = $res_b->fetch(PDO::FETCH_ASSOC)) !== false){
+									if (!empty($row["extra"])){
+										$extra_decoded = json_decode_array($row["extra"],true);
+										if ($extra_decoded && is_array($extra_decoded)){
+											$extra = $extra_decoded;
+										}else{
+											$extra["_invalid__extra_".date("Y-m-d")] = $row["extra"];
+										};
+									}else{
+										$extra = array();
+									};
+									
+									foreach($fields_to_del[$table] as $ftd){
+										if ( ($row[$ftd]!=="") && ($row[$ftd] !== NULL) ){
+											$extra[$ftd."__".date("Y-m-d")] = $row[$ftd];
+										};
+									};
+									$extra_encoded = json_encode_array($extra);
+									
+									if (!empty($extra) && ($extra_encoded != $row["extra"]) ){
+										$qu = "UPDATE ".$temp_table." SET extra = ".$dbh->quote($extra_encoded)." WHERE id=".(int) $row["id"].";";
+										echo "<li>$qu</li>";
+                                        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$qu."'.");
+										$res_u = $dbh->exec($qu);
 
-                                                if(!$res_u){
-                                                    dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $temp_table . "]: '".db_error($dbh)."'. Query: '".$qu."'.");
-                                                    dosyslog(__FUNCTION__.": FATAL ERROR: Can not backup data while migrate DB schema. Query failed: '$qu'.");
-                                                    die("FATAL ERROR: Can not backup data while migrate DB schema.");
+										if(!$res_u){
+                                            dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $temp_table . "]: '".db_error($dbh)."'. Query: '".$qu."'.");
+											dosyslog(__FUNCTION__.": FATAL ERROR: Can not backup data while migrate DB schema. Query failed: '$qu'.");
+											die("FATAL ERROR: Can not backup data while migrate DB schema.");
                                                 };
                                             };
                                         }; //while
@@ -874,13 +874,17 @@ function db_get($db_table, $ids, $flags=0, $limit="", $offset = 0){
 
     return $result;
 };
-function db_get_count($db_table){
+function db_get_count($db_table, $where_clause = ""){
     $dbh = db_set($db_table);
     
     $table_name = db_get_table($db_table);
     
     $query = "SELECT count(*) as c FROM " . $table_name;
-    $query .= " WHERE (deleted IS NULL)";
+    if ($where_clause){
+        $query .= $where_clause;
+    }else{
+        $query .= " WHERE (isDeleted = '' OR isDeleted IS NULL)";
+    }
     $query .= ";";
     
     $res = db_select($db_table, $query);
@@ -1087,11 +1091,11 @@ function db_get_tables_list($db_name = "", $skipHistoryTable = true){
     $db_tables_info = db_get_tables($db_name);
     
     $full_table_name = function($db_name, $tables) use ($skipHistoryTable){
-        return array_map(function($table) use ($db_name){
-            return $db_name . "." . $table;
+            return array_map(function($table) use ($db_name){
+                return $db_name . "." . $table;
         }, array_filter($tables, function($table) use ($skipHistoryTable){
             return !($skipHistoryTable && ($table == "history"));
-        }));
+            }));
     };
     
     if ($db_name){
@@ -1144,7 +1148,7 @@ function db_get_tables_list_from_xml($db_name=""){
     };
         
     return $dbs;
-    
+                
 };
 function db_insert($db_table, ChangesSet $data){
     $result = false;
@@ -1176,7 +1180,7 @@ function db_insert($db_table, ChangesSet $data){
         return ( isset($fields[$k]) && ($fields[$k]["type"] != "autoincrement") && ($k != "modified") && ($k != "deleted") );
     });
     
-    
+        
     $insert_data = array();
     $record = db_prepare_record($db_table, $data->to);
     $keys = array_keys($record);  // db_prepare_record() may delete 'pass' field if it's empty
@@ -1316,7 +1320,7 @@ function db_set($db_table){
         die("platform_db:db-set-2");
     };
         
-    $db_name = db_get_name($db_table);
+	$db_name = db_get_name($db_table);
     $table_name = db_get_table($db_table);
     
     if ( empty($_DB[$db_name]) ) $_DB[$db_name] = array("handler"=>null, "tables"=>array());
@@ -1362,7 +1366,7 @@ function db_set($db_table){
         };
     };
 
-    return $dbh;
+	return $dbh;
 };
 function db_select($db_table, $select_query, $flags=0){
 
