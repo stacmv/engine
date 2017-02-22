@@ -141,6 +141,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     global $_PARAMS;
     global $_DATA;
     global $CFG;
+    global $IS_AJAX;
     
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
     
@@ -192,28 +193,35 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     dosyslog(__FUNCTION__.": NOTICE: RESULT = ".$reason);
 
 
-    if ($res){
-        if ( ! is_null($redirect_on_success) ){
-            if ($redirect_on_success){
-               $redirect_uri = $redirect_on_success;
-            }elseif (db_get_meta($db_table, "edit_success_redirect")){
-                $redirect_uri = db_get_meta($db_table, "edit_success_redirect");
-            }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
-                $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
-            }elseif(db_get_name($db_table) == db_get_table($db_table)){
-                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . db_get_name($db_table);
-            }else{
-                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . $db_table;
-            };
-            redirect($redirect_uri);
-        };
+    if ($IS_AJAX){
+        
+        $_DATA["result"] = $res;
+        $_DATA["reason"] = $reason;
+        clear_actions();
+        
     }else{
-        if ( ! is_null($redirect_on_fail) ){
-            redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
+        
+        if ($res){
+            if ( ! is_null($redirect_on_success) ){
+                if ($redirect_on_success){
+                   $redirect_uri = $redirect_on_success;
+                }elseif (db_get_meta($db_table, "edit_success_redirect")){
+                    $redirect_uri = db_get_meta($db_table, "edit_success_redirect");
+                }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
+                    $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
+                }elseif(db_get_name($db_table) == db_get_table($db_table)){
+                    $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . db_get_name($db_table);
+                }else{
+                    $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . $db_table;
+                };
+                redirect($redirect_uri);
+            };
+        }else{
+            if ( ! is_null($redirect_on_fail) ){
+                redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
+            };
         };
-    };
-    
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    }
     
     return array($res, $reason);
     

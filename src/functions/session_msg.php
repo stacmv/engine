@@ -1,7 +1,8 @@
 <?php
 function set_session_msg($message, $class="info", array $options=array() ){
     global $CFG;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    global $IS_AJAX;
+    global $_DATA;
 
     $msg = array("class"=>"alert-info", "text"=>"");
     
@@ -38,8 +39,13 @@ function set_session_msg($message, $class="info", array $options=array() ){
 
     //
     
-    if ( ! isset($_SESSION["msg"]) || ! is_array($_SESSION["msg"]) ) $_SESSION["msg"] = array();
-    $_SESSION["msg"][] = $msg;
+    if ($IS_AJAX){
+        if ( ! isset($_DATA["msg"]) || ! is_array($_DATA["msg"]) ) $_DATA["msg"] = array();
+        $_DATA["msg"][] = $msg;
+    } else {
+        if ( ! isset($_SESSION["msg"]) || ! is_array($_SESSION["msg"]) ) $_SESSION["msg"] = array();
+        $_SESSION["msg"][] = $msg;
+    };
     
     dosyslog(__FUNCTION__.": DEBUG: ". get_callee() . ": Session message added: '[".$msg["class"]."] " . $msg["text"] . "'.");
     
