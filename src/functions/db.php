@@ -1460,6 +1460,13 @@ function db_parse_value($value, $field_type){
             $value = (string) bcadd($value/100, 0, DB_MONEY_PRECISION);
         }
         break;
+    case "phone":
+        if (!preg_match("/\d{10}$/", $value)){ 
+            // do nothing
+        }else{
+            $value = db_prepare_value($value, "phone");
+        }
+        break;
     case "list":
         if (isset($value) ){
             if (strpos($value, DB_LIST_DELIMITER) !== false){
@@ -1582,6 +1589,12 @@ function db_prepare_value($value, $field_type){
             if ($value === "") $res = 0;
             elseif ( ! is_null($value) ){
                 $res = (int) ($value*100);
+            };
+            break;
+        case "phone":
+            if ($value === "") $res = null;
+            elseif ( ! is_null($value) ){
+                $res = substr(glog_clear_phone($value), -10);
             };
             break;
         case "date":
