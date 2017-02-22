@@ -8,7 +8,8 @@ function assets($command, $type, $resource=""){
                 case "css-file":
                 case "js-file":
                     if (!empty($resource) && is_string($resource)){
-                        $assets[$type][] = (string) $resource;
+                        $hash = md5($resource);
+                        $assets[$type][$hash] = (string) $resource;
                         return true;
                     }else{
                         dosyslog(__FUNCTION__.get_callee().": ERROR: empty resource of  asset type '".(string) $type."'.");
