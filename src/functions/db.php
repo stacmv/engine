@@ -883,7 +883,7 @@ function db_get_count($db_table, $where_clause = ""){
     if ($where_clause){
         $query .= $where_clause;
     }else{
-        $query .= " WHERE (isDeleted = '' OR isDeleted IS NULL)";
+        $query .= " WHERE (deleted = '' OR deleted IS NULL)";
     }
     $query .= ";";
     
