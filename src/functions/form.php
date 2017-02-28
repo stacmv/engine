@@ -66,25 +66,33 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         // from значение поля 
         $field["value_from"] = "";
         if ($value_from){
-            if ($type == "password") {
-                $field["value_from"] = FORM_PASS_SUBSTITUTION;
-            }elseif($type == "timestamp"){
-                $field["value_from"] = $value_from;
-            }else{
-                $field["value_from"] = db_prepare_value($value_from, $type);
+            switch($type){
+                case "password":
+                    $field["value_from"] = FORM_PASS_SUBSTITUTION;
+                    break;
+                case "timestamp":
+                case "money":
+                    $field["value_from"] = $value_from;
+                    break;
+                default:
+                    $field["value_from"] = db_prepare_value($value_from, $type);
             };
         };
         
         // to значение поля 
         $field["value"] = "";
         if ($value){
-            if ($type == "password") {
-                $field["value"] = "";
-            }elseif($type == "list"){
-                $field["value"] = $value;
-            }else{
-                $field["value"] = db_prepare_value($value, $type);
-            };
+            switch($type){
+                case "password":
+                    $field["value"] = "";
+                    break;
+                case "money":
+                case "list":
+                    $field["value"] = $value;
+                    break;
+                default:
+                    $field["value"] = db_prepare_value($value, $type);
+            }
         }elseif(!empty($field["form_value_default"])){
             $field["value"] = form_get_field_values($field, "form_value_default");
             if (is_array($field["value"])){

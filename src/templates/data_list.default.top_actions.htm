@@ -9,8 +9,8 @@ foreach(@array(
 
 ?>
 <?php
-	$dldta_add = form_get_fields(_plural($model_name), "add_".$model_name) && userHasRight("manager");
-	$dldta_import = form_get_fields(_plural($model_name), "import_"._plural($model_name))  && userHasRight("manager");
+	$dldta_add = form_get_fields(db_get_db_table($model_name), "add_".$model_name) && userHasRight("manager");
+	$dldta_import = form_get_fields(db_get_db_table($model_name), "import_"._plural($model_name))  && userHasRight("manager");
 ?>
 
 <?php if ($dldta_add || $dldta_import):?>
