@@ -23,10 +23,10 @@ class UploadHandler {
      */
     public function getName(){
         if (isset($_REQUEST['qqfilename']))
-            return $_REQUEST['qqfilename'];
+            return glog_codify($_REQUEST['qqfilename'], GLOG_CODIFY_FILENAME);
 
         if (isset($_FILES[$this->inputName]))
-            return $_FILES[$this->inputName]['name'];
+            return glog_codify($_FILES[$this->inputName]['name'], GLOG_CODIFY_FILENAME);
     }
 
     public function getInitialFiles() {

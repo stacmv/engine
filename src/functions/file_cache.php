@@ -11,9 +11,9 @@ function file_cache($value = null, $ttl = null){
     $key = glog_codify(_cache_key(), GLOG_CODIFY_FILENAME);
             
     if ( is_null($value) ){  // get from cache 
-        return _file_cache($key, null, $ttl === false ? false : true); // $ttl === false => ignore TTL when read cached data
+        return _file_cache("get", $key, null, $ttl === false ? false : true); // $ttl === false => ignore TTL when read cached data
     }else{                     // set into cache
-        return _file_cache($key, $value, $ttl);
+        return _file_cache("set", $key, $value, $ttl);
     };
 
 }
@@ -33,7 +33,7 @@ function file_cache_cleanup($time = ""){
     };
 }
 function file_cache_del($key){
-    file_cache_set($key, FILE_CACHE_DELETE_FLAG);
+    _file_cache("delete", $key, null, null);
 }
 function file_cache_get($key, $ignoreTTL = false){
     $hash = glog_codify($key, GLOG_CODIFY_FILENAME);
@@ -42,6 +42,13 @@ function file_cache_get($key, $ignoreTTL = false){
     }
     return _file_cache("get", $hash, null, $ignoreTTL);
 };
+function file_cache_get_filename($key, $ignoreTTL = false){
+    $hash = glog_codify($key, GLOG_CODIFY_FILENAME);
+    if ($hash !== $key){
+        dosyslog(__FUNCTION__.get_callee().": WARNING: key:'".$key."' is not suitable for file name. Consider to change it.");
+    }
+    return _file_cache("get_filename", $hash, null, $ignoreTTL);
+};
 function file_cache_set($key, $value, $ttl = FILE_CACHE_TTL_DEFAULT){
     $hash = glog_codify($key, GLOG_CODIFY_FILENAME);
     if ($hash !== $key){
@@ -49,7 +56,7 @@ function file_cache_set($key, $value, $ttl = FILE_CACHE_TTL_DEFAULT){
     }
     return _file_cache("set", $hash, $value, $ttl);
 }
-function file_cached($key = null){
+function file_cached($key = null, $ignoreTTL = false){
     
     if ( ! FILE_CACHE_ENABLED ) return null;
         
@@ -62,7 +69,7 @@ function file_cached($key = null){
         }
     }
     
-    return ! is_null(_file_cache("get_filename", $hash, null, true));
+    return ! is_null(_file_cache("get_filename", $hash, null, !$ignoreTTL));
 }
 function _file_cache($command, $key, $value, $ttl){
     static $file_cache = array();
@@ -98,6 +105,7 @@ function _file_cache($command, $key, $value, $ttl){
         case "delete":
             if (isset($file_cache[$key])){
                 @unlink($file_cache[$key]);
+                unset($file_cache[$key]);
                 dosyslog(__FUNCTION__.get_callee().": DEBUG: Принудительная инвалидация: ".$key);
             }else{
                 dosyslog(__FUNCTION__.get_callee().": WARNING: Ошибка ключ '".$key."' отсутствует в кеше.");
@@ -159,7 +167,7 @@ function get_file_cached_file($key, $ttl){
     
     $parts = pathinfo($key);
     
-    if (!$parts["extension"]) $parts["extension"] = "cache";
+    if (!isset($parts["extension"])) $parts["extension"] = "cache";
     
     $file = FILE_CACHE_DIR . $parts["filename"] . "." . $time_valid_for . "." . $parts["extension"];
     
