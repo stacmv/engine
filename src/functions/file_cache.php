@@ -2,7 +2,7 @@
 // require PHP 5.4
 define("FILE_CACHE_ENABLED", true);
 define("FILE_CACHE_DELETE_FLAG", uniqid("file_cache_del"));
-define("FILE_CACHE_DIR", DATA_DIR.".cache/file_cache/");
+define("FILE_CACHE_DIR", ".cache/file_cache/");
 define("FILE_CACHE_TTL_DEFAULT", 3600); // Time to live in seconds
 function file_cache($value = null, $ttl = null){
         
@@ -62,7 +62,7 @@ function file_cached($key = null){
         }
     }
     
-    return ! is_null(_file_cache($hash));
+    return ! is_null(_file_cache("get_filename", $hash, null, true));
 }
 function _file_cache($command, $key, $value, $ttl){
     static $file_cache = array();
