@@ -26,8 +26,8 @@ function apply_template($template_name, $content_block = ""){
         }elseif(file_exists(cfg_get_filename("templates", $template_name . ".block.htm"))){
             $template_file = $template_name .".block.htm";
         }else{
-            dosyslog(__FUNCTION__.": FATAL ERROR: Template '".$template_name."' for page '".$_PAGE["uri"]."' is not set in pages file and not found at default paths.");
-            die("Code: et-".__LINE__."-".$template_name);
+            dosyslog(__FUNCTION__.": ERROR: Template '".$template_name."' for page '".$_PAGE["uri"]."' is not set in pages file and not found at default paths.");
+            return "%%".$template_name."%%"; // 
         };
     };
     
@@ -75,13 +75,24 @@ function get_content($block_name){
     global $_PAGE;
     
     static $blocks_chain = array();
+    static $dont_parse_blocks = array();
     
     dosyslog(__FUNCTION__.": DEBUG: Getting content block '".$block_name."'.");
     
+    if (in_array($block_name, $dont_parse_blocks)){
+        dosyslog(__FUNCTION__.get_callee().": DEBUG: block ". $block_name . " shoud not be parsed.");
+        return "%%".$block_name."%%";
+    };
+    
+    
     if (in_array($block_name,$blocks_chain)) {
         return ""; // don't parse block if it contained in itself directly or indirectly.
+    }elseif (in_array("form",$blocks_chain)){
+        $dont_parse_blocks[] = $block_name;
+        return "%%".$block_name."%%"; // don't parse block inside 'form' since it's not really block but some string in form data
     }else{
         array_push($blocks_chain, $block_name);
+        dosyslog(__FUNCTION__.get_callee().": DEBUG: blocks_chain: ".implode(", ", $blocks_chain));
     };
        
     $HTML = "";
@@ -95,7 +106,7 @@ function get_content($block_name){
     };
        
     if ($HTML){
-        $res = preg_replace_callback(
+            $res = preg_replace_callback(
             "/%%([\w\d_\-\s\.]+)%%/",
             function($m) use ($block_name){
                 return get_content($m[1]);
