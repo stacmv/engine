@@ -1,21 +1,20 @@
 <?php
 
 ?>
-<div class="attributes_container">
+<div class="<?=$field["name"];?>_container">
 	<input type="hidden" name="<?=$field["name_to"];?>" class="input" value="null">
 
 	<table class="table table-bordered table-condensed">
-		<thead><tr><th>Параметр</th><th>Значение</th><th></th></tr></thead>
 		<tbody>
-		
+			<p class="alert">Пусто</p>
 		</tbody>
 		<tfoot>
 			<tr>
 				<td>
-					<input class="attr_key" placeholder="Параметр">
+					<input class="attr_key" type="text" placeholder="Параметр">
 				</td>
 				<td>
-					<input class="attr_value" placeholder="Значение">
+					<input class="attr_value" type="text" placeholder="значение">
 				</td>
 				<td><button class="btn btn-small cmdAdd"><i class="icon icon-plus"></i></button></td>
 			</tr>
@@ -23,45 +22,56 @@
 	</table>
 
 	<script>
+
 		var field_value = <?=(!empty($field["value"]) ? html_entity_decode($field["value"]) : "[]");?>;
-		var tr = function(attr){
-			return '<tr data-hash="'+encodeURIComponent(attr.key)+'"><td>'+attr.key+'</td><td>'+attr.value+'</td><td><a class="close cmdDel">&times;</a></td></tr>';
+		var tr = function(key, value){
+			return '<tr><td>'+key+'</td><td><input type="text" value="'+value+'"></td><td><a class="close cmdDel">&times;</a></td></tr>';
 		};
 		var render = function(){
-			if (field_value instanceof Array){
-				var tbody_html = $.map(field_value, function(attr){
-					return tr(attr);
-				}).join("");
-			}else{
-				
-			}
+			var tbody_html = "";
+			for (var key in field_value){
+				tbody_html += tr(key, field_value[key]);
+			};
+
 			$cnt.find("table tbody").html(tbody_html);
 			$input.val(JSON.stringify(field_value));
+			
 		};
 		
-		var $cnt = $("div.attributes_container"),
+		var $cnt = $("div.<?=$field["name"];?>_container"),
 			$input = $cnt.find("input.input"),
-		    $attr_key = $("input#attr_key"),
+			$attr_key = $cnt.find("input.attr_key"),
 			$attr_value = $cnt.find("input.attr_value"),
 			$cmdAdd = $cnt.find(".btn.cmdAdd");
 		
+		// Add
 		$cmdAdd.on("click", function(e){
 			e.preventDefault();
-			debugger;
-			field_value.push({key: $attr_key.val(), value: $attr_value.val()});
+			var attr = {};
+			var key = $attr_key.val();
+			if (key){
+				field_value[key] = $attr_value.val();
+				render();
+				$attr_key.val("");
+				$attr_value.val("");
+			};
+			return false;
+		});
+		
+		// Edit
+		$cnt.on("change", "tbody input", function(e){
+			e.preventDefault();
+			var key = $(this).parents("tr").find("td").first().text();
+			field_value[key] = $(this).val();
 			render();
 			return false;
 		});
+		
+		// Delete
 		$cnt.on("click", ".cmdDel", function(e){
 			e.preventDefault();
-			debugger;
-			var hash = $(this).parents("tr").data("hash");
-			var i = field_value.length;
-			while(i--){
-				if (encodeURIComponent(field_value[i].key) == hash){
-					field_value.splice(i,1);
-				};
-			};
+			var key = $(this).parents("tr").find("td").first().text();
+			delete field_value[key]
 			render();
 			return false;
 		});
