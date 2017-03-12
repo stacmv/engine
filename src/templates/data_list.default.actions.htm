@@ -6,6 +6,9 @@ foreach(@array(
 
 ?>
 <?php if (userHasRight("access,manager") || userHasRight("access,owner","",$item)):?>
+	<?php if (!empty($_PAGE["templates"]["item"])):?>
+		<a href="<?=$repo_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small">Посмотреть</a>
+	<?php endif;?>
 	<a href="form/edit/<?=$model_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small"><i class="icon-edit"></i>Ред.</a>
 	<a href="form/delete/<?=$model_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small btn-danger">&times;</a>
 <?php else:?>
