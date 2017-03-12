@@ -92,7 +92,7 @@ function get_content($block_name){
         return "%%".$block_name."%%"; // don't parse block inside 'form' since it's not really block but some string in form data
     }else{
         array_push($blocks_chain, $block_name);
-        dosyslog(__FUNCTION__.get_callee().": DEBUG: blocks_chain: ".implode(", ", $blocks_chain));
+        dosyslog(__FUNCTION__.": DEBUG: blocks_chain: ".implode(", ", $blocks_chain));
     };
        
     $HTML = "";
