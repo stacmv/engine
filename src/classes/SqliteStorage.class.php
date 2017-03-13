@@ -203,11 +203,10 @@ class SqliteStorage extends EStorage
         return $this;
     }
     public function orderBy(array $orderBy){
-        $fields = $this->fields;
         
         $this->sql_order_by = array();
         foreach($orderBy as $field=>$sort_mode){
-            if (in_array($field, array_keys($fields)) && in_array(strtoupper($sort_mode), array("ASC", "DESC"))){
+            if (in_array(strtoupper($sort_mode), array("ASC", "DESC"))){
                 $this->sql_order_by[] = $field. " " . $sort_mode;
             };
         }
