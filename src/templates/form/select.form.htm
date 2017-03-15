@@ -12,7 +12,7 @@
 	<?php if ( empty($field["readonly"])):?>
 		<option></option>
 		<?php $in_optgroup = false;?>
-		<?php foreach($field["values"] as $caption=>$value):?>
+		<?php foreach($field["values"] as $value=>$caption):?>
 			<?php if ($value == "optgroup"):?>
 				<?php if ($in_optgroup):?>
 					</optgroup>

@@ -47,7 +47,7 @@ function file_cache_get_filename($key, $ignoreTTL = false){
     if ($hash !== $key){
         dosyslog(__FUNCTION__.get_callee().": WARNING: key:'".$key."' is not suitable for file name. Consider to change it.");
     }
-    return _file_cache("get_filename", $hash, null, $ignoreTTL);
+    return _file_cache("get_filename", $hash, null, !$ignoreTTL);
 };
 function file_cache_set($key, $value, $ttl = FILE_CACHE_TTL_DEFAULT){
     $hash = glog_codify($key, GLOG_CODIFY_FILENAME);
@@ -69,7 +69,7 @@ function file_cached($key = null, $ignoreTTL = false){
         }
     }
     
-    return ! is_null(_file_cache("get_filename", $hash, null, !$ignoreTTL));
+    return (bool) _file_cache("get_filename", $hash, null, !$ignoreTTL);
 }
 function _file_cache($command, $key, $value, $ttl){
     static $file_cache = array();
@@ -94,7 +94,7 @@ function _file_cache($command, $key, $value, $ttl){
                     };
                 }else{
                     dosyslog(__FUNCTION__.get_callee().": DEBUG: Промах: ".$key.".");
-                    return false;
+                    return null;
                 };
             }else{
                 dosyslog(__FUNCTION__.get_callee().": DEBUG: Промах: ".$key.".");

@@ -314,7 +314,7 @@ function form_get_field_values($field, $key = "form_values"){
                 $tsv = $values;
                 $values = array();
                 foreach($tsv as $record){
-                    $values[ trim($record["caption"]) ] = trim($record["value"]);
+                    $values[ trim($record["value"]) ] = trim($record["caption"]);
                 };
                 unset($record);
             };
