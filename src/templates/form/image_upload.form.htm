@@ -1,6 +1,9 @@
 <?php
 assets("add", "css-file", INC_DIR."engine/src/assets/fine-uploader/fine-uploader-gallery.css");
 assets("add", "js-file", INC_DIR."engine/src/assets/fine-uploader/fine-uploader.js");
+
+$object_uid = !empty($object["uid"]) ? $object["uid"] : $object["id"];
+
 ?>
 
 <script type="text/template" id="qq-template">
@@ -90,12 +93,12 @@ assets("add", "js-file", INC_DIR."engine/src/assets/fine-uploader/fine-uploader.
         <?php endif;?>
         element: document.getElementById("uploader"),
         request: {
-            endpoint: "image/upload/<?=$repo_name;?>/<?=$object["uid"];?><?=$CFG["URL"]["ext"];?>"
+            endpoint: "image/upload/<?=$repo_name;?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>"
         },
         deleteFile: {
             enabled: true,
 			forceConfirm: true,
-            endpoint: "image/upload/delete/<?=$repo_name;?>/<?=$object["uid"];?><?=$CFG["URL"]["ext"];?>?uuid="
+            endpoint: "image/upload/delete/<?=$repo_name;?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>?uuid="
         },
         chunking: {
             enabled: true,
@@ -103,7 +106,7 @@ assets("add", "js-file", INC_DIR."engine/src/assets/fine-uploader/fine-uploader.
                 enabled: true
             },
             success: {
-                endpoint: "image/upload/<?=$repo_name;?>/<?=$object["uid"];?><?=$CFG["URL"]["ext"];?>?done"
+                endpoint: "image/upload/<?=$repo_name;?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>?done"
             }
         },
         resume: {
@@ -114,7 +117,7 @@ assets("add", "js-file", INC_DIR."engine/src/assets/fine-uploader/fine-uploader.
             showButton: true
         },
         session: {
-            endpoint: "image/upload/session/<?=$repo_name;?>/<?=$object["uid"];?><?=$CFG["URL"]["ext"];?>"
+            endpoint: "image/upload/session/<?=$repo_name;?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>"
         }
     });
 </script>
