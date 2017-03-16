@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pages>
+	<page uri="image" title="">
+		<params>
+			<type><type>string</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>1</pos></type>
+			<uid><type>string</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>2</pos></uid>
+			<uuid><type>string</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>3</pos></uuid>
+			<width><type>number</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>4</pos></width>
+			<height><type>number</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>5</pos></height>
+		</params>
+		<actions>image</actions>
+	</page>
+	<page uri="image/upload" title="">
+		<params>
+			<type><type>string</type><source>get</source><regexp>|image/upload/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></type>
+			<uid><type>string</type><source>get</source><regexp>|image/upload/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></uid>
+		</params>
+		<actions>image_upload</actions>
+	</page>
+	<page uri="image/upload/delete" title="delete.endpoint for FineUploder">
+		<params>
+			<type><type>string</type><source>get</source><regexp>|image/upload/delete/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></type>
+			<uid><type>string</type><source>get</source><regexp>|image/upload/delete/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></uid>
+			<uuid><type>string</type><source>request</source></uuid>
+		</params>
+		<actions>image_upload_delete</actions>
+	</page>
+	<page uri="image/upload/session" title="session.endpoint for FineUploder">
+		<params>
+			<type><type>string</type><source>get</source><regexp>|image/upload/session/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></type>
+			<uid><type>string</type><source>get</source><regexp>|image/upload/session/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></uid>
+		</params>
+		<actions>image_upload_session</actions>
+	</page>
+</pages>
+
