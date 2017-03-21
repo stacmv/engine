@@ -4,6 +4,7 @@ define("FILE_CACHE_ENABLED", true);
 define("FILE_CACHE_DELETE_FLAG", uniqid("file_cache_del"));
 define("FILE_CACHE_DIR", ".cache/file_cache/");
 define("FILE_CACHE_TTL_DEFAULT", 3600); // Time to live in seconds
+define("FILE_CACHE_DEFAULT_FILE_EXTENSION", "cache"); // extension w/o leadind dot, i.e, "cache"
 function file_cache($value = null, $ttl = null){
         
     if ( ! FILE_CACHE_ENABLED ) return null;
@@ -88,7 +89,12 @@ function _file_cache($command, $key, $value, $ttl){
                 if (($ttl === false /* ignoreTTL */ ) || (time() <= get_file_cached_time($key_file))){
                     dosyslog(__FUNCTION__.get_callee().": DEBUG: Попадание: ".$key.".");
                     if ($command == "get"){
-                        return glog_file_read( $key_file );
+                        $content = glog_file_read( $key_file );
+                        if (substr($content, 0, strlen("json_encode\n")) == "json_encode\n"){  // value is serialized Array
+                            $content = json_decode(substr($content, strlen("json_encode\n")), true);
+                        };
+                        return $content;
+
                     }else{
                         return $key_file;
                     };
@@ -114,6 +120,9 @@ function _file_cache($command, $key, $value, $ttl){
         
         case "set": // set into cache
             $key_file = get_file_cached_file($key, $ttl);
+            if (is_array($value)){
+                $value = "json_encode\n" . json_encode($value);
+            };
             if (file_put_contents($key_file, $value)){
                 $file_cache[$key] = $key_file; 
                 dosyslog(__FUNCTION__.get_callee().": NOTICE: Запись: ".$key." в " . $key_file . ", валиден до ".glog_isodate(get_file_cached_time($key_file), true).".");
@@ -155,7 +164,11 @@ function get_file_cached_key($file){
     
     $m = array();
     if (preg_match("/^(.+?)(?:\.(\d+))?\.([^.]+?)$/", $basename, $m)){
-        return $m[1].".".$m[3];
+        if ($m[3] == FILE_CACHE_DEFAULT_FILE_EXTENSION){
+            return $m[1];
+        }else{
+            return $m[1].".".$m[3];
+        }
     }else{
         return $basename;
     }
@@ -167,7 +180,7 @@ function get_file_cached_file($key, $ttl){
     
     $parts = pathinfo($key);
     
-    if (!isset($parts["extension"])) $parts["extension"] = "cache";
+    if (!isset($parts["extension"])) $parts["extension"] = FILE_CACHE_DEFAULT_FILE_EXTENSION;
     
     $file = FILE_CACHE_DIR . $parts["filename"] . "." . $time_valid_for . "." . $parts["extension"];
     
@@ -179,7 +192,7 @@ function get_file_cached_versions($key){
     $parts = pathinfo($key);
     
         
-    if (!$parts["extension"]) $parts["extension"] = "cache";
+    if (!$parts["extension"]) $parts["extension"] = FILE_CACHE_DEFAULT_FILE_EXTENSION;
     
     $pattern = FILE_CACHE_DIR . $parts["filename"] . ".*.".$parts["extension"];
     

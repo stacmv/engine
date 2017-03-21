@@ -383,7 +383,7 @@ class SqliteStorage extends EStorage
         // Order by
         if ($this->sql_order_by){
             $sql .= " ORDER BY " . implode(", ", $this->sql_order_by). " ";
-        } else {
+        } elseif (!$this->sql_join) {
             $sql .= " ORDER BY created DESC ";
         }
         
