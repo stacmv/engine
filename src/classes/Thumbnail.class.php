@@ -31,14 +31,16 @@ class Thumbnail
             if ($full_image && filemtime($full_image) && filemtime($thumb)){
                 if (filemtime($full_image) < filemtime($thumb)){
                     $this->thumb_url = $thumb;
+                }else{
+                    $this->thumb_url = $this->create_thumb_uri($type, $uid, $uuid, $CFG["IMAGE"]["width"], $CFG["IMAGE"]["height"]);
                 }
             }else{ // filemtime не рабоатет или нет оригинального файла, а минивтюра есть
                 $this->thumb_url = $thumb;
-            };
+            }
         }else{
         
             if ($full_image){
-                $this->thumb_url = "image/".$type."/" . $uid. "/" . $uuid . "/" . $CFG["IMAGE"]["width"] . "/" . $CFG["IMAGE"]["height"] . $CFG["URL"]["ext"];
+                $this->thumb_url = $this->create_thumb_uri($type, $uid, $uuid, $CFG["IMAGE"]["width"], $CFG["IMAGE"]["height"]);
             }else{
                 $this->thumb_url = self::NO_IMAGE_FILE;
             }
@@ -49,5 +51,11 @@ class Thumbnail
     
     public function __toString(){
         return $this->thumb_url;
+    }
+
+    private function create_thumb_uri($type, $uid, $uuid, $width, $height){
+        global $CFG;
+
+        return "image/".$type."/" . $uid. "/" . $uuid . "/" . $width . "/" . $height . $CFG["URL"]["ext"];
     }
 }
