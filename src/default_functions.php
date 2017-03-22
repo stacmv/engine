@@ -322,6 +322,7 @@ if (!function_exists("get_page_files")){
             "engine_json" => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_ENGINE),
             "engine_xml"  => cfg_get_filename("settings", "pages.xml", ENGINE_SCOPE_ENGINE),
             "engine_api"  => cfg_get_filename("settings", "api.pages.xml", ENGINE_SCOPE_ENGINE),
+            "image_xml"  => cfg_get_filename("settings", "image.pages.xml", ENGINE_SCOPE_ENGINE),
             "app_json"    => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_APP),
             "app_xml"     => cfg_get_filename("settings", "pages.xml", ENGINE_SCOPE_APP),
             "site_json"    => cfg_get_filename("settings", "pages.json", ENGINE_SCOPE_SITE),
