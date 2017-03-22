@@ -881,7 +881,7 @@ function db_get_count($db_table, $where_clause = ""){
     
     $query = "SELECT count(*) as c FROM " . $table_name;
     if ($where_clause){
-        $query .= $where_clause;
+        $query .= " " . $where_clause;
     }else{
         $query .= " WHERE (deleted = '' OR deleted IS NULL)";
     }

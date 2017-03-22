@@ -5,6 +5,7 @@ define("FILE_CACHE_DELETE_FLAG", uniqid("file_cache_del"));
 define("FILE_CACHE_DIR", ".cache/file_cache/");
 define("FILE_CACHE_TTL_DEFAULT", 3600); // Time to live in seconds
 define("FILE_CACHE_DEFAULT_FILE_EXTENSION", "cache"); // extension w/o leadind dot, i.e, "cache"
+define("FILE_CACHE_TIMESTAMP_FORMAT", "Ymdhis"); // only digits
 function file_cache($value = null, $ttl = null){
         
     if ( ! FILE_CACHE_ENABLED ) return null;
@@ -48,7 +49,7 @@ function file_cache_get_filename($key, $ignoreTTL = false){
     if ($hash !== $key){
         dosyslog(__FUNCTION__.get_callee().": WARNING: key:'".$key."' is not suitable for file name. Consider to change it.");
     }
-    return _file_cache("get_filename", $hash, null, !$ignoreTTL);
+    return _file_cache("get_filename", $hash, null, $ignoreTTL);
 };
 function file_cache_set($key, $value, $ttl = FILE_CACHE_TTL_DEFAULT){
     $hash = glog_codify($key, GLOG_CODIFY_FILENAME);
@@ -70,7 +71,7 @@ function file_cached($key = null, $ignoreTTL = false){
         }
     }
     
-    return (bool) _file_cache("get_filename", $hash, null, !$ignoreTTL);
+    return (bool) _file_cache("get_filename", $hash, null, $ignoreTTL);
 }
 function _file_cache($command, $key, $value, $ttl){
     static $file_cache = array();
@@ -84,9 +85,10 @@ function _file_cache($command, $key, $value, $ttl){
     switch($command){
         case "get": // get from cache 
         case "get_filename":
+            $ignoreTTL = (bool) $ttl;
             if ( isset($file_cache[$key]) ){
                 $key_file = $file_cache[$key];
-                if (($ttl === false /* ignoreTTL */ ) || (time() <= get_file_cached_time($key_file))){
+                if ($ignoreTTL || (time() <= get_file_cached_time($key_file))){
                     dosyslog(__FUNCTION__.get_callee().": DEBUG: Попадание: ".$key.".");
                     if ($command == "get"){
                         $content = glog_file_read( $key_file );
@@ -147,10 +149,11 @@ function get_file_cached_time($file){
     // Filename format: basename . timestamp . extension
     
     $parts = pathinfo($file);
-    $time  = pathinfo($parts["filename"], PATHINFO_EXTENSION);
+    $timestamp  = pathinfo($parts["filename"], PATHINFO_EXTENSION);
     
-    if (preg_match("/^\d+$/", $time)){
-        return $time;
+    if (preg_match("/^\d+$/", $timestamp)){
+        $dateTime = date_create_from_format(FILE_CACHE_TIMESTAMP_FORMAT, $timestamp);
+        return $dateTime->getTimestamp();
     }else{
         return time()+60; // if time to live for file is not set
     }
@@ -158,7 +161,7 @@ function get_file_cached_time($file){
 }
 function get_file_cached_key($file){
     
-    // Filename format: basename . timestamp . extension
+    // Filename format: basename . timestamp in FILE_CACHE_TIMESTAMP_FORMAT . extension
     
     $basename = basename($file);
     
@@ -182,7 +185,7 @@ function get_file_cached_file($key, $ttl){
     
     if (!isset($parts["extension"])) $parts["extension"] = FILE_CACHE_DEFAULT_FILE_EXTENSION;
     
-    $file = FILE_CACHE_DIR . $parts["filename"] . "." . $time_valid_for . "." . $parts["extension"];
+    $file = FILE_CACHE_DIR . $parts["filename"] . "." . date(FILE_CACHE_TIMESTAMP_FORMAT, $time_valid_for) . "." . $parts["extension"];
     
     return $file;
 }    
