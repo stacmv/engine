@@ -32,7 +32,7 @@ class Thumbnail
                 if (filemtime($full_image) < filemtime($thumb)){
                     $this->thumb_url = $thumb;
                 }
-            }else{ // filemtime íå ðàáîàòåò èëè íåò îðèãèíàëüíîãî ôàéëà, à ìèíèâòþðà åñòü
+            }else{ // filemtime Ð½Ðµ Ñ€Ð°Ð±Ð¾Ð°Ñ‚ÐµÑ‚ Ð¸Ð»Ð¸ Ð½ÐµÑ‚ Ð¾Ñ€Ð¸Ð³Ð¸Ð½Ð°Ð»ÑŒÐ½Ð¾Ð³Ð¾ Ñ„Ð°Ð¹Ð»Ð°, Ð° Ð¼Ð¸Ð½Ð¸Ð²Ñ‚ÑŽÑ€Ð° ÐµÑÑ‚ÑŒ
                 $this->thumb_url = $thumb;
             };
         }else{
