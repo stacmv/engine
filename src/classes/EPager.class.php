@@ -58,6 +58,24 @@ class EPager implements ArrayAccess, jsonSerializable
         
         return glog_render_string($this->url_template, $data);
     }
+
+    public function getUrl(){
+        $url = array();
+        // Previous link
+        if ($this->current > 1){
+            $url[$this->current - 1] = $this->url($this->current - 1);
+        };
+        // visible pages links
+        foreach($this->pager as $p){
+            if (is_numeric($p)){
+                $url[$p] = $this->url($p);
+            };
+        };
+        // next link
+        if ($this->current < $this->count){
+            $url[$this->current + 1] = $this->url($this->current + 1);
+        };
+    }
  
     /* ArrayAccess implementation */
     public function offsetSet($offset, $value) {
@@ -77,6 +95,11 @@ class EPager implements ArrayAccess, jsonSerializable
         if (isset($this->$offset)) {
             return $this->$offset;
         }else{
+
+            if ($offset == "url"){
+                return $this->getUrl();
+            };
+
             if (DEV_MODE){
                 dosyslog(__METHOD__.get_callee().": FATAL ERROR: Neither property '".$offset."' nor method '"."get".ucfirst($offset)."' are exists in class '".__CLASS__."'.");
                 die("Code: ".__CLASS__."-".__LINE__."-".$offset);
@@ -93,21 +116,7 @@ class EPager implements ArrayAccess, jsonSerializable
             $res[$property] = $this->$property;
         };
         
-        $res["url"] = array();
-        // Previous link
-        if ($this->current > 1){
-            $res["url"][$this->current - 1] = $this->url($this->current - 1);
-        };
-        // visible pages links
-        foreach($this->pager as $p){
-            if (is_numeric($p)){
-                $res["url"][$p] = $this->url($p);
-            };
-        };
-        // next link
-        if ($this->current < $this->count){
-            $res["url"][$this->current + 1] = $this->url($this->current + 1);
-        };
+        $res["url"] = $this->getUrl();
         
         return $res;
 

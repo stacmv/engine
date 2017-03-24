@@ -17,25 +17,17 @@ function apply_template($template_name, $content_block = ""){
         die("Code: et-".__LINE__);
     };
 
+    $template_file = find_template_file($template_name);
     
-    if ( ! empty($_PAGE["templates"][$template_name]) ){
-        $template_file = $_PAGE["templates"][$template_name];
-    }else{
-        if (file_exists( cfg_get_filename("templates", $template_name . ".htm") )){
-            $template_file = $template_name . ".htm";
-        }elseif(file_exists(cfg_get_filename("templates", $template_name . ".block.htm"))){
-            $template_file = $template_name .".block.htm";
-        }else{
-            dosyslog(__FUNCTION__.": ERROR: Template '".$template_name."' for page '".$_PAGE["uri"]."' is not set in pages file and not found at default paths.");
-            return "%%".$template_name."%%"; // 
-        };
-    };
-    
-    dosyslog(__FUNCTION__.": DEBUG: Start rendering template '".$template_name."'.");
-    $HTML = render_template($template_file, array_map("escape_template_data", (array) $_DATA) );
-    dosyslog(__FUNCTION__.": DEBUG: Finish rendering template '".$template_name."'.");
+    if ($template_file !== false){
+        dosyslog(__FUNCTION__.": DEBUG: Start rendering template '".$template_name."'.");
+        $HTML = render_template($template_file, /*array_map("escape_template_data",*/ (array) $_DATA/*)*/ );
+        dosyslog(__FUNCTION__.": DEBUG: Finish rendering template '".$template_name."'.");
 
-    set_content($content_block, $HTML);  
+        set_content($content_block, $HTML);  
+    }else{
+        dosyslog(__FUNCTION__.": WARNING: Can not find file for template '".$template_name."'.");
+    }
     
     return $HTML;
 };
@@ -139,6 +131,28 @@ function get_content($block_name){
     
     return $HTML;
 };
+function find_template_file($template_name){
+    global $_PAGE;
+
+    if (cached()) return cache();
+
+    if ( ! empty($_PAGE["templates"][$template_name]) ){
+        $template_file = cfg_get_filename("templates", $_PAGE["templates"][$template_name]);
+    }else{
+        
+        $template_file = cfg_get_filename("templates", $template_name . ".htm");
+        if (!$template_file){
+            $template_file = cfg_get_filename("templates", $template_name . ".block.htm");
+        };
+
+        if (!$template_file){
+            dosyslog(__FUNCTION__.": ERROR: Template '".$template_name."' for page '".$_PAGE["uri"]."' is not set in pages file and not found at default paths.");
+            $template_file = false;
+        };
+    };
+
+    return cache($template_file);
+}
 function render_template($template_file, $data = array() ){
     // Declare global which must be visible from within templates
     global $CFG;
@@ -147,13 +161,18 @@ function render_template($template_file, $data = array() ){
     global $_URI;
     global $_USER;
     global $IS_IFRAME_MODE;
+  
+    if ($template_file === false){
+        dosyslog(__FUNCTION__.": ERROR: Can not find file for template '".$template_file."'.");
+        return "";
+    }
     
-    $template_file_name = cfg_get_filename("templates", $template_file);
+    dosyslog(__FUNCTION__.": DEBUG: Prepare to render template file '".$template_file."'.");
+
+    $cacheable = strpos($template_file, ".cacheable") > 0 ? true : false;
     
-    $cacheable = strpos($template_file_name, ".cacheable") > 0 ? true : false;
     
-    
-    if ( ! file_exists( $template_file_name )){
+    if ( ! file_exists( $template_file )){
         dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template_file."' is not found.");
         die("Code: et-".__LINE__."-".$template_file);
     };
@@ -167,9 +186,10 @@ function render_template($template_file, $data = array() ){
         // dosyslog(__FUNCTION__.": NOTICE: Rendering template file '".$template_file."' with data '" . json_encode($data) . "'.");
         
         ob_start();
-            include $template_file_name;
+            include $template_file;
             $HTML = ob_get_contents();
         ob_end_clean();
+        dosyslog(__FUNCTION__.": DEBUG: template file '".$template_file."' rendered.");
         
         if ($cacheable) file_cache_set($template_file, $HTML);
     };

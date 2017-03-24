@@ -10,6 +10,8 @@ if (!function_exists("cfg_get_filename")){
         // scope == ENGINE_SCOPE_APP - get file from app
         // scope == ENGINE_SCOPE_SITE - get file from app's specific site
         // scope == ENGINE_SCOPE_ALL - get file from site, then if not found, from app then if not found get it from engine
+
+        if (cached()) return cache();
         
         // Type whitelist
         $types = array("templates/form", "templates", "settings", "email_templates", "sms_templates", "classes" );
@@ -38,15 +40,16 @@ if (!function_exists("cfg_get_filename")){
             $path[] = ENGINE_DIR;
         };
         
-        if (count($path) == 1){
-            return $path[0] . $type . "/" . $filename;
-        }else{
-            do {
-                $test_filename = array_shift($path) . $type . "/" . $filename;
-            } while ( ! file_exists($test_filename) && ( count($path) > 0) );
-                        
-            return $test_filename;
-        }
+        foreach($path as $p){
+            $test_filename = $p . $type . "/" . $filename;
+            if (file_exists($test_filename)){
+
+                return cache($test_filename);
+            };
+        };
+
+        dosyslog(__FUNCTION__.get_callee().": ERROR: File '".$filename."' of type '".$type."' not found in scope '".$scope."'.");
+        return "";
     }
 }
 if (!function_exists("check_application_already_in_db")){
@@ -142,9 +145,9 @@ if (!function_exists("check_application_already_in_db")){
 
 }
 if (!function_exists("dosyslog")){
-    function dosyslog($msg){
-              if (function_exists("glog_dosyslog")){
-            glog_dosyslog($msg);
+    function dosyslog($msg, $flush=false){
+        if (function_exists("glog_dosyslog")){
+            glog_dosyslog($msg, $flush);
         }else{
             die("Err: Neither app dosyslog() nor glog_dosyslog() are defined.");
         };   

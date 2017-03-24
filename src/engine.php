@@ -475,4 +475,4 @@ if($IS_AJAX && empty($_PAGE["templates"]["page"]) && !$IS_API_CALL){
 SENDHEADERS();
 SENDBODY();
 
-dosyslog("ENGINE: INFO: Request processed within " . round(microtime(true) - $start_microtime, 4) ."s, memory used in peak: ".glog_convert_size(memory_get_peak_usage(true)).".");
+dosyslog("ENGINE: INFO: Request processed within " . round(microtime(true) - $start_microtime, 4) ."s, memory used in peak: ".glog_convert_size(memory_get_peak_usage(true)).".", true);
