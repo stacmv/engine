@@ -264,7 +264,7 @@ function form_get_field_values($field, $key = "form_values"){
         $tsv = import_tsv( cfg_get_filename("settings", glog_codify($field["name"]) . ".tsv") );
         if ($tsv){
             foreach($tsv as $record){
-                $values[ trim($record["caption"]) ] = trim( isset($record[ $field["name"] ]) ? $record[ $field["name"] ] : $record["value"] );
+                $values[ trim( isset($record[ $field["name"] ]) ? $record[ $field["name"] ] : $record["value"] ) ] = $record["caption"];
             }
             unset($record);
         }
