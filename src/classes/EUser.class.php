@@ -44,7 +44,9 @@ class EUser extends Model implements ArrayAccess
     }
     
     function is_authenticated(){
-        dosyslog(__METHOD__.get_callee().": DEBUG: User 'authenticated' value: '".serialize(@$_SESSION["authenticated"])."'.");
+        if (isset($_SESSION["authenticated"])){
+            dosyslog(__METHOD__.get_callee().": DEBUG: User 'authenticated' value: '".serialize($_SESSION["authenticated"])."'.");
+        };            
         return ! empty($_SESSION["authenticated"]) ;
     }
 

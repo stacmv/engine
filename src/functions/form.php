@@ -264,7 +264,10 @@ function form_get_field_values($field, $key = "form_values"){
         $tsv = import_tsv( cfg_get_filename("settings", glog_codify($field["name"]) . ".tsv") );
         if ($tsv){
             foreach($tsv as $record){
-                $values[ trim( isset($record[ $field["name"] ]) ? $record[ $field["name"] ] : $record["value"] ) ] = $record["caption"];
+                $values[] = array(
+                    "value" => trim( isset($record[ $field["name"] ]) ? $record[ $field["name"] ] : $record["value"] ),
+                    "caption" =>$record["caption"],
+                );
             }
             unset($record);
         }
@@ -307,16 +310,12 @@ function form_get_field_values($field, $key = "form_values"){
         
         if ( is_array($values) && ! empty($values) ){
         
-            $keys = array_keys($values);
-            if ( ! is_array($values[ $keys[0] ]) ){ // одномерный список значений
+            if ( is_scalar($values[0]) ){ // одномерный список значений
                 $values = array_map("trim", $values);
             }else{
-                $tsv = $values;
-                $values = array();
-                foreach($tsv as $record){
-                    $values[ trim($record["value"]) ] = trim($record["caption"]);
-                };
-                unset($record);
+                $values = array_map(function($v){
+                    return array_map("trim", $v);
+                }, $values);
             };
         };
         

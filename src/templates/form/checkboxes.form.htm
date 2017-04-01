@@ -1,5 +1,6 @@
 <input type="hidden" name="to[<?=$field["name"];?>]" value="null">
-<?php foreach($field["values"] as $caption=>$value):?>
+<?php foreach($field["values"] as $fv):?>
+	<?php $caption = $fv["caption"]; $value = $fv["value"];?>
 	<label>
 		<input
 			type="checkbox"

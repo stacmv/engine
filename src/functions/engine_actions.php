@@ -218,7 +218,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             };
         }else{
             if ( ! is_null($redirect_on_fail) ){
-                redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
+                redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$object ."/".$_PARAMS["id"]);
             };
         };
     }

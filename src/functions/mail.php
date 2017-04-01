@@ -53,16 +53,21 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     $data["tracking_pixel_url"] = $CFG["URL"]["base"] . "/reg_msg_opened/" . $message_id . $CFG["URL"]["ext"];
     
     // parse template.
-    $t = glog_render( cfg_get_filename("email_templates", $template.".htm"), $data );
-    if (empty($t)){
-        dosyslog(__FUNCTION__.": ERROR: Email template is empty.");
-        if ($t == "") die("Code: df-".__LINE__); // убиваемся при ошибке конфигурирования (пустой шаблон), но работаем, если произошла ошибка чтения в продакшене
-        return false;
+    if (isset($options["template_parsed"])){
+        $subject = $options["template_parsed"]["subject"];
+        $message = nl2br($options["template_parsed"]["message"]);
+    }else{
+        $t = glog_render( cfg_get_filename("email_templates", $template.".htm"), $data );
+        if (empty($t)){
+            dosyslog(__FUNCTION__.": ERROR: Email template is empty.");
+            if ($t == "") die("Code: df-".__LINE__); // СѓР±РёРІР°РµРјСЃСЏ РїСЂРё РѕС€РёР±РєРµ РєРѕРЅС„РёРіСѓСЂРёСЂРѕРІР°РЅРёСЏ (РїСѓСЃС‚РѕР№ С€Р°Р±Р»РѕРЅ), РЅРѕ СЂР°Р±РѕС‚Р°РµРј, РµСЃР»Рё РїСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР° С‡С‚РµРЅРёСЏ РІ РїСЂРѕРґР°РєС€РµРЅРµ
+            return false;
+        };
+                
+        $tmp = @explode("\n\n",$t,2);
+        $subject = isset($tmp[0]) ? $tmp[0] : "";
+        $message = isset($tmp[1]) ? $tmp[1] : "";
     };
-            
-    $tmp = @explode("\n\n",$t,2);
-    $subject = isset($tmp[0]) ? $tmp[0] : "";
-    $message = isset($tmp[1]) ? $tmp[1] : "";
     $to = $email;
     
             

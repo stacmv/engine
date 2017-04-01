@@ -29,7 +29,7 @@ foreach(@array(
 					};
 				?>
 				<td>
-					<?php if ( DEV_MODE &&! isset($item[$field["name"]]) ):?>
+					<?php if ( DEV_MODE && is_array($item) && !array_key_exists($field["name"], $item) ):?>
 						<div class="alert alert-danger" title="Сделай миграцию базы данных!">Не актуальная структура БД!</div>
 						</td>
 						<?php continue;?>

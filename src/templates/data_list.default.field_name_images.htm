@@ -1,7 +1,9 @@
-<?php if (empty($item[$field["name"]])):?>
-	<span class="label label-important">Нет</span>
+<?php $images = !empty($item[$field["name"]]) ? $item[$field["name"]] : ( method_exists($item, "getImages") ? $item->getImages() : array() );?>
+<?php if ($images):?>
+	<span class="label label-success"><?=count($images);?></span>
 <?php else:?>
-	<span class="label label-success"><?=count($item[$field["name"]]);?></span>
+	<span class="label label-important">Нет</span>
+	
 <?php endif;?>
 
 

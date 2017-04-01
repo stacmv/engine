@@ -10,8 +10,9 @@
 	<?php endif;?>
 
 	<?php $in_group = false;?>
-	<?php foreach($field["values"] as $caption=>$value):?>
-		<?php if ($value == "optgroup"):?>
+	<?php foreach($field["values"] as $v):?>
+		<?php $value = $v["value"]; $caption = $v["caption"];?>
+		<?php if (substr($value, 0, 9) == "optgroup:"):?>
 			<?php if ($in_group):?>
 				</optgroup>
 			<?php endif;?>

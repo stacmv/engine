@@ -9,40 +9,30 @@
 	<?php endif;?> 
 	class="form-control <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
 >
-	<?php if ( empty($field["readonly"])):?>
-		<option></option>
-		<?php $in_optgroup = false;?>
-		<?php foreach($field["values"] as $value=>$caption):?>
-			<?php if ($value == "optgroup"):?>
-				<?php if ($in_optgroup):?>
-					</optgroup>
-				<?php endif;?>
-				<optgroup label="<?=$caption;?>">
-				<?php $in_optgroup = true;?>
-				<?php continue;?>
+	<option></option>
+	<?php $in_optgroup = false;?>
+	<?php foreach($field["values"] as $v):?>
+		<?php $value = $v["value"]; $caption = $v["caption"];?>
+		<?php if ($value == "optgroup"):?>
+			<?php if ($in_optgroup):?>
+				</optgroup>
 			<?php endif;?>
-			
-			
-			<?php if ( ! is_int($caption) ):?>
-				<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
-			<?php else:?>
-				<option <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
-			<?php endif;?>
-		<?php endforeach;?>
-		<?php if ($in_optgroup):?>
-			</optgroup>
+			<optgroup label="<?=$caption;?>">
+			<?php $in_optgroup = true;?>
+			<?php continue;?>
 		<?php endif;?>
-	<?php else:?>
-		<?php if (!empty($field["value"])):?>
-			<?php if (is_array($field["value"])):?>
-				<option value="<?=current($field["value"]);?>"><?=key($field["value"]);?></option>
-			<?php else:?>
-				<option><?=$field["value"];?></option>
-			<?php endif;?>
+		
+		
+		<?php if ( ! is_int($caption) ):?>
+			<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
 		<?php else:?>
-			<option></option>
+			<option <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
 		<?php endif;?>
+	<?php endforeach;?>
+	<?php if ($in_optgroup):?>
+		</optgroup>
 	<?php endif;?>
+	
 </select><?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
 <?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=unescape_template_data($field["hint"]);?></span>

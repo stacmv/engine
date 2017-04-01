@@ -20,7 +20,7 @@ abstract class EView
             
         };
     }
-    public function __construct (array $data){
+    public function __construct (EModel $data){
         $this->data = $data;
     }
     public function prepare($view_name = "",  $options = array()){

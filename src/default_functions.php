@@ -48,8 +48,7 @@ if (!function_exists("cfg_get_filename")){
             };
         };
 
-        dosyslog(__FUNCTION__.get_callee().": ERROR: File '".$filename."' of type '".$type."' not found in scope '".$scope."'.");
-        return "";
+        return cache("");
     }
 }
 if (!function_exists("check_application_already_in_db")){

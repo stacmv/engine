@@ -177,8 +177,8 @@ function render_template($template_file, $data = array() ){
         die("Code: et-".__LINE__."-".$template_file);
     };
     
-    if ($cacheable && file_cached($template_file)){
-        $HTML = file_cache_get($template_file);
+    if ($cacheable && file_cached(basename($template_file))){
+        $HTML = file_cache_get(basename($template_file));
     }else{
         if (is_array($data)) extract($data);
         
@@ -191,7 +191,7 @@ function render_template($template_file, $data = array() ){
         ob_end_clean();
         dosyslog(__FUNCTION__.": DEBUG: template file '".$template_file."' rendered.");
         
-        if ($cacheable) file_cache_set($template_file, $HTML);
+        if ($cacheable) file_cache_set(basename($template_file), $HTML);
     };
     
     return $HTML;

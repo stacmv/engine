@@ -136,8 +136,7 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     global $CFG;
     global $ISREDIRECT;
     global $IS_IFRAME_MODE;
-    
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+       
     
     if ($IS_IFRAME_MODE) $params["i"] = is_string($IS_IFRAME_MODE) ? $IS_IFRAME_MODE : "1";
     
@@ -161,7 +160,7 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     dosyslog(__FUNCTION__.get_callee().": NOTICE: Prepare for  redirect to '".$uri."'.");
     
     $ISREDIRECT = true;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    
 };
 function redirect_301($redirect_uri = "", array $params = array(), $hash_uri = ""){
     global $_RESPONSE;

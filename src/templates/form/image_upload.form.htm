@@ -6,6 +6,10 @@ $object_uid = !empty($object["uid"]) ? $object["uid"] : $object["id"];
 
 ?>
 
+<?php if (!empty($field["hint"])):?>
+	<p><small><?=$field["hint"];?></small></p>
+<?php endif;?>
+
 <script type="text/template" id="qq-template">
 	<div class="qq-uploader-selector qq-uploader qq-gallery" qq-drop-area-text="Перетащите файлы сюда">
 		<div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">

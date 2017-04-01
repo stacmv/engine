@@ -881,7 +881,7 @@ function db_get_count($db_table, $where_clause = ""){
     
     $query = "SELECT count(*) as c FROM " . $table_name;
     if ($where_clause){
-        $query .= " " . $where_clause;
+        $query .= " WHERE " . $where_clause;
     }else{
         $query .= " WHERE (deleted = '' OR deleted IS NULL)";
     }
@@ -1629,18 +1629,10 @@ function db_prepare_value($value, $field_type){
             };
             break;
         default:
-            $res = $value;
+            if ($value === "") $res = null;
+            else $res = $value;
     };
-    
-    // if ( $res != $value){
-        // if ($field_type == "password"){
-            // dosyslog(__FUNCTION__.": ".get_callee().": DEBUG: value='".substr($value,0,2)."...cut', result='".substr($res,0,5)."...cut'.");
-        // }else{
-            // dosyslog(__FUNCTION__.": ".get_callee().": DEBUG: value='".json_encode_array($value)."', result='".json_encode_array($res)."'.");
-        // };
-    // };
-    
-    
+        
     return $res;
 }
 function db_quote($value){

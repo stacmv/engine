@@ -18,6 +18,10 @@
 	<?=show_date($item[ $field["name"] ], SHOW_DATE_TIME_DIFF | SHOW_DATE_AGO);?>
 <?php elseif ($field["type"] == "date"):?>
 	<?=($item[$field["name"]]  ? glog_rusdate($item[$field["name"]]) : "");?>
+<?php elseif ($field["type"] == "phone"):?>
+	<?=($item[$field["name"]]  ? glog_show_phone($item[$field["name"]]) : "");?>
+<?php elseif ($field["type"] == "money"):?>
+	<?=($item[$field["name"]]  ? show_money($item[$field["name"]]) : "");?>
 <?php elseif($field["type"] == "file"):?>
 	<?php if (!empty($item[ $field["name"] ])):?>
 		<?php if(in_array( strtolower(substr($item[ $field["name"] ], -4)), array(".png", ".gif", ".jpg") )):?>
@@ -32,7 +36,7 @@
 	<?php if (isset($item["_".$field["name"]])):?>
 		<?=$item["_".$field["name"]];?>
 	<?php elseif(is_string($item[ $field["name"] ])):?>
-		<?=glog_str_limit( $item[ $field["name"] ], 140);?>
+		<?=glog_str_limit( escape_template_data($item[ $field["name"] ]), 140);?>
 	<?php else:?>
 		<?=json_encode_array($item[ $field["name"] ]);?>
 	<?php endif;?>

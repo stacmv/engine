@@ -5,7 +5,7 @@ define("FILE_CACHE_DELETE_FLAG", uniqid("file_cache_del"));
 define("FILE_CACHE_DIR", ".cache/file_cache/");
 define("FILE_CACHE_TTL_DEFAULT", 3600); // Time to live in seconds
 define("FILE_CACHE_DEFAULT_FILE_EXTENSION", "cache"); // extension w/o leadind dot, i.e, "cache"
-define("FILE_CACHE_TIMESTAMP_FORMAT", "Ymdhis"); // only digits
+define("FILE_CACHE_TIMESTAMP_FORMAT", "YmdHis"); // only digits
 function file_cache($value = null, $ttl = null){
         
     if ( ! FILE_CACHE_ENABLED ) return null;
@@ -88,7 +88,8 @@ function _file_cache($command, $key, $value, $ttl){
             $ignoreTTL = (bool) $ttl;
             if ( isset($file_cache[$key]) ){
                 $key_file = $file_cache[$key];
-                if ($ignoreTTL || (time() <= get_file_cached_time($key_file))){
+                $time = time();
+                if ($ignoreTTL || ($time <= get_file_cached_time($key_file))){
                     dosyslog(__FUNCTION__.get_callee().": DEBUG: Попадание: ".$key.".");
                     if ($command == "get"){
                         $content = glog_file_read( $key_file );
@@ -179,6 +180,7 @@ function get_file_cached_key($file){
 }
 function get_file_cached_file($key, $ttl){
     
+    $time = time();
     $time_valid_for = (int) $ttl ? time() + $ttl : time() + FILE_CACHE_TTL_DEFAULT;
     
     $parts = pathinfo($key);

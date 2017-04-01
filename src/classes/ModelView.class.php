@@ -3,7 +3,7 @@ class ModelView extends View
 {
     protected $model;
     public function __construct(EModel $model){
-        parent::__construct($model->jsonSerialize());
+        parent::__construct($model);
         $this->model = $model;
     }
     
@@ -17,8 +17,9 @@ class ModelView extends View
                 return array_filter(form_get_fields($this->model->repo_name, "list_".$this->model->repo_name),"check_form_field_acl");
                 break;
             case "itemView":
-            default:
                 return array_filter(form_get_fields($this->model->repo_name, "show_".$this->model->model_name),"check_form_field_acl");
+            default:
+                return array_filter(form_get_fields($this->model->repo_name, $view_name),"check_form_field_acl");
         };
     }
     
