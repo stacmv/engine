@@ -1500,7 +1500,9 @@ function db_parse_value($value, $field_type){
             $value = array();
         };
         break;
-        
+    case "string":
+        $value = htmlspecialchars_decode($value, ENT_QUOTES);
+        break;
     }; // switch
     
     return $value;
@@ -1628,11 +1630,13 @@ function db_prepare_value($value, $field_type){
                 dosyslog(__FUNCTION__.": ".get_callee().": ERROR: Empty hash for no-empty password");
             };
             break;
+        case "string":
+            $res = htmlspecialchars($value, ENT_QUOTES);
+            break;
         default:
-            if ($value === "") $res = null;
-            else $res = $value;
+            $res = $value;
     };
-        
+    
     return $res;
 }
 function db_quote($value){
