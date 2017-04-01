@@ -139,47 +139,6 @@
 		"acl":[]
 	},
 	{
-		"uri":"user_applications",
-		"title":"Регистрации",
-		"params":{
-			"model": { "type": "string", "source": "get", "regexp": "/(user_applications)(?:\\/(\\d+))?/", "pos": 1 },
-			"id": { "type": "number", "source": "get", "regexp": "/(user_applications)(?:\\/(\\d+))?/", "pos": 2 }
-		},
-		"actions": [ "show_data" ],
-		"templates": {
-			"msg": "message.block.htm",
-			"item": "item_details.htm",
-			"list":"data_list.htm",
-			"page":"page.htm"
-		},
-		"acl":[]
-	},
-	{
-		"uri":"approve/user_application",
-		"title":"Одобрение заявки на регистрацию",
-		"params":{
-			"id": { "type": "number", "source": "get", "regexp": "/approve\\/user_application\\/(\\d+)/", "pos": 1 }
-		},
-		"actions": [ "approve_user_application" ],
-		"acl":["access", "manager"]
-	},
-	{
-		"uri": "ulogin",
-		"title": "Авторизация через соц. сети с помощью Ulogin",
-		"params":{
-			"token": { "type": "string", "source": "post" }
-		},
-		"actions": ["ulogin"]
-	},
-	{
-		"uri": "ulogin/unlink",
-		"title": "Отключание профиля Ulogin от профиля приложения",
-		"params":{
-			"id": { "type": "string", "source": "get", "regexp": "/ulogin\\/unlink\\/(\\d+)/", "pos": 1}
-		},
-		"actions": ["ulogin_unlink"]
-	},
-	{
 		"uri": "adm_import_first_user",
 		"title": "Добавление первого пользователя",
 		"params":{
@@ -192,23 +151,5 @@
 			"content":"html.htm",
 			"page":"page.htm"
 		}
-	},
-	{
-		"uri": "reg_msg_opened",
-		"title": "Трекинг открытия письма получателем",
-		"params":{
-			"message_id": { "type": "string", "source": "get", "regexp": "/reg_msg_opened\\/(.+)/", "pos": 1 }
-		},
-		"actions": ["register_message_opened"]
-	},
-	{
-		"uri":"dbmigrate",
-		"title": "Проверка схем БД и миграция",
-		"actions": ["dbmigrate"],
-		"templates": {
-			"content":"empty.htm",
-			"page":"page.htm"
-		},
-		"acl": ["manager"]
 	}
 ]}

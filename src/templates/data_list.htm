@@ -10,16 +10,29 @@ foreach(@array(
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
 ?>
+<?php
+// ОПЦИИ: значения по умолчанию
+// Ширина заголовка страницы: span2 на каждые 10 символов; максимальная ширина span 12
+$o["header_span"] = !empty($o["header_span"]) ? $o["header_span"] : min(ceil(mb_strlen($_PAGE["header"], "UTF-8") / 10) * 2, 12);
+?>
+
 <article class="app_content">
-	<div class="page-header">
-		<h1><?=$_PAGE["header"];?></h1>
+	<div class="row-fluid">
+		<div class="span<?=$o["header_span"];?>">
+			<div class="page-header">
+				<h1><?=$_PAGE["header"];?></h1>
+			</div>
+		</div>
+		<div class="span<?=12-1-$o["header_span"];?> offset1">
+		
+			<?php if(file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".top_actions.htm"))):?>
+				<?php include cfg_get_filename("templates", "data_list.".$repo_name.".top_actions.htm");?>
+			<?php else:?>
+				%%data_list.default.top_actions%%
+			<?php endif;?>
+
+		</div>
 	</div>
-	
-	<?php if(file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".top_actions.htm"))):?>
-		<?php include cfg_get_filename("templates", "data_list.".$repo_name.".top_actions.htm");?>
-	<?php else:?>
-		%%data_list.default.top_actions%%
-	<?php endif;?>
 	
 	<?php if(empty($items)):?>
 		<div class="alert alert-warning">
@@ -29,8 +42,11 @@ foreach(@array(
 			
 		<div class="row-fluid">
 			<div class="span12">
-				
+				%%pagination%%
+
 				<?php include cfg_get_filename("templates", "data_list.default.table.htm");?>
+
+				%%pagination%%
 				
 			</div>
 		</div>

@@ -75,6 +75,8 @@ class EPager implements ArrayAccess, jsonSerializable
         if ($this->current < $this->count){
             $url[$this->current + 1] = $this->url($this->current + 1);
         };
+
+        return $url;
     }
  
     /* ArrayAccess implementation */

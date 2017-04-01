@@ -599,7 +599,14 @@ function show_data_action(){
     dosyslog(__FUNCTION__.": DEBUG: Start getting data from DB.");
     $repository = Repository::create($repo_name, $form_name);
     if ($mode == "list"){ // 
-        $_DATA["items"] = $repository->fetchAll();
+        if (isset($_PAGE["params"]["page"])){ // pagination enabled
+            $page = !empty($_PARAMS["page"]) ? $_PARAMS["page"] : 1;
+            $items_per_page = db_get_meta($repo_name, "items_per_page") or $items_per_page = 20;
+            $_DATA["pager"] = $repository->getPager($items_per_page, $page);
+            $_DATA["items"] = $repository->limit($items_per_page)->offset($items_per_page * ($page-1))->fetchAll();
+        }else{
+            $_DATA["items"] = $repository->fetchAll();
+        }
     }else{
         $_DATA["items"] = $repository->load($id)->fetchAll();
     };

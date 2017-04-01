@@ -49,6 +49,14 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
     public function rollback(){
         return $this->storage->rollback();
     }
+
+    public function getPager($items_per_page, $current_page){
+        global $CFG;
+
+        $url_template = $this->repo_name . $CFG["URL"]["ext"] . "?page=%%page%%";
+        $items_count = db_get_count($this->repo_name);
+        return new Pager($url_template, $items_count, $items_per_page, $current_page);
+    }
     
     
     protected static function _getRepositoryClassName($repository_name){

@@ -1,10 +1,5 @@
-<?php
-foreach(@array(
-	$pager,
-) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
-?>
-<?php if (!empty($pager["pager"])):?>
+<?php if (!empty($pager)):?>
 <div class="pagination  pagination-centered">
   <ul>
 	<?php if($pager["current"]>1):?>
