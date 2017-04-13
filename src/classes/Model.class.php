@@ -23,6 +23,7 @@ class Model extends EModel
         return implode(".", array_map("_plural", explode(".", $model_name)));
     }
     protected function _get_model_name_for_class($class_name){
+        $class_name = str_replace("_model", "", $class_name); // if plural and singular forms of the word are same, then model class has suffix "_model"
         return strtolower(implode(".", preg_split("/([[:upper:]][[:lower:]_]+)/", $class_name, null, PREG_SPLIT_DELIM_CAPTURE|PREG_SPLIT_NO_EMPTY )));
     }
     

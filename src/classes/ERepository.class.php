@@ -82,6 +82,10 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         $a = array_map("ucfirst", $a);
         
         $modelClass = implode("", $a);
+
+        if (strtolower($modelClass) ==strtolower($repository_name)){ // if singular and plural forms of the word are the same
+            $modelClass .= "_model";
+        };
         
         // Ensure if class is defined
         if (!$modelClass_exists){

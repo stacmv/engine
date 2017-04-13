@@ -3,6 +3,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     global $_PARAMS;
     global $_DATA;
     global $CFG;
+    global $_PAGE;
     global $IS_AJAX;
         
     if (!$db_table){
@@ -58,14 +59,29 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
         if ( ! is_null($redirect_on_success) ){
             if ($redirect_on_success){
                $redirect_uri = $redirect_on_success;
-            }elseif (db_get_meta($db_table, "add_success_redirect")){
-                $redirect_uri = db_get_meta($db_table, "add_success_redirect");
-            }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
-                $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
-            }elseif(db_get_name($db_table) == db_get_table($db_table)){
-                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . db_get_name($db_table);
             }else{
-                $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . $db_table;
+                if ($_PAGE["uri"] == "pub/add"){
+                    // Форма заполнена в публичной части
+                    if (db_get_meta($db_table, "pub_add_success_redirect")){
+                        $redirect_uri = db_get_meta($db_table, "pub_add_success_redirect");
+                    }elseif(!empty($CFG["URL"]["on_success"])){
+                        $redirect_uri = $CFG["URL"]["on_success"];
+                    }else{
+                        $redirect_uri = "index";
+                    };
+
+                }else{
+                    // Форма заполнена в ажминке
+                    if (db_get_meta($db_table, "add_success_redirect")){
+                        $redirect_uri = db_get_meta($db_table, "add_success_redirect");
+                    }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
+                        $redirect_uri =  $CFG["URL"]["redirect_on_success_default"];
+                    }elseif(db_get_name($db_table) == db_get_table($db_table)){
+                        $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . db_get_name($db_table);
+                    }else{
+                        $redirect_uri = db_get_meta($db_table, "model_uri_prefix") . $db_table;
+                    };
+                };
             };
               
             if ($IS_AJAX) $_DATA["redirect_uri"] = $redirect_uri;
@@ -218,7 +234,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             };
         }else{
             if ( ! is_null($redirect_on_fail) ){
-                redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$object ."/".$_PARAMS["id"]);
+                redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
             };
         };
     }
@@ -605,7 +621,7 @@ function show_data_action(){
             $_DATA["pager"] = $repository->getPager($items_per_page, $page);
             $_DATA["items"] = $repository->limit($items_per_page)->offset($items_per_page * ($page-1))->fetchAll();
         }else{
-            $_DATA["items"] = $repository->fetchAll();
+        $_DATA["items"] = $repository->fetchAll();
         }
     }else{
         $_DATA["items"] = $repository->load($id)->fetchAll();

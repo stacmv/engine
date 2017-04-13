@@ -145,7 +145,7 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     global $CFG;
     global $ISREDIRECT;
     global $IS_IFRAME_MODE;
-       
+    
     
     if ($IS_IFRAME_MODE) $params["i"] = is_string($IS_IFRAME_MODE) ? $IS_IFRAME_MODE : "1";
     
