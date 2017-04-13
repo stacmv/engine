@@ -103,6 +103,15 @@ function get_filename($name, $ext = "") {//
 };
 function month_name($month_num, $genitive = false){
     $month_name = "";
+
+    if (!is_int($month_num)){ // period = 2017-04
+        $m = array();
+        if (preg_match("/(\d{4})\-(\d\d)/", $month_num, $m)){
+            $year = $m[1];
+            $month_num = $m[2];
+        };
+    };
+
     switch( (int) $month_num){
         case "1":  $month_name = $genitive ? "января"   : "январь"; break;
         case "2":  $month_name = $genitive ? "февраля"  : "февраль"; break;
@@ -118,7 +127,7 @@ function month_name($month_num, $genitive = false){
         case "12": $month_name = $genitive ? "декабря"  : "декабрь"; break;
     }
     
-    return $month_name;    
+    return $month_name . (isset($year) ? " ".$year : "");
 }
 
 function clear_actions(){

@@ -157,6 +157,41 @@ function HASNEXTACTION(){
     
     return $res;
 };
+function RUN(){
+    global $IS_AJAX;
+    global $_PAGE;
+    global $IS_API_CALL;
+    global $ISREDIRECT;
+
+
+    $start_microtime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
+    
+    GETURI();
+    GETPAGE(); 
+    AUTHORIZE(); 
+    SETACTIONLIST();
+    SETPARAMS();
+
+    while(HASNEXTACTION()){
+
+        DOACTION();
+
+    };
+
+
+    if($IS_AJAX && empty($_PAGE["templates"]["page"]) && !$IS_API_CALL){
+        SETAJAXRESPONSEBODY();
+    }elseif ( ! $ISREDIRECT && ! $IS_API_CALL ){
+        APPLYPAGETEMPLATE();  
+    }
+
+
+    SENDHEADERS();
+    SENDBODY();
+
+    dosyslog("ENGINE: INFO: Request processed within " . round(microtime(true) - $start_microtime, 4) ."s, memory used in peak: ".glog_convert_size(memory_get_peak_usage(true)).".", true);
+
+}
 function SENDHEADERS(){
     
     global $_RESPONSE;
@@ -434,14 +469,11 @@ function SETPARAMS(){
 };
 
 
-
-$start_microtime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
-
 // register autoload function for engine classes
 spl_autoload_register(function ($class_name){$class_file =  ENGINE_DIR . "classes/" . engine_utils_get_class_filename($class_name); if (file_exists($class_file)){ require_once $class_file; } /*else throw new Exception($class_name)*/;});
 
 // register_shutdown_function("shutdown");
-session_start();
+if (!session_id()) session_start();
 
 $DONTSHOWERRORS = false; // когда вывод ошибок недопустим (при вызове методов API, например, надо устанавливать эту переменную в true.
 $ISERRORSREGISTERED = false; // зарегистрированы ли ошибки? Функция REGISTERERRORS() устанавливает переменную в true. Иначе, регистрация ошибок будет в shutdown().
@@ -450,29 +482,3 @@ $IS_API_CALL = false;
 $IS_IFRAME_MODE = ! empty($_GET["i"]) ? true : false;
 $IS_MOBILE = is_mobile();
 $IS_AJAX = is_ajax();
-
-
-GETURI();
-GETPAGE(); 
-AUTHORIZE(); 
-SETACTIONLIST();
-SETPARAMS();
-
-while(HASNEXTACTION()){
-
-    DOACTION();
-
-};
-
-
-if($IS_AJAX && empty($_PAGE["templates"]["page"]) && !$IS_API_CALL){
-    SETAJAXRESPONSEBODY();
-}elseif ( ! $ISREDIRECT && ! $IS_API_CALL ){
-    APPLYPAGETEMPLATE();  
-}
-
-
-SENDHEADERS();
-SENDBODY();
-
-dosyslog("ENGINE: INFO: Request processed within " . round(microtime(true) - $start_microtime, 4) ."s, memory used in peak: ".glog_convert_size(memory_get_peak_usage(true)).".", true);

@@ -15,6 +15,9 @@ function import_tsv($filename, $convertToUTF8=false, $returnHeaderOnly = false, 
 };
 
 function import_tsv_string($tsv_str, $convertToUTF8=false, $returnHeaderOnly = false, $stripComments = true, $delimiter="\t"){
+
+    if ($convertToUTF8) $tsv_str = iconv("CP1251","UTF-8",$tsv_str);
+
     $tsv = parse_tsv(trim($tsv_str), $delimiter); 
         
     $header = $tsv[0];

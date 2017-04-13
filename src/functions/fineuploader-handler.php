@@ -93,6 +93,8 @@ class UploadHandler {
      */
     public function handleUpload($uploadDirectory, $name = null){
 
+        if (!is_dir($this->chunksFolder)) mkdir($this->chunksFolder, 077, true);
+        
         if (is_writable($this->chunksFolder) &&
             1 == mt_rand(1, 1/$this->chunksCleanupProbability)){
 

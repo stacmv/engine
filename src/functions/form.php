@@ -127,10 +127,10 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
          
         // Шаблон поля : показывать ли поле на форме и как именно
         $field["template_file"] = form_get_template_file($template);
-        if ( ! file_exists($field["template_file"]) ){
+        if ( !$field["template_file"] ){
             dosyslog(__FUNCTION__.": FATAL ERROR: Template file '".$template."' is not found.");
             if (DEV_MODE){
-                die("Form template not exists: ".basename($field["template_file"]));
+                die("Form template not exists: '".$template);
             }else{
                 die("Code: efrm-".__LINE__."-".$template);
             };
