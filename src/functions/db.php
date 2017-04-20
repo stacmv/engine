@@ -1631,7 +1631,11 @@ function db_prepare_value($value, $field_type){
             };
             break;
         case "string":
-            $res = htmlspecialchars($value, ENT_QUOTES);
+            if ($value){
+                $res = htmlspecialchars($value, ENT_QUOTES);
+            }else{
+                $res = null;
+            }
             break;
         default:
             $res = $value;

@@ -2,11 +2,11 @@
 <pages>
 	<page uri="image" title="">
 		<params>
-			<type><type>string</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>1</pos></type>
-			<uid><type>string</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>2</pos></uid>
-			<uuid><type>string</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>3</pos></uuid>
-			<width><type>number</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>4</pos></width>
-			<height><type>number</type><source>get</source><regexp>|image/([\w\.]+)/([\w\d\-\.]+)/([\w\d\-\.=]+)/(\d+)/(\d+)|</regexp><pos>5</pos></height>
+			<uuid><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>1</pos></uuid>
+			<width><type>number</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>2</pos></width>
+			<height><type>number</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>3</pos></height>
+			<type><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>4</pos></type>
+			<uid><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>5</pos></uid>
 		</params>
 		<actions>image</actions>
 	</page>

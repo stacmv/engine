@@ -1,0 +1,10 @@
+<?php $images = get_images($repo_name, $item["uid"]);?>
+<?php if ($images):?>
+	<span class="label label-success">Есть</span>
+<?php else:?>
+	<span class="label label-important">Нет</span>
+	
+<?php endif;?>
+
+
+

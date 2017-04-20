@@ -27,7 +27,7 @@ function image_action(){
     if (!empty($images[0])){
         $image_file = $images[0];
     }else{
-        $image_file = Thumbnail::NO_IMAGE_FILE;
+        $image_file = Thumbnail::no_image_file();
     }
     
     $thumb_name = Thumbnail::thumb_name($type, $uid, $uuid, $width, $height);
@@ -46,14 +46,21 @@ function image_action(){
             
             $aspect_ratio = $image->width() / $image->height();
             
-            if ($width && ! $height) $height = (int) ($width / $aspect_ratio);
-            elseif ( ! $width && $height) $width = (int) ($height * $aspect_ratio);
+            if ($width && ! $height){
+                 $height = (int) ($width / $aspect_ratio);
+                 $method = "resize";
+            } elseif ( ! $width && $height) {
+                $width = (int) ($height * $aspect_ratio);
+                $method = "resize";
+            }else{
+                $method = "fit";
+            }
             
             
             
-            $image->fit($width, $height, function ($constraint) {
+            $image->$method($width, $height/*, function ($constraint) {
                 $constraint->upsize();
-            });
+            }*/);
            
             $_RESPONSE["headers"]["Content-type"] = "image/jpeg";
             $_RESPONSE["body"] = file_cache_set($thumb_name, (string) $image->encode("jpg", 75), 60*60*24 );
@@ -61,7 +68,7 @@ function image_action(){
             dump($image_file,"image");die();
             dosyslog(__FUNCTION__.": ERROR: Can not create thumbnal for '".$type."' '".$uid."' '".$width."x".$height."'. Error: ".$e->getMessage());
             $_RESPONSE["headers"]["Content-type"] = "image/jpeg";
-            $_RESPONSE["body"] = file_get_contents(Product::NO_IMAGE_FILE);
+            $_RESPONSE["body"] = file_get_contents(Thumbnail::no_image_file());
         }
     }else{
         $_RESPONSE["headers"]["HTTP"] = "HTTP/1.1 400 Bad Request";

@@ -256,12 +256,12 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
 
     public function offsetGet($offset) {
         
-        if (array_key_exists($offset, $this->data)) {
+        if (method_exists($this, "get".ucfirst($offset)) ){
+            return call_user_func(array($this, "get".ucfirst($offset)));
+        } elseif (array_key_exists($offset, $this->data)) {
             return $this->data[$offset];
         } elseif (isset($this->data["extra"][$offset])) {
             return $this->data["extra"][$offset];
-        }elseif (method_exists($this, "get".ucfirst($offset)) ){
-            return call_user_func(array($this, "get".ucfirst($offset)));
         }elseif (in_array($offset, array_keys($this->fields))){
             return null;
         }else{

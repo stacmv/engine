@@ -3,7 +3,7 @@ class ModelView extends View
 {
     protected $model;
     public function __construct(EModel $model){
-        parent::__construct($model->jsonSerialize());
+        parent::__construct($model);
         $this->model = $model;
     }
     
