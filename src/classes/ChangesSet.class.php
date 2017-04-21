@@ -22,14 +22,17 @@ class ChangesSet {
         if ( ! $to ) throw new Exception("Parameter 'to' must be non-empty.");
         
         $str_to_arr = function($s){
-            $a = explode("\n", $s);
-            $a = array_reduce($a, function($a, $k_v_pair_str){
-                $k_v_pair = explode("=", trim($k_v_pair_str));
-                list($k, $v) = array_map("trim", $k_v_pair);
+            $a = array();
+            $m = array();
+            if (preg_match_all('/(\w+)\s=\s(\[".+"\]\n|"[^"]+")/u', $s, $m)){
                 
-                $a[$k] = json_decode($v);
+                foreach ($m[0] as $k => $v) {
+                    $a[$m[1][$k]] = json_decode(str_replace(["\n","\t"],['\n', '\t'], trim($m[2][$k])), true);
+                }
                 return $a;
-            }, array());
+            }else{
+                dosyslog("ChangesSet::createFromString: ERROR: string does not match regexp. String:'".$s."'.");
+            }
             return $a;
         };
         
