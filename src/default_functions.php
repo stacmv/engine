@@ -754,7 +754,13 @@ if (!function_exists("userHasRight")){
         
         // Ownership of object_accessed
         if ($object_accessed){
-            if (! empty($object_accessed[$object_acl_field]) && ($object_accessed[$object_acl_field] == $user["id"])){
+            $owners = $object_accessed[$object_acl_field]; // this dedivated var is needed since $object_accessed may be an object and empty() works inproper with it;
+            if (! empty($owners) && 
+                (
+                    (is_scalar($owners) && ($owners == $user["id"])) ||
+                    (is_array($owners) && in_array($user["id"], $owners))
+                )
+            ){
                 $user_rights[] = "owner";
             };
         };
