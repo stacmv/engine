@@ -16,6 +16,7 @@ foreach(@array(
 <?php if ($dldta_add || $dldta_import):?>
 	<div class="row">
 		<div class="form-actions">
+
 			<div class="pull-right">
 				<?php if($dldta_import):?>
 					<a href="form/import/<?=_plural($model_name);?><?=$CFG["URL"]["ext"];?>" class="btn">Импорт</a>
@@ -24,6 +25,10 @@ foreach(@array(
 					<a href="form/add/<?=$model_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> Добавить</a>
 				<?php endif;?>
 			</div>
+
+			<?php if (!empty($months_nav)):?>
+				<?php include cfg_get_filename("templates", "months_nav.block.htm");?>
+			<?php endif;?>
 		</div>
 	</div>
 <?php endif;?>

@@ -1,0 +1,11 @@
+<?php if (!empty($months_nav)):?>
+<div class="pull-right" style="margin:0px 8px;">
+	<?php if (!empty($months_nav["prev"])):?>
+		<a class="btn" href="<?=$months_nav["uri"];?>?period=<?=$months_nav["prev"];?>">&larr;&nbsp;<?=month_name($months_nav["prev"]);?></a>
+	<?php endif;?>
+	&nbsp;&nbsp;<strong><?=month_name($months_nav["current"]);?></strong>&nbsp;&nbsp;
+	<?php if (!empty($months_nav["next"])):?>
+		<a class="btn" href="<?=$months_nav["uri"];?>?period=<?=$months_nav["next"];?>"><?=month_name($months_nav["next"]);?>&nbsp;&rarr;</a>
+	<?php endif;?>
+</div>
+<?php endif;?>

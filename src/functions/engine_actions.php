@@ -619,10 +619,14 @@ function show_data_action(){
             $page = !empty($_PARAMS["page"]) ? $_PARAMS["page"] : 1;
             $items_per_page = db_get_meta($repo_name, "items_per_page") or $items_per_page = 20;
             $_DATA["pager"] = $repository->getPager($items_per_page, $page);
-            $_DATA["items"] = $repository->limit($items_per_page)->offset($items_per_page * ($page-1))->fetchAll();
-        }else{
+            
+            $repository->limit($items_per_page)->offset($items_per_page * ($page-1));
+        };
+        // Фильтрация данных
+        if ($_DATA["show_data_where"]) $repository->where($_DATA["show_data_where"]);
+        //
         $_DATA["items"] = $repository->fetchAll();
-        }
+        
     }else{
         $_DATA["items"] = $repository->load($id)->fetchAll();
     };
@@ -661,6 +665,65 @@ function show_data_action(){
     
     dosyslog(__FUNCTION__.": DEBUG: Finished.");
 
+}
+function show_data_state_period_action()
+{
+    global $_PARAMS;
+    global $_DATA;
+    global $CFG;
+    global $_PAGE;
+    
+    $repo_name = $_PARAMS["model"];
+
+    $state      = isset($_PARAMS["state"]) ? $_PARAMS["state"] : null;
+    $period = $_PARAMS["period"] ? $_PARAMS["period"] : (is_null($state) ? date("Y-m") : null);
+    
+    $correct_displayed_period = false;
+    if (! is_null($state) && is_null($period)) {
+        $end_date = glog_isodate(db_get_max($repo_name, "created"));
+        $start_date = glog_isodate(db_get_min($repo, "created"));
+        $correct_displayed_period = true;
+    } else {
+        $start_date = month_start_date($period);
+        $end_date   = month_end_date($period);
+    }
+
+    $_DATA["show_data_where"] = "created >= ".strtotime($start_date)." AND created <= ".strtotime($end_date . " 23:59:59") . ($state ? " AND lead_state = ".db_quote($state) : "");
+
+    show_data_action();
+
+    if ($_DATA["items"]){
+        $_DATA["items"] = arr_index($_DATA["items"]);
+    
+        if ($correct_displayed_period) { // отображать период на основе выборки заявок, а не запроса.
+            $ids = array_keys($_DATA["items"]);
+            $start_date = glog_isodate($_DATA["items"][$ids[count($ids)-1]]["created"]);  // заявки отсортированы по дате по убыванию.
+            $end_date   = glog_isodate($_DATA["items"][$ids[0]]["created"]);
+        }
+    }
+      
+
+    $_DATA["start_date"] = $start_date;
+    $_DATA["end_date"]   = $end_date;
+    
+    
+
+    
+    // Навигация по месяцам
+    if ($period){
+        $_DATA["months_nav"] = array(
+            "current" => $period,
+            "prev" => month_prev($period),
+            "next" => month_next($period),
+            "uri"  => "adm/leads".$CFG["URL"]["ext"],
+        );
+    };
+
+    // Заголовок страницы
+    $_PAGE["header"] = $_PAGE["title"] . ($state ? " в статусе '".get_value_caption("lead_state", $state) : "") . ($period ? " за ".month_name($period) : "");
+
+    // Перезагрузка страницы не нужна
+    $_DATA["auto_reload"] = false;
 }
 function show_login_form_action(){
     global $_DATA;
