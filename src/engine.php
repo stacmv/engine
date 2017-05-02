@@ -10,9 +10,9 @@ function APPLYPAGETEMPLATE(){
     global $CFG;
     global $IS_IFRAME_MODE;
     global $IS_MOBILE;
-    
+
     if (empty($_PAGE["title"])) $_PAGE["title"] = $CFG["GENERAL"]["app_name"];
-    
+
     if (! empty($_PAGE["templates"]["page"]) ){
         if (empty($_PAGE["templates"]["content"]) ){
             if ( ! empty($_PAGE["templates"]["guest"]) ){
@@ -35,19 +35,19 @@ function APPLYPAGETEMPLATE(){
         dosyslog(__FUNCTION__.get_callee().": FATAL ERROR: 'Page' templates is not set for page '".$_PAGE["uri"]."'. Check pages config.");
         die("Code: e-".__LINE__."-page_tmpl");
     };
-    
-    
+
+
 };
 function AUTHORIZE(){
     global $_PAGE;
     global $_USER;
-    
+
     $_USER = new User();
 
     if ( empty($_PAGE["acl"]) ){
         $authorized = true;
     }else{
-        
+
         if ( ! $_USER->is_authenticated()){
             $authorized = false;
         }else{
@@ -61,7 +61,7 @@ function AUTHORIZE(){
             };
         };
     };
-    
+
     if ( ! $authorized) {
         dosyslog(__FUNCTION__.": WARNING: User not authorized for page '" . $_PAGE["uri"]."'.");
 
@@ -72,81 +72,81 @@ function AUTHORIZE(){
             $_PAGE["actions"] = array("NOT_LOGGED");
         };
         // ///////////////////////////
-        
-    }else{   
+
+    }else{
         dosyslog(__FUNCTION__.": INFO: User " . $_USER->get_login() . " authorized for page '" . $_PAGE["uri"]."'.");
     };
-    
-    
+
+
    return $_USER;
-   
+
 };
 function DOACTION(){
     global $_ACTIONS;
     global $_PAGE;
 
     //if (TEST_MODE) echo "<br>\n SETACTION done.";
-    
+
     $action = array_shift($_ACTIONS);
 
     dosyslog(__FUNCTION__.": INFO: Action: ".$action);
-  
+
     $function = $action . "_action";
-    
+
     if ( function_exists($function) ){
         $tmp = call_user_func($function);
-    }else{  
+    }else{
         dosyslog(__FUNCTION__.": FATAL ERROR: Function '".$function."' is not defined.  URI: '".$_PAGE["uri"]."'.");
         die("Code: e-".__LINE__."-".$function);
     };
-    
-    
+
+
 };
 function GETPAGE(){  // поиск страницы, соответствующей текущему URI
     global $_PAGE;
     global $_URI;
 
-    
-    
+
+
 
     $_PAGE = find_page($_URI);
 
     if( ! $_PAGE ){
         $_PAGE = response_404_page();
     };
-    
+
     if ( ! $_PAGE ) {
         dosyslog(__FUNCTION__.": FATAL ERROR: Can not find page for uri '".$_URI."' in pages files.");
         die("Code: e-".__LINE__);
     };
-    
+
     dosyslog(__FUNCTION__.": INFO: ".$_PAGE["uri"] . " for uri '".$_URI."'.");
-    
-    
+
+
 };
 function GETURI(){
     global $CFG;
     global $_URI;
-    
-    
+
+
     $uri = ! empty($_GET["uri"]) ? $_GET["uri"] : "/";
-    
+
     if ("index"==$uri) $uri = "/";
     if ( ("/"!=$uri) && ("/" == $uri{0}) ) $uri = substr($uri,1);
 
     $_URI = $uri;
-    
+
     dosyslog(__FUNCTION__.": DEBUG: ".$_URI);
-    
-    
+
+
 };
 function HASNEXTACTION(){
     global $_ACTIONS;
-    
+
     if (isset($_ACTIONS)){
         if (isset($_ACTIONS[0])){
             $res = true;
-        }else{ 
+        }else{
             $res = false;
             dosyslog(__FUNCTION__.": NOTICE: _ACTIONS list is empty.");;
         };
@@ -154,7 +154,7 @@ function HASNEXTACTION(){
         dosyslog(__FUNCTION__.": FATAL ERROR: _ACTIONS list is not set. SETDEFAULTACTIONS() have to be called before HASNEXTACTION().");
         die("Code: e-".__LINE__);
     };
-    
+
     return $res;
 };
 function RUN(){
@@ -165,10 +165,10 @@ function RUN(){
 
 
     $start_microtime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
-    
+
     GETURI();
-    GETPAGE(); 
-    AUTHORIZE(); 
+    GETPAGE();
+    AUTHORIZE();
     SETACTIONLIST();
     SETPARAMS();
 
@@ -182,7 +182,7 @@ function RUN(){
     if($IS_AJAX && empty($_PAGE["templates"]["page"]) && !$IS_API_CALL){
         SETAJAXRESPONSEBODY();
     }elseif ( ! $ISREDIRECT && ! $IS_API_CALL ){
-        APPLYPAGETEMPLATE();  
+        APPLYPAGETEMPLATE();
     }
 
 
@@ -193,14 +193,14 @@ function RUN(){
 
 }
 function SENDHEADERS(){
-    
+
     global $_RESPONSE;
-    
-       
+
+
     if (isset($_RESPONSE["headers"])){
         $headers = (array) $_RESPONSE["headers"];
         //dump($headers,"headers");
-        
+
         if (isset($headers["HTTP"])){
             header($headers["HTTP"]);
         };
@@ -213,35 +213,35 @@ function SENDHEADERS(){
             setcookie($name,$cookie["value"],$cookie["expire"], $cookie["path"], $cookie["domain"]);
         };
     };
-    
+
 };
 function SENDBODY(){
     global $_RESPONSE;
-    
+
     if (isset($_RESPONSE["body"])) echo $_RESPONSE["body"];
-    
-    
+
+
 };
 function SETACTIONLIST(){
     global $_PAGE;
     global $_ACTIONS;
     global $_DEFAULT_ACTIONS;
-    
-     
-     
+
+
+
     // $_DEFAULT_ACTIONS - action-функции, которые должны выполняться для каждой страницы. См. register_default_action() из engine_functions.php, которая может вызываться из actions.php.
-    
-    $_ACTIONS = array(); 
-      
-        
+
+    $_ACTIONS = array();
+
+
     if (empty($_PAGE["actions"])){
         $_PAGE["actions"] = array();
     };
     if ( ! empty($_DEFAULT_ACTIONS) ){
         $_PAGE["actions"] = array_merge($_PAGE["actions"], $_DEFAULT_ACTIONS);
     };
-    
-    
+
+
     foreach($_PAGE["actions"] as $action){
         if ($action) {
             if (!in_array($action, $_ACTIONS)) {
@@ -249,35 +249,35 @@ function SETACTIONLIST(){
             }else{
                 dosyslog(__FUNCTION__.": ERROR: Dublicate action. Action '".$action."' of page '".$_PAGE["uri"]."' is not unique. Only first instance was added to action list.");
             };
-        }else{  
+        }else{
             dosyslog(__FUNCTION__.": ERROR: Action '". $action_name."' of page '".$_PAGE["uri"]."' has no name. Check pages file.");
         };
-    };        
+    };
 
-    
+
 };
 function SETAJAXRESPONSEBODY(){
     global $IS_AJAX;
     global $_DATA;
     global $_RESPONSE;
-    
+
     if ($IS_AJAX && empty($_RESPONSE["body"])){
         $_RESPONSE["headers"]["Content-type"] = "application/json";
         $_RESPONSE["body"] = json_encode($_DATA);
     };
-    
+
 }
 function SETPARAMS(){
     global $_URI;
     global $_PAGE;
     global $CFG;
     global $_PARAMS;
-    
-        
+
+
     dosyslog(__FUNCTION__.": NOTICE: Start setting parameters for page: '" . $_PAGE["uri"] . "'.");
-       
+
     if ( ! empty($_PAGE["params"]) ) {
-    
+
         foreach ($_PAGE["params"] as $fparam_name=>$fparam){
             $tmp = NULL;
             switch ($fparam["source"]){
@@ -290,7 +290,7 @@ function SETPARAMS(){
                 case "get":
                     $regexp = ! empty($fparam["regexp"]) ? $fparam["regexp"] : null;
                     $pos = ! empty($fparam["pos"]) ? $fparam["pos"] : null;
-                   
+
                     if ( ! $regexp && ! is_numeric($pos) ){
                         $tmp = isset($_GET[$fparam_name]) ? $_GET[$fparam_name] : null;
                     }else{
@@ -345,17 +345,24 @@ function SETPARAMS(){
                 case "function":
                     if (function_exists($fparam["function"])){
                         $tmp = call_user_func($param["function"]);
-                    }else{  
+                    }else{
                         dosyslog(__FUNCTION__.": ERROR: Function '".$fparam["function"]."' is not defined. Attribute 'function' of parameter '" . $fparam_name . "'. URI: '" . $_URI . "'.");
                     };
                     break;
-                    
+                case "value":
+                    if (isset($fparam["value"])){
+                        $tmp = $fparam["value"];
+                    }else{
+                        dosyslog(__FUNCTION__.": ERROR: Attribute 'value' of parameter '" . $fparam_name . "' is not set. URI: '" . $_URI . "'.");
+                    };
+                    break;
+
                 default:
                     dosyslog(__FUNCTION__.": ERROR: Parameter source '" . @$fparam["source"] . "' does not supported. Attribute 'source' of parameter '" . $fparam_name . "'. URI: '" . $_URI . "'.");
                     break;
             }; // switch
-                        
-            
+
+
             if ($tmp !== NULL){
                 switch ($fparam["type"]){
                     case "number":
@@ -392,13 +399,13 @@ function SETPARAMS(){
                         };
                         break;
                     case "json":
-                        
+
                         if (is_string($tmp)){
                             $tmp = json_decode($tmp,true); // json_decode returns NULL in case of errors.
                         }else{
                             $tmp = json_decode(json_encode($tmp), true);
                         };
-                        
+
                         if ($tmp === NULL) dosyslog(__FUNCTION__.": ERROR: Parameter '" . $fparam_name . "' of type '" . $fparam["type"] . "' does not satisfy to type requirements. Discarded. URI: '" . $_URI . "'.");
                         break;
                     case "list":
@@ -407,7 +414,7 @@ function SETPARAMS(){
                         }else{
                             $tmp = explode(DB_LIST_DELIMITER,implode(",",$tmp)); foreach($tmp as $kl=>$vl) $tmp[$kl] = trim($vl);
                         };
-                        
+
                         if (!$tmp){
                             $tmp = NULL;
                             dosyslog(__FUNCTION__.": ERROR: Parameter '". $fparam_name . "' of type '" . $fparam["type"] . "' does not satisfy to type requirements. Discarded. URI: '" . $_URI ."'.");
@@ -430,9 +437,9 @@ function SETPARAMS(){
                     case "email":
                         $tmp = filter_var($tmp, FILTER_VALIDATE_EMAIL);
                         if ( ! $tmp ) $tmp = null;
-                        
+
                          if ($tmp === null) dosyslog(__FUNCTION__.": ERROR: Parameter '" . $fparam_name . "' of type '" . $fparam["type"] . "' does not satisfy to type requirements. Discarded. URI: '" . $_URI . "'.");
-                        break;        
+                        break;
                     case "name":
                         if (function_exists("validate_name")){
                             $tmp = validate_name($tmp);
@@ -449,22 +456,22 @@ function SETPARAMS(){
             }; // if
 
             // dump($tmp,"type checked: param[".$fparam_name."]");
-            
-            
+
+
             $_PARAMS[$fparam_name] = $tmp;
-            
+
             if ($fparam_name == "to") $_SESSION["to"] = $tmp; // сохраняем ввод пользователя в сессию
-            
+
         }; // foreach
     }; // if
-    
+
     if ( ! empty($_PARAMS) ){
         dosyslog(__FUNCTION__.": NOTICE: Params set: {". urldecode(http_build_query($_PARAMS)) . "} for page '".$_PAGE["uri"]."'.");
     }else{
         dosyslog(__FUNCTION__.": DEBUG: No params are set for page '".$_PAGE["uri"]."'.");
     }
-    
-    
+
+
     return $_PARAMS;
 };
 

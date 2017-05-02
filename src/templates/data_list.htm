@@ -24,7 +24,7 @@ $o["header_span"] = !empty($o["header_span"]) ? $o["header_span"] : min(ceil(mb_
 			</div>
 		</div>
 		<div class="span<?=12-1-$o["header_span"];?> offset1">
-		
+
 			<?php if(file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".top_actions.htm"))):?>
 				<?php include cfg_get_filename("templates", "data_list.".$repo_name.".top_actions.htm");?>
 			<?php else:?>
@@ -33,21 +33,27 @@ $o["header_span"] = !empty($o["header_span"]) ? $o["header_span"] : min(ceil(mb_
 
 		</div>
 	</div>
-	
+
 	<?php if(empty($items)):?>
 		<div class="alert alert-warning">
 			Нет данных.
 		</div>
 	<?php else:?>
-			
+
 		<div class="row-fluid">
 			<div class="span12">
-				%%pagination%%
 
+
+      <?php if(file_exists(cfg_get_filename("templates", "data_list.".$repo_name.".table.htm"))):?>
+				<?php include cfg_get_filename("templates", "data_list.".$repo_name.".table.htm");?>
+			<?php else:?>
+        %%pagination%%
 				<?php include cfg_get_filename("templates", "data_list.default.table.htm");?>
+        %%pagination%%
+			<?php endif;?>
 
-				%%pagination%%
-				
+
+
 			</div>
 		</div>
 	<?php endif;?>
