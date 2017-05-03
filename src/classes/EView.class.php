@@ -49,6 +49,10 @@ abstract class EView
             
             if (! isset($fields[$key])) continue;
             
+
+            if (is_a($itemData, "EModel") && method_exists($itemData, $get_method = "get".ucfirst($key))){
+                $item[$key] = $value = $itemData->$get_method();
+            };
             
             if ( (substr($key,-3) == "_id") || (substr($key,-4) == "_ids") ){
                 $obj_name = (substr($key,-4) == "_ids") ? substr($key, 0,-4) : substr($key, 0,-3);

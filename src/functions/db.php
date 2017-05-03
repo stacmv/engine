@@ -1505,6 +1505,9 @@ function db_parse_value($value, $field_type){
     case "string":
         $value = htmlspecialchars_decode($value, ENT_QUOTES);
         break;
+    case "boolean":
+        $value = (boolean) $value;
+        break;
     }; // switch
     
     return $value;
@@ -1608,6 +1611,7 @@ function db_prepare_value($value, $field_type){
             };
             break;
         case "timestamp":
+        case "boolean": // prepare as timestamp
             if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
                 $res = time();
             }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false") )){
@@ -1622,9 +1626,6 @@ function db_prepare_value($value, $field_type){
                     $res = time();
                 };
             };
-            break;
-        case "boolean":
-            $res = (boolean) $value;
             break;
         case "password":
             $res = passwords_hash($value);

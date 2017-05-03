@@ -140,7 +140,11 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         };
     }
     protected function getName(){
-        return isset($this->data["name"]) ? $this->data["name"] : (isset($this->data["title"]) ? $this->data["title"] : _t("Unknown name"));
+        return !empty($this->data["name"]) ? $this->data["name"] : (!empty($this->data["title"]) ? $this->data["title"] : _t("Unknown name"));
+    }
+    
+    public function getUid(){
+        return !empty($this->data["uid"]) ? $this->data["uid"] : $this->data["id"];
     }
 
     public function getLink($id = ""){

@@ -1,6 +1,5 @@
-<?php $images = !empty($item[$field["name"]]) ? $item[$field["name"]] : ( method_exists($item, "getImages") ? $item->getImages() : array() );?>
-<?php if ($images):?>
-	<span class="label label-success"><?=count($images);?></span>
+<?php if (!empty($item["images"])):?>
+	<span class="label label-success"><?=count($item["images"]);?></span>
 <?php else:?>
 	<span class="label label-important">Нет</span>
 	

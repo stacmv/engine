@@ -23,20 +23,15 @@ class UploadHandler {
      */
     public function getName(){
         if (isset($_REQUEST['qqfilename']))
-            return glog_codify($_REQUEST['qqfilename'], GLOG_CODIFY_FILENAME);
+            $name = glog_codify($_REQUEST['qqfilename'], GLOG_CODIFY_FILENAME);
+        elseif (isset($_FILES[$this->inputName]))
+            $name  = glog_codify($_FILES[$this->inputName]['name'], GLOG_CODIFY_FILENAME);
 
-        if (isset($_FILES[$this->inputName]))
-            return glog_codify($_FILES[$this->inputName]['name'], GLOG_CODIFY_FILENAME);
-    }
+        // we want .jpeg files be saves as .jpg
+        $name = preg_replace("/.jpeg$/", ".jpg", $name);
+        //
 
-    public function getInitialFiles() {
-        $initialFiles = array();
-
-        for ($i = 0; $i < 5000; $i++) {
-            array_push($initialFiles, array("name" => "name" + $i, uuid => "uuid" + $i, thumbnailUrl => "/test/dev/handlers/vendor/fineuploader/php-traditional-server/fu.png"));
-        }
-
-        return $initialFiles;
+        return $name;
     }
 
     /**
