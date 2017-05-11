@@ -42,7 +42,7 @@ class Thumbnail
         $thumb_name = self::thumb_name($type, $uid, $uuid, $width, $height);
         if (file_cached($thumb_name, true)){
             $thumb = file_cache_get_filename($thumb_name, true);
-            if ($full_image && filemtime($full_image) && filemtime($thumb)){
+            if ($full_image && (!filter_var($full_image, FILTER_VALIDATE_URL) && filemtime($full_image) ) && filemtime($thumb)){
                 if (filemtime($full_image) < filemtime($thumb)){
                     $this->thumb_url = $thumb;
                 }else{

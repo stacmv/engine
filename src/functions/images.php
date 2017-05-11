@@ -13,7 +13,7 @@ function get_images($type, $uid, $uuid =""){
     
     $sub_dir = IMAGES_DIR.db_get_db_table($type)."/";
     // 1. Изображения, загруженные, условно, по FTP
-    $images1 = glob($sub_dir . $uid ."/*.jpg");
+    $images1 = glob($sub_dir . $uid ."/*.{jpg,png}", GLOB_BRACE);
     $images = array_merge($images, $images1);
     
     // 2. Изображения, загруженные пользователем через админку - каждое в отдельном подкаталоге в виде uuid
@@ -27,7 +27,7 @@ function get_images($type, $uid, $uuid =""){
     
     if(!empty($image_dirs)){
         foreach($image_dirs as $image_dir){
-            $images2 = array_merge($images2, glob($image_dir ."/*.jpg"));
+            $images2 = array_merge($images2, glob($image_dir ."/*.{jpg,png}", GLOB_BRACE));
         };
     };
     $images = array_merge($images, $images2);

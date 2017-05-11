@@ -35,7 +35,7 @@ function image_action(){
 
     $check = true;
     // Check image 
-    if (!file_exists($image_file)) $check = false;
+    if (!file_exists($image_file) && !filter_var($image_file, FILTER_VALIDATE_URL)) $check = false;
     
     
         
@@ -107,7 +107,7 @@ function image_upload_action(){
     $uploader = new UploadHandler();
 
     // Specify the list of valid extensions, ex. array("jpeg", "xml", "bmp")
-    $uploader->allowedExtensions = array("jpg");
+    $uploader->allowedExtensions = array("jpg","png");
 
     // Specify max file size in bytes.
     $uploader->sizeLimit = null; 

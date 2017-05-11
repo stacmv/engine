@@ -1,5 +1,8 @@
+<link rel="stylesheet" href="assets/bs2/css/multiple-select.css">
+<script src="assets/bs2/js/jquery.multiple.select.js"></script>
+
 <input type="hidden" name="to[<?=$field["name"];?>]" value="null">
-<select multiple size="1" data-placeholder="-"
+<select <?php if($field["type"] == "list"):?> multiple<?php endif;?> size="1" data-placeholder="-"
 	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
 	id="<?=$field["name"];?>"
 	class="form-control input-xxlarge <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
@@ -38,9 +41,11 @@ $(function(){
 	$("#<?=$field["name"];?>").multipleSelect(
 		{
 		filter:true,
+		<?php if($field["type"] != "list"):?>single: true,<?php endif;?>
 		selectAllText: "Выбрать все",
 		allSelected: "Выбраны все",
 		countSelected: "Выбрано # из %",
+		noMatchesFound: "Не найдено"
 		});
 })
 </script>
