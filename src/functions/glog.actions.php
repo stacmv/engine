@@ -4,9 +4,9 @@ function show_glog_action(){
     
     $repo_name = ! empty($_PARAMS["repo_name"]) ? $_PARAMS["repo_name"] : null;
     $filter = ! empty($_PARAMS["filter"]) ? $_PARAMS["filter"] : null;
-    $filterValue = ! is_null($_PARAMS["filterValue"]) ? $_PARAMS["filterValue"] : null;
+    $filterValue = ! empty($_PARAMS["filterValue"]) ? $_PARAMS["filterValue"] : null;
     $group = ! empty($_PARAMS["group"]) ? $_PARAMS["group"] : null;
-    $groupValue = ! is_null($_PARAMS["groupValue"]) ? $_PARAMS["groupValue"] : null;
+    $groupValue = ! empty($_PARAMS["groupValue"]) ? $_PARAMS["groupValue"] : null;
     
     $id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
     

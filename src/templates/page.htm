@@ -98,7 +98,7 @@ if (!isset($page_fluid)) $page_fluid = false;
 
 <?php if (userHasRight("manager")):?>
 <script>
-window.optimit = {app: {unsaved:false}};
+window.optimit = {app: {unsaved:false<?php if (!empty($CFG["DADATA"]["token"])):?>, dadata_token: '<?=$CFG["DADATA"]["token"];?>'<?php endif;?>}};
 $(function(){
 	$(window).bind('beforeunload', function() {
 		if(window.optimit.app.unsaved){

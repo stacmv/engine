@@ -40,7 +40,7 @@ foreach(@array(
 		</h1>
 	</div>
 		
-	<?php if(empty($items_by_group)):?>
+	<?php if(empty(array_filter($items_by_group))):?>
 		<div class="alert alert-warning">
 			Нет данных за период.
 		</div>
