@@ -121,6 +121,7 @@ function _singular($word){
             }
         }
     };
+    return $word;
 };
     
 function _irregular($word, $get_singular = false){

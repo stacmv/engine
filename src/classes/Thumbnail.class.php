@@ -1,9 +1,9 @@
 <?php
 class Thumbnail
 {
-    
+
     private $thumb_url;
-    
+
     public static function thumb_name($type, $uid, $uuid, $width ="", $height=""){
         if ($type && $uid){
             return "thumb_".$type."__".$uid."__".$uuid.".jpg";
@@ -29,10 +29,10 @@ class Thumbnail
         }else{
             $uuid = "B64".base64_encode($image_file);
         };
-        
+
         return $uuid;
     }
-    
+
     public function __construct($full_image, $type, $uid, $width = null, $height=null){
         global $CFG;
         $uuid = self::uuid($type,$uid, $full_image);
@@ -48,28 +48,28 @@ class Thumbnail
                 }else{
                     $this->thumb_url = $this->create_thumb_uri($type, $uid, $uuid, $width, $height);
                 }
-            }else{ // filemtime не рабоатет или нет оригинального файла, а минивтюра есть
+            }else{ // filemtime не работает или нет оригинального файла, а миниатюра есть
                 $this->thumb_url = $thumb;
             }
         }else{
-        
+
             if ($full_image){
                 $this->thumb_url = $this->create_thumb_uri($type, $uid, $uuid, $width, $height);
             }else{
                 $this->thumb_url = self::no_image_file();
             }
-            
-            
+
+
         };
     }
-    
+
     public function __toString(){
         return $this->thumb_url;
     }
 
     private function create_thumb_uri($type, $uid, $uuid, $width, $height){
         global $CFG;
-        
+
         return implode("/", array(
             "image",
              $uuid,

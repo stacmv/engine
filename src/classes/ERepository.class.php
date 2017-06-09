@@ -11,6 +11,13 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
 
     // abstract public function checkACL($model, $right);
 
+    /**
+     * Returns object of Repository sub-class for db_table $repository_name
+     *
+     * @param string $repository_name
+     * @param string $form_name
+     * @return Repository
+     */
     public static function create($repository_name, $form_name = "all"){
         $repo = self::_getInstance($repository_name);
         $repo->repo_name  = $repository_name;
@@ -250,8 +257,13 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
                 break;
             default:
                 if (!empty($this->fields[$whereClause]) && ! empty($this->fields[$whereClause]["type"])){
-                    $value = db_prepare_value($value, $this->fields[$whereClause]["type"]);
-                }
+                    if ($this->fields[$whereClause]["type"] == "boolean"){
+                        $this->where_clause = $whereClause . " IS " . ((boolean) $value ? " NOT " : "") . " NULL ";
+                        break;
+                    }else{
+                        $value = db_prepare_value($value, $this->fields[$whereClause]["type"]);
+                    };
+                };
                 $this->where_clause = $whereClause . " = " . db_quote($value);
                 break;
             };

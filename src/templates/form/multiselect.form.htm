@@ -15,6 +15,17 @@
 	<?php $in_group = false;?>
 	<?php foreach($field["values"] as $v):?>
 		<?php $value = $v["value"]; $caption = $v["caption"];?>
+		<?php
+			 $selected = false;
+			 if (!empty($field["value"])){
+				 if (is_scalar($field["value"]) && ($field["values"] == $value) ){
+					 $selected = true;
+				 }elseif(in_array($value, array_map(function($f){return $f["value"];}, $field["values"]))){
+					$selected = true;
+				 }
+			 };
+		?>
+
 		<?php if (substr($value, 0, 9) == "optgroup:"):?>
 			<?php if ($in_group):?>
 				</optgroup>
@@ -24,9 +35,9 @@
 		<?php else:?>
 				
 			<?php if ( ! is_int($caption) ):?>
-				<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ( in_array($value, $field["value"]) ) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
+				<option value="<?=$value;?>" <?php if ( $selected ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
 			<?php else:?>
-				<option <?php if ( ! empty($field["value"]) && ( in_array($value, $field["value"]) ) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
+				<option <?php if ( $selected ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
 			<?php endif;?>
 			
 		<?php endif;?>

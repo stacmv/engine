@@ -310,7 +310,7 @@ function form_get_field_values($field, $key = "form_values"){
         
         if ( is_array($values) && ! empty($values) ){
         
-            if ( is_scalar($values[0]) ){ // одномерный список значений
+            if ( isset($values[0]) && is_scalar($values[0]) ){ // одномерный список значений
                 $values = array_map("trim", $values);
             }else{
                 $values = array_map(function($v){
