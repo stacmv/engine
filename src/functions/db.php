@@ -633,6 +633,16 @@ function db_error($dbh){
     $err = $dbh->errorInfo();
     return $err[2];
 }
+function db_field_exists($db_table, $field_name){
+  $table_schema = db_get_table_schema($db_table);
+  if ($table_schema){
+    $fields = array_keys(arr_index($table_schema, "name"));
+  }else{
+    $fields = array();
+  }
+
+  return in_array($field_name, $fields);
+}
 function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_by="", $limit=""){
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 
@@ -680,7 +690,10 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
                 };
             };
         }
-        $where_clause .= ( ! ($returnOptions & DB_RETURN_DELETED) ? " AND (deleted IS NULL)" : "");
+        
+        if (db_field_exists($db_table, "deleted")){
+          $where_clause .= ( ! ($returnOptions & DB_RETURN_DELETED) ? " AND (deleted IS NULL)" : "");
+        };
         
         // ORDER BY
         $order_by_clause = "";
