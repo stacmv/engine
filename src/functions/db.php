@@ -1389,7 +1389,9 @@ function db_select($db_table, $select_query, $flags=0){
     $select_query = trim($select_query);
 
 
-    if (strtoupper(substr($select_query,0,strlen("SELECT "))) !== "SELECT "){
+    if ( (strtoupper(substr($select_query,0,strlen("SELECT "))) !== "SELECT ") &&
+         (strtoupper(substr($select_query,0,strlen("WITH RECURSIVE"))) !== "WITH RECURSIVE")
+      ){
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Only SELECT query is allowed. Query: '".htmlspecialchars($select_query)."'. IP:".$_SERVER["REMOTE_ADDR"]);
         die();
     };
