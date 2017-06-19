@@ -1,12 +1,31 @@
-<input type="hidden" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>_cur_file" <?php if (isset($field["value"])):?>value="<?=$field["value"];?>"<?php endif;?>>
+<div class="<?=$field["name"];?>-container">
+  <input type="hidden" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>_cur_file" <?php if (isset($field["value"])):?>value="<?=$field["value"];?>"<?php endif;?>>
+  <?php if(!empty($field["value"])):?>
+    <img src="<?=$field["value"];?>" style="max-width:100%" class="img-polaroid">
+    <br>
+    <a href="" class="close cmdClear">&times; <small>удалить</small></a>
+  <?php endif;?>
 
-<img src="<?=$field["value"];?>" style="max-width:100%" class="img-polaroid">
-<br>
-<input
-	type="file"
-	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
-	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?> 
-	class="input-file <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
->
+  <input
+    type="file"
+    <?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
+    <?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?>
+    class="input-file <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
+  >
+  <?php if(!empty($field["hint"])):?>
+    <span class="help-block"><?=$field["hint"];?></span>
+  <?php endif;?>
+</div>
 
+<script>
+  $(function(){
+    $(".<?=$field["name"];?>-container").find("a.cmdClear").on("click", function (e) {
+      e.preventDefault();
+      $("#<?=$field["name"];?>_cur_file").val("");
+      $(this).parent().find("img").remove();
+      $(this).remove();
+      return false;
+    });
+  });
+</script>
 
