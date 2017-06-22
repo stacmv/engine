@@ -35,6 +35,11 @@ class Thumbnail
 
     public function __construct($full_image, $type, $uid, $width = null, $height=null){
         global $CFG;
+
+        if (empty($CFG["IMAGE"]["width"])) throw  new Exception("Thumbnail image width is not set in config.");
+        if (empty($CFG["IMAGE"]["height"])) throw  new Exception("Thumbnail image height is not set in config.");
+
+
         $uuid = self::uuid($type,$uid, $full_image);
         $width = !is_null($width) ? $width : $CFG["IMAGE"]["width"];
         $height = !is_null($height) ? $height : $CFG["IMAGE"]["height"];
@@ -48,7 +53,7 @@ class Thumbnail
                 }else{
                     $this->thumb_url = $this->create_thumb_uri($type, $uid, $uuid, $width, $height);
                 }
-            }else{ // filemtime не работает или нет оригинального файла, а миниатюра есть
+            }else{ // filemtime не рабоатет или нет оригинального файла, а минивтюра есть
                 $this->thumb_url = $thumb;
             }
         }else{

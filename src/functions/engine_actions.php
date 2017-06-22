@@ -550,47 +550,7 @@ function register_message_opened_action(){  // трекинг открытия �
     $IS_API_CALL = true;
 
 }
-function send_registration_repetition_request_action(){
-	global $CFG;
-	global $_PARAMS;
 
-    // Проверка прав доступа 
-        if ( ! user_has_access_by_ip() ){
-            dosyslog(__FUNCTION__ . ": WARNING: Отказ в обслуживании.");
-            die("Отказ");
-            return false;
-        }
-    //
-	
-	$email = ! empty($_PARAMS["email"]) ? $_PARAMS["email"] : null;
-	$email_token = ! empty($_PARAMS["email_token"]) ? $_PARAMS["email_token"] : null;
-	$valid_email_token = md5($email.substr(date("Y-m-d H:i"),0,-1));
-	$date_str =  ! empty($_PARAMS["date_str"]) ? $_PARAMS["date_str"] : null;
-	$phone =  ! empty($_PARAMS["phone"]) ? $_PARAMS["phone"] : null;
-	$name = ! empty($_PARAMS["name"]) ? $_PARAMS["name"] : null;
-    $app_id = ! empty($_PARAMS["app_id"]) ? $_PARAMS["app_id"] : null;
-	
-	$HTML = "";
-	
-	if ( ! $email ){
-		$HTML .= "<div class='alert alert-error'>Не указан e-mail.</div>";
-	}elseif( $email_token !== $valid_email_token ){
-		$HTML .= "<div class='alert alert-error'>Истекло разрешенное для отправки письма время.</div>";
-	}elseif( empty($phone) ){
-		$HTML .= "<div class='alert alert-error'>Не указан телефон.</div>";
-	}elseif( empty($date_str) ){
-		$HTML .= "<div class='alert alert-error'>Не указана дата.</div>";
-	}elseif( empty($name) ){
-		$HTML .= "<div class='alert alert-error'>Не указано имя пользователя.</div>";
-	}else{
-		if (send_message($email, 'send_registration_repetition_request', array("name"=>$name, "phone"=>$phone, "date_str"=>$date_str, "cfg_app_name"=>$CFG["GENERAL"]["app_name"], "cfg_app_url"=>$CFG["URL"]["base"], "cfg_system_email"=>$CFG["GENERAL"]["system_email"]))){
-			$HTML .= "<div class='alert alert-success'>Письмо отправлено.<p><a href='form/delete/application/".$app_id.".html'>Заявку можно удалить</a></p></div>";
-		}else{
-			$HTML .= "<div class='alert alert-error'>Не удалось отправить письмо. <br>Отправьте письмо пользователю самостоятельно. <br><b>Сообщите администратору о проблемах с отправкой e-mail.</b></div>";
-		};
-	};
-	exit($HTML);
-};
 function set_topmenu_action(){
     global $_DATA;
      
