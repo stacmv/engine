@@ -6,18 +6,18 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     protected $state_field;
     protected $repo_name;
     protected $model_name;
-    
+
     protected $fields;
     protected $data;
     protected $data_before_changes;
-    
-    protected $one2many; // array($db_table => null | ERepository::create($db_table)
-    
 
-    
+    protected $one2many; // array($db_table => null | ERepository::create($db_table)
+
+
+
     public function __construct(array $data = array()){
         static $one2many = null;
-        
+
         $this->fields = Repository::fields($this->repo_name);
         $this->data = array();
         $db_fields = array_merge(array_keys($this->fields), $this->common_fields);
@@ -31,17 +31,17 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
                 $this->data["extra"][$k] = $v;
             }
         };
-        
+
         $this->data_before_changes = $this->data;
-        
+
         $this->state_field = isset($this->fields[$this->model_name . "_state"]) ? $this->model_name . "_state" : (isset($this->fields["state"]) ? "state" : null);
-        
+
         // Related tables from the same db
         $db_table = $this->repo_name;
-        
-        
+
+
         if (db_get_name($db_table) == db_get_table($db_table)){
-            
+
             if (is_null($one2many)){
                 $tables = db_get_tables_list($db_table, $skipHistory = true);
 
@@ -50,34 +50,34 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
                     $fields = Repository::fields($dbt);
                     return isset($fields[$foreign_key]);
                 });
-                
+
                 $one2many = array_map(function($repo_name){
                     return ERepository::create($repo_name);
                 }, $one2many);
             };
             $this->one2many = $one2many;
         }
-        
+
     }
-    
+
     public function checkACL($right){
         if ( ! userHasRight("access,owner|manager", "", $this)) return false;
 
         return userHasRight($right,"", $this);
     }
-    
+
     public static function prepare_view($itemData, $fields, $strict = false){
-        
+
         static $tsv = array();
-        
+
         $item = array();
-        
+
         foreach($itemData as $key => $value){
-            
+
             if ($strict && ! isset($fields[$key])) continue;
-            
+
             $item[$key] = $value;
-            
+
             if ( (substr($key,-3) == "_id") || (substr($key,-4) == "_ids") ){
                 $obj_name = (substr($key,-4) == "_ids") ? substr($key, 0,-4) : substr($key, 0,-3);
                 $get_name_function = "get_".$obj_name."_name";
@@ -101,7 +101,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
                     };
                     unset($tmp, $v);
                 };
-                    
+
                 if ($fields[$key]["type"] == "list"){
                     $item["_".$key] = array_map(function($v)use($tsv, $key, $tsv_file){
                         if (isset($tsv[$key][$v])){
@@ -112,7 +112,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
                         };
                     }, $value);
                 }else{
-                
+
                     if (isset($tsv[$key][$value])){
                         $item["_".$key] = $tsv[$key][$value];
                     }else{
@@ -120,17 +120,17 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
                     }
                 };
             };
-            
-            
+
+
         }
-        
+
         return $item;
-        
+
     }
     public static function methods(){
         return get_class_methods(get_called_class());
     }
-    
+
     protected function getHistory($id = ""){
 
         if ($id){
@@ -142,7 +142,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     protected function getName(){
         return !empty($this->data["name"]) ? $this->data["name"] : (!empty($this->data["title"]) ? $this->data["title"] : _t("Unknown name"));
     }
-    
+
     public function getUid(){
         return !empty($this->data["uid"]) ? $this->data["uid"] : $this->data["id"];
     }
@@ -162,19 +162,19 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         if ($this->state_field) $this->data[$this->state_field] = $state_value;
         return isset($this->state_field);
     }
-    
-    
+
+
     public function changes(){
         return new ChangesSet($this->data, $this->data_before_changes);
     }
     public function whatChanged(){
-        
+
         $cs = $this->changes();
-        
+
         if ($cs && $cs->to){
             return array_keys($cs->to);
         }else{
-            return array(); 
+            return array();
         }
     }
     public function isChanged($field = ""){
@@ -184,30 +184,30 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
             return !is_null($this->changes());
         }
     }
-    
-    
+
+
     public function modify(array $to, array $from = array()){
         foreach($to as $k=>$v){
             $this->data[$k] = $v;
         }
-        
+
         return $this;
     }
-    
+
     public function save($comment=""){
-        
+
         if ($this->isChanged()){
             $repository = Repository::create($this->repo_name);
-            
+
             if (!empty($this->data["id"])){
                 try{
-                    $repository->update($this);
+                    $repository->update($this, $comment);
                 }catch(Exception $e){
                     throw $e;
                 }
-                
+
             }else{
-                $res = $repository->insert($this);
+                $res = $repository->insert($this, $comment);
                 if ($res){
                     $this->data["id"] = $res;
                 };
@@ -215,10 +215,10 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         }else{
             dosyslog(__METHOD__.get_callee().": WARNING: Model '".$this->model_name."(".$this->data["id"].")' is not changed. Not saved, so.");
         }
-        
+
         return $repository->load($this->data["id"])->fetch();
     }
-    
+
     public function __get($key){
         if ($key == "repo_name")   return $this->repo_name;
         if ($key == "model_name")  return $this->model_name;
@@ -226,12 +226,12 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         if ($key == "name")        return $this->getName();
         if ($key == "state")       return $this->getState();
         if ($key == "state_field") return $this->state_field;
-        
+
         dosyslog(__METHOD__ . get_callee() . ": FATAL ERROR: Property '".$key."' is not available in class '".__CLASS__."'.");
         die("Code: ".__CLASS__."-".__LINE__."-".$key);
-        
+
     }
-    
+
     /* ArrayAccess implementation for model attributes */
     public function offsetSet($offset, $value) {
         $set_method_name = "set".ucfirst($offset);
@@ -246,7 +246,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
 
     public function offsetExists($offset) {
         return isset($this->data[$offset]) || isset($this->data["extra"][$offset]);
-        
+
     }
 
     public function offsetUnset($offset) {
@@ -255,11 +255,11 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         } else {
             unset($this->data["extra"][$offset]);
         }
-        
+
     }
 
     public function offsetGet($offset) {
-        
+
         if (method_exists($this, "get".ucfirst($offset)) ){
             return call_user_func(array($this, "get".ucfirst($offset)));
         } elseif (array_key_exists($offset, $this->data)) {
@@ -276,26 +276,26 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
             return null;
         }
     }
-    
+
     /* jsonSerializable implementation */
     public function jsonSerialize(){
-        
+
         $item = $this->data;
-                
+
         foreach(static::methods() as $method){
             if ("getIterator" == $method) continue; // IteratorAggregate method, not own
             if ( ! preg_match("/^get([A-Z].+)$/", $method, $matches)) continue;
             $item[strtolower($matches[1])] = $this->$method();
         };
-                
+
         return $item;
-        
+
     }
-    
+
     /* IteratorAggregate implementation */
     public function getIterator() {
         return new ArrayIterator($this->data);
     }
-    
-    
+
+
 }
