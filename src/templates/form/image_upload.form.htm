@@ -97,17 +97,17 @@
 	<script>
 		var manualUploader = new qq.FineUploader({
 			debug: true,
-			<?php if ($field["type"] != "list"):?>
+			<?php if (!in_array($field["type"], array("list", "images"))):?>
 			multiple: false,
 			<?php endif;?>
 			element: document.getElementById("uploader"),
 			request: {
-				endpoint: "image/upload/<?=$repo_name;?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>"
+				endpoint: "image/upload/<?=$repo_name;?>/<?=$field["name"];?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>"
 			},
 			deleteFile: {
 				enabled: true,
 				forceConfirm: true,
-				endpoint: "image/upload/delete/<?=$repo_name;?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>?uuid="
+				endpoint: "image/upload/delete/<?=$repo_name;?>/<?=$field["name"];?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>?uuid="
 			},
 			chunking: {
 				enabled: true,
@@ -115,7 +115,7 @@
 					enabled: true
 				},
 				success: {
-					endpoint: "image/upload/<?=$repo_name;?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>?done"
+					endpoint: "image/upload/<?=$repo_name;?>/<?=$field["name"];?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>?done"
 				}
 			},
 			resume: {
@@ -126,7 +126,7 @@
 				showButton: true
 			},
 			session: {
-				endpoint: "image/upload/session/<?=$repo_name;?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>"
+				endpoint: "image/upload/session/<?=$repo_name;?>/<?=$field["name"];?>/<?=$object_uid;?><?=$CFG["URL"]["ext"];?>"
 			}
 		});
 	</script>

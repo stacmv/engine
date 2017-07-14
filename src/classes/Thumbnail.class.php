@@ -1,12 +1,12 @@
 <?php
 class Thumbnail
 {
-
+    
     private $thumb_url;
-
-    public static function thumb_name($type, $uid, $uuid, $width ="", $height=""){
-        if ($type && $uid){
-            return "thumb_".$type."__".$uid."__".$uuid.".jpg";
+    
+    public static function thumb_name($repo_name, $field_name, $uid, $uuid, $width ="", $height=""){
+        if ($repo_name && $field_name && $uid){
+            return "thumb_".$repo_name."__".$field_name."__".$uid."__".$uuid.($width && $height ? $width."x".$height : "") . ".jpg";
         }else{
             return "thumb_".$width."__".$height."__".$uuid.".jpg";
         }
@@ -16,11 +16,13 @@ class Thumbnail
 
         return $CFG["IMAGE"]["no_image_file"];
     }
-    public static function uuid($type, $uid, $image_file){
-        if ($type && $uid){
+    public static function uuid($repo_name, $field_name, $uid, $image_file){
+        if ($repo_name && $field_name && $uid){
+            $repo_name = db_get_db_table($repo_name);
             $m = array();
-            $prefix = IMAGES_DIR . $type ."/".$uid;
+            $prefix = IMAGES_DIR . $repo_name ."/" . $field_name . "/" . $uid;
             $suffix = basename($image_file);
+
             if (preg_match("|".$prefix."/([\w\d\-]+)/".$suffix."|", $image_file, $m)){
                 $uuid = $m[1];
             }else{
@@ -29,60 +31,55 @@ class Thumbnail
         }else{
             $uuid = "B64".base64_encode($image_file);
         };
-
+        
         return $uuid;
     }
-
-    public function __construct($full_image, $type, $uid, $width = null, $height=null){
+    
+    public function __construct($full_image, $repo_name, $field_name, $uid, $width = null, $height=null){
         global $CFG;
-
-        if (empty($CFG["IMAGE"]["width"])) throw  new Exception("Thumbnail image width is not set in config.");
-        if (empty($CFG["IMAGE"]["height"])) throw  new Exception("Thumbnail image height is not set in config.");
-
-
-        $uuid = self::uuid($type,$uid, $full_image);
+        $uuid = self::uuid($repo_name, $field_name,$uid, $full_image);
         $width = !is_null($width) ? $width : $CFG["IMAGE"]["width"];
         $height = !is_null($height) ? $height : $CFG["IMAGE"]["height"];
 
-        $thumb_name = self::thumb_name($type, $uid, $uuid, $width, $height);
+        $thumb_name = self::thumb_name($repo_name, $field_name, $uid, $uuid, $width, $height);
         if (file_cached($thumb_name, true)){
             $thumb = file_cache_get_filename($thumb_name, true);
             if ($full_image && (!filter_var($full_image, FILTER_VALIDATE_URL) && filemtime($full_image) ) && filemtime($thumb)){
                 if (filemtime($full_image) < filemtime($thumb)){
                     $this->thumb_url = $thumb;
                 }else{
-                    $this->thumb_url = $this->create_thumb_uri($type, $uid, $uuid, $width, $height);
+                    $this->thumb_url = $this->create_thumb_uri($repo_name, $field_name, $uid, $uuid, $width, $height);
                 }
             }else{ // filemtime не рабоатет или нет оригинального файла, а минивтюра есть
                 $this->thumb_url = $thumb;
             }
         }else{
-
+        
             if ($full_image){
-                $this->thumb_url = $this->create_thumb_uri($type, $uid, $uuid, $width, $height);
+                $this->thumb_url = $this->create_thumb_uri($repo_name, $field_name, $uid, $uuid, $width, $height);
             }else{
                 $this->thumb_url = self::no_image_file();
             }
-
-
+            
+            
         };
     }
-
+    
     public function __toString(){
         return $this->thumb_url;
     }
 
-    private function create_thumb_uri($type, $uid, $uuid, $width, $height){
+    private function create_thumb_uri($repo_name, $field_name, $uid, $uuid, $width, $height){
         global $CFG;
-
+        
         return implode("/", array(
             "image",
              $uuid,
              $width,
              $height,
-             $type,
-             $uid,
-             $CFG["URL"]["ext"],
-        ));
+             $repo_name,
+             $field_name,
+             $uid
+        )) . $CFG["URL"]["ext"];
     }
 }

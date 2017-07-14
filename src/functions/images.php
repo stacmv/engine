@@ -1,5 +1,5 @@
 <?php
-function get_images($type, $uid, $uuid =""){
+function get_images($repo_name, $field_name, $uid, $uuid =""){
     $images = array();
     
     if (!defined("IMAGES_DIR")) die("IMAGES_DIR is not defined.");
@@ -11,7 +11,7 @@ function get_images($type, $uid, $uuid =""){
     
     
     
-    $sub_dir = IMAGES_DIR.db_get_db_table($type)."/";
+    $sub_dir = IMAGES_DIR.db_get_db_table($repo_name). "/" . $field_name . "/";
     // 1. Изображения, загруженные, условно, по FTP
     $images1 = glob($sub_dir . $uid ."/*.{jpg,png}", GLOB_BRACE);
     $images = array_merge($images, $images1);
@@ -31,6 +31,6 @@ function get_images($type, $uid, $uuid =""){
         };
     };
     $images = array_merge($images, $images2);
-    
+
     return $images;
 }

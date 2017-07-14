@@ -13,7 +13,8 @@ function image_action(){
    
     Image::configure(array('driver' => 'gd'));
 
-    $type   = $_PARAMS["type"];
+    $repo_name   = $_PARAMS["repo_name"];
+    $field_name   = $_PARAMS["field_name"];
     $uid    = $_PARAMS["uid"];
     $uuid    = $_PARAMS["uuid"];
     $width  = $_PARAMS["width"];
@@ -23,14 +24,14 @@ function image_action(){
     
     
         
-    $images = get_images($type, $uid, $uuid);
+    $images = get_images($repo_name, $field_name, $uid, $uuid);
     if (!empty($images[0])){
         $image_file = $images[0];
     }else{
         $image_file = Thumbnail::no_image_file();
     }
     
-    $thumb_name = Thumbnail::thumb_name($type, $uid, $uuid, $width, $height);
+    $thumb_name = Thumbnail::thumb_name($repo_name, $field_name, $uid, $uuid, $width, $height);
       
 
     $check = true;
@@ -66,7 +67,7 @@ function image_action(){
             $_RESPONSE["body"] = file_cache_set($thumb_name, (string) $image->encode("jpg", 75), 60*60*24 );
         }catch(Exception $e){
             dump($image_file,"image");die();
-            dosyslog(__FUNCTION__.": ERROR: Can not create thumbnal for '".$type."' '".$uid."' '".$width."x".$height."'. Error: ".$e->getMessage());
+            dosyslog(__FUNCTION__.": ERROR: Can not create thumbnal for '".$repo_name."' '".$uid."' '".$width."x".$height."'. Error: ".$e->getMessage());
             $_RESPONSE["headers"]["Content-type"] = "image/jpeg";
             $_RESPONSE["body"] = file_get_contents(Thumbnail::no_image_file());
         }
@@ -83,7 +84,8 @@ function image_upload_action(){
     global $_DATA;
     global $IS_AJAX;
     
-    $type = $_PARAMS["type"];
+    $repo_name = $_PARAMS["repo_name"];
+    $field_name = $_PARAMS["field_name"];
     $uid  = $_PARAMS["uid"];
     
     $IS_AJAX = true;
@@ -92,10 +94,11 @@ function image_upload_action(){
    
     
     
-    if (!$type) return;
+    if (!$repo_name) return;
+    if (!$field_name) return;
     if (!$uid) return;
     
-    $files_dir = IMAGES_DIR.db_get_db_table($type)."/".$uid;
+    $files_dir = IMAGES_DIR.db_get_db_table($repo_name)."/".$field_name."/".$uid;
     
     if (!is_dir($files_dir)) mkdir($files_dir, 0777, true);
     
@@ -152,7 +155,8 @@ function image_upload_delete_action(){
     global $_DATA;
     global $IS_AJAX;
     
-    $type = $_PARAMS["type"];
+    $repo_name = $_PARAMS["repo_name"];
+    $field_name = $_PARAMS["field_name"];
     $uid  = $_PARAMS["uid"];
     
     $IS_AJAX = true;
@@ -161,26 +165,20 @@ function image_upload_delete_action(){
    
     
     
-    if (!$type) return;
+    if (!$repo_name) return;
+    if (!$field_name) return;
     if (!$uid) return;
     
     
-    $files_dir = IMAGES_DIR.db_get_db_table($type)."/".$uid;
+    $files_dir = IMAGES_DIR.db_get_db_table($repo_name)."/".$field_name."/".$uid;
         
     // -------------
-   
-    // Include the upload handler class
-    // require_once "vendor/fineuploader/php-traditional-server/handler.php";
-
+      
     $uploader = new UploadHandler();
 
-    
-
     $method = $_SERVER["REQUEST_METHOD"];
-    // if ($method == "DELETE") {  // for delete file requests
-        $result = $uploader->handleDelete($files_dir);
-        $_DATA = $result;
-    // }
+    $result = $uploader->handleDelete($files_dir);
+    $_DATA = $result;
 }
 
 function image_upload_session_action(){
@@ -188,7 +186,8 @@ function image_upload_session_action(){
     global $_DATA;
     global $IS_AJAX;
     
-    $type = $_PARAMS["type"];
+    $repo_name = $_PARAMS["repo_name"];
+    $field_name = $_PARAMS["field_name"];
     $uid  = $_PARAMS["uid"];
     
     $IS_AJAX = true;
@@ -196,21 +195,21 @@ function image_upload_session_action(){
     clear_actions();
     
         
-    if (!$type) return;
+    if (!$repo_name) return;
+    if (!$field_name) return;
     if (!$uid) return;
     
-    $images = get_images($type, $uid);
+    $images = get_images($repo_name, $field_name, $uid);
         
     if (!$images) return;
+        
     
-    
-    
-    $_DATA = array_map(function($image) use ($type, $uid){
+    $_DATA = array_map(function($image) use ($repo_name, $field_name, $uid){
         return array(
             "name" => basename($image),
-            "uuid" => Thumbnail::uuid($type, $uid, $image),
+            "uuid" => Thumbnail::uuid($repo_name, $field_name, $uid, $image),
             "size" => filesize($image),
-            "thumbnailUrl" => (string) new Thumbnail($image, $type, $uid),
+            "thumbnailUrl" => (string) new Thumbnail($image, $repo_name, $field_name, $uid),
         );
     }, $images);
     
