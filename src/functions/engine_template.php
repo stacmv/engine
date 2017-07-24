@@ -1,4 +1,6 @@
 <?php
+define("ENGINE_TEMPLATE_DEBUG_LOGGING", false);
+
 function apply_template($template_name, $content_block = ""){
     global $_USER;
     global $_PAGE;
@@ -6,7 +8,7 @@ function apply_template($template_name, $content_block = ""){
     global $_DATA;
 
     // dump($_DATA,"_DATA");
-    dosyslog(__FUNCTION__.": DEBUG: Applying template '".$template_name."'.");
+    if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: Applying template '".$template_name."'.");
 
     if ( ! $content_block ) $content_block = $template_name;
 
@@ -20,9 +22,9 @@ function apply_template($template_name, $content_block = ""){
     $template_file = find_template_file($template_name);
 
     if ($template_file){
-        dosyslog(__FUNCTION__.": DEBUG: Start rendering template '".$template_name."'.");
+        if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: Start rendering template '".$template_name."'.");
         $HTML = render_template($template_file, /*array_map("escape_template_data",*/ (array) $_DATA/*)*/ );
-        dosyslog(__FUNCTION__.": DEBUG: Finish rendering template '".$template_name."'.");
+        if (ENGINE_TEMPLATE_DEBUG_LOGGING)dosyslog(__FUNCTION__.": DEBUG: Finish rendering template '".$template_name."'.");
 
         set_content($content_block, $HTML);
     }else{
@@ -72,10 +74,10 @@ function get_content($block_name){
     static $blocks_chain = array();
     static $dont_parse_blocks = array();
 
-    dosyslog(__FUNCTION__.": DEBUG: Getting content block '".$block_name."'.");
+    if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: Getting content block '".$block_name."'.");
 
     if (in_array($block_name, $dont_parse_blocks)){
-        dosyslog(__FUNCTION__.get_callee().": DEBUG: block ". $block_name . " shoud not be parsed.");
+        if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.get_callee().": DEBUG: block ". $block_name . " shoud not be parsed.");
         return "%%".$block_name."%%";
     };
 
@@ -87,13 +89,13 @@ function get_content($block_name){
         return "%%".$block_name."%%"; // don't parse block inside 'form' since it's not really block but some string in form data
     }else{
         array_push($blocks_chain, $block_name);
-        dosyslog(__FUNCTION__.": DEBUG: blocks_chain: ".implode(", ", $blocks_chain));
+        if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: blocks_chain: ".implode(", ", $blocks_chain));
     };
 
     $HTML = "";
     if ( ! empty($_PAGE["content"][$block_name]) ){
         $HTML .= $_PAGE["content"][$block_name];
-        dosyslog(__FUNCTION__.": DEBUG: Found block '".$block_name."' in page contents.");
+        if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: Found block '".$block_name."' in page contents.");
     };
 
     if(!$HTML) {
@@ -119,7 +121,7 @@ function get_content($block_name){
 
         if ($res !== NULL) {
             $HTML = $res;
-            dosyslog(__FUNCTION__.": DEBUG: Included in '".$block_name."' blocks parsed.");
+            if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: Included in '".$block_name."' blocks parsed.");
         }else{
             dosyslog(__FUNCTION__.": ERROR: There is an error in preg_replace_callback() while parsing block '".$block_name."'.");
         };
@@ -170,7 +172,7 @@ function render_template($template_file, $data = array() ){
         return "";
     }
 
-    dosyslog(__FUNCTION__.": DEBUG: Prepare to render template file '".$template_file."'.");
+    if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: Prepare to render template file '".$template_file."'.");
 
     $cacheable = strpos($template_file, ".cacheable") > 0 ? true : false;
 
@@ -185,14 +187,14 @@ function render_template($template_file, $data = array() ){
     }else{
         if (is_array($data)) extract($data);
 
-        dosyslog(__FUNCTION__.": DEBUG: Rendering template file '".$template_file."'.");
+        if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: Rendering template file '".$template_file."'.");
         // dosyslog(__FUNCTION__.": NOTICE: Rendering template file '".$template_file."' with data '" . json_encode($data) . "'.");
 
         ob_start();
             include $template_file;
             $HTML = ob_get_contents();
         ob_end_clean();
-        dosyslog(__FUNCTION__.": DEBUG: template file '".$template_file."' rendered.");
+        if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: template file '".$template_file."' rendered.");
 
         if ($cacheable) file_cache_set(basename($template_file), $HTML);
     };
@@ -202,7 +204,7 @@ function render_template($template_file, $data = array() ){
 function set_content($block_name, $content){
     global $_PAGE;
 
-    dosyslog(__FUNCTION__.": DEBUG: Setting content block '".$block_name."'.");
+    if (ENGINE_TEMPLATE_DEBUG_LOGGING) dosyslog(__FUNCTION__.": DEBUG: Setting content block '".$block_name."'.");
 
     if (empty($content)){
         dosyslog(__FUNCTION__.": WARNING: Content for block '".$block_name."' is empty.");
