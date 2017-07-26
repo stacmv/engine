@@ -66,9 +66,6 @@ $(function(){
     }
 
     function render(){
-        debugger;
-
-
         // clean up
         $view.find("table tbody").html("");
 
@@ -113,9 +110,11 @@ $(function(){
     function delRow(e){
         e.preventDefault();
 
-        $(e.target).parents("tr").remove();
-        inputChanged();
-        render();
+        if (confirm("Удалить строку?")){
+          $(e.target).parents("tr").remove();
+          inputChanged();
+          render();
+        };
     }
 
 })
