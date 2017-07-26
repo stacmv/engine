@@ -10,8 +10,14 @@ if ($actions){
 } else{
 	$actions = array();
 }
+
+$rights = db_get_meta($repo_name, "acl");
+if (!$rights){
+  $rights="access,manager|owner";
+};
+
 ?>
-<?php if (userHasRight("access,manager") || userHasRight("access,owner","",$item)):?>
+<?php if (userHasRight($rights, "", $item)):?>
 	<?php if (!empty($_PAGE["templates"]["item"]) || in_array("show", $actions)):?>
 		<a href="<?=db_get_meta($repo_name, "model_uri_prefix");?><?=$repo_name;?>/<?=$item["id"].$CFG["URL"]["ext"];?>" class="btn btn-small">Посмотреть</a>
 	<?php endif;?>
