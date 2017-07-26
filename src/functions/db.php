@@ -1286,7 +1286,7 @@ function db_search_substr($db_table, $field, $search_query, $limit=100, $flags =
     list($count) = $stmt_count->fetchAll(PDO::FETCH_COLUMN, 0);
 
 
-    $sql = "SELECT * FROM ".$table_name." WHERE lower(" . $field . ") LIKE lower(?) LIMIT ?;";
+    $sql = "SELECT * FROM ".$table_name." WHERE lower(" . $field . ") LIKE lower(?) AND deleted IS NULL LIMIT ?;";
     $stmt = $dbh->prepare($sql);
     if (!$stmt){
         dosyslog(__FUNCTION__.get_callee().": SQL ERROR: ".db_error($dbh).".");
@@ -1521,7 +1521,13 @@ function db_parse_value($value, $field_type){
         $value = htmlspecialchars_decode($value, ENT_QUOTES);
         break;
     case "boolean":
-        $value = (boolean) $value;
+        if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
+            return true;
+        }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false") )){
+            return false;
+        }else{
+            return (boolean) $value ? true : false;
+        };
         break;
     }; // switch
 
@@ -1625,13 +1631,17 @@ function db_prepare_value($value, $field_type){
                 $res = glog_isodate($value);
             };
             break;
-        case "timestamp":
-        case "boolean": // prepare as timestamp
-            if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
-                $res = time();
-            }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false") )){
-                $res = null;
-            }elseif($value == glog_isodate($value)){ // Check if value is date, convert to timestamp
+        case "boolean":
+             if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
+                 return 1;
+             }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false") )){
+                 return null;
+             }else{
+                 return (boolean) $value ? 1 : null;
+             };
+             break;
+        case "timestamp": // prepare as timestamp
+            if($value == glog_isodate($value)){ // Check if value is date, convert to timestamp
                 $res = strtotime($value);
             }else{   // Check if value is valid timestamp, if not (i.e it's string "yes", "on", ... ) generate current timestamp
 

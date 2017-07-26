@@ -158,7 +158,7 @@ class FormData{
                 };
             };
             
-            if ( $field["required"] && empty($changes_to[$name]) ){
+            if ( $field["required"] && (!isset($changes_to[$name]) || ($changes_to[$name] === "")) ){ // value is required but may be equal to 0 or "0"
                 // required
                 $this->is_valid = false;
                 if ( ! isset($this->errors[$name]) ) $this->errors[$name] = array();

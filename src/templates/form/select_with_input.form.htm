@@ -1,3 +1,13 @@
+<?php
+if (empty($field["values"])){
+    $field["values"] = array_map(function($v){
+        return array(
+            "value" => $v,
+            "caption" => $v,
+        );
+    }, db_get_list($repo_name, array($field["name"])));
+};
+?>
 <div id="select_with_input_<?=$field["name"];?>">
 <?php
 include cfg_get_filename("templates/form", "select.form.htm");
@@ -7,15 +17,15 @@ include cfg_get_filename("templates/form", "select.form.htm");
 <script>
 $(function(){
 	var $cnt = $("#select_with_input_<?=$field["name"];?>");
-	
+
 	$cnt.find("select").append("<option value='add-new-value'>-- Добавить -- </option>");
-	
+
 	$cnt.find("select").on("change", function(e){
 		if (this.value == "add-new-value"){
 			$(this).parent().append('<input type="text" name="<?=$field["name_to"];?>">');
 			$(this).remove();
 		}
 	})
-	
+
 });
 </script>
