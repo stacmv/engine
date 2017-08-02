@@ -3,7 +3,6 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
 {
     protected $repo_name;
     protected $fields;
-    protected $id;
     protected $model_name;
     protected $uri_prefix;
     protected $storage;
@@ -22,7 +21,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         $repo = self::_getInstance($repository_name);
         $repo->repo_name  = $repository_name;
         $repo->model_name = db_get_obj_name($repository_name);
-        $repo->fields     = form_get_fields($repository_name, $form_name);
+        $repo->fields     = static::fields($repository_name, $form_name);
         $repo->uri_prefix = db_get_meta($repository_name, "model_uri_prefix");
 
         $storage_type  = db_get_meta($repository_name, "storage") or $storage_type = "Sqlite";
