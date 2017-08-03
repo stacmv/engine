@@ -2,33 +2,37 @@
 <pages>
 	<page uri="image" title="">
 		<params>
-			<uuid><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>1</pos></uuid>
-			<width><type>number</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>2</pos></width>
-			<height><type>number</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>3</pos></height>
-			<type><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>4</pos></type>
-			<uid><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>5</pos></uid>
+			<uuid><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>1</pos></uuid>
+			<width><type>number</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>2</pos></width>
+			<height><type>number</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>3</pos></height>
+			<repo_name><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>4</pos></repo_name>
+			<field_name><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>5</pos></field_name>
+			<uid><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>6</pos></uid>
 		</params>
 		<actions>image</actions>
 	</page>
 	<page uri="image/upload" title="">
 		<params>
-			<type><type>string</type><source>get</source><regexp>|image/upload/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></type>
-			<uid><type>string</type><source>get</source><regexp>|image/upload/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></uid>
+			<repo_name><type>string</type><source>get</source><regexp>|image/upload/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></repo_name>
+			<field_name><type>string</type><source>get</source><regexp>|image/upload/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></field_name>
+			<uid><type>string</type><source>get</source><regexp>|image/upload/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>3</pos></uid>
 		</params>
 		<actions>image_upload</actions>
 	</page>
 	<page uri="image/upload/delete" title="delete.endpoint for FineUploder">
 		<params>
-			<type><type>string</type><source>get</source><regexp>|image/upload/delete/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></type>
-			<uid><type>string</type><source>get</source><regexp>|image/upload/delete/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></uid>
+			<repo_name><type>string</type><source>get</source><regexp>|image/upload/delete/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></repo_name>
+			<field_name><type>string</type><source>get</source><regexp>|image/upload/delete/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></field_name>
+			<uid><type>string</type><source>get</source><regexp>|image/upload/delete/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>3</pos></uid>
 			<uuid><type>string</type><source>request</source></uuid>
 		</params>
 		<actions>image_upload_delete</actions>
 	</page>
 	<page uri="image/upload/session" title="session.endpoint for FineUploder">
 		<params>
-			<type><type>string</type><source>get</source><regexp>|image/upload/session/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></type>
-			<uid><type>string</type><source>get</source><regexp>|image/upload/session/([\w\.]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></uid>
+			<repo_name><type>string</type><source>get</source><regexp>|image/upload/session/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>1</pos></repo_name>
+			<field_name><type>string</type><source>get</source><regexp>|image/upload/session/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>2</pos></field_name>
+			<uid><type>string</type><source>get</source><regexp>|image/upload/session/([\w\.]+)/([\w]+)/([\w\d\-\.]+)|</regexp><pos>3</pos></uid>
 		</params>
 		<actions>image_upload_session</actions>
 	</page>
