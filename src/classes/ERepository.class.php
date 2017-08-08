@@ -57,10 +57,12 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         return $this->storage->rollback();
     }
 
-    public function getPager($items_per_page, $current_page, $uri_params = array()){
+    public function getPager($items_per_page, $current_page, $uri_params = array(), $url_template = ""){
         global $CFG;
 
-        $url_template = $this->repo_name . $CFG["URL"]["ext"] . "?page=%%page%%";
+        if (!$url_template){
+            $url_template = $this->repo_name . $CFG["URL"]["ext"] . "?page=%%page%%";
+        };
         if (!empty($uri_params)){
           $url_template .= "&".http_build_query($uri_params);
         };
