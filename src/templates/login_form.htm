@@ -8,6 +8,14 @@ foreach(@array(
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
 ?>
+
+<?php if (!empty($CFG["VKONTAKTE"]["app_id"])) $VK_LOGIN = true; else $VK_LOGIN = false;?>
+<?php if ($VK_LOGIN){
+	assets("add","js-file", "//vk.com/js/api/openapi.js?142");
+};
+?>
+%%vk_init%%
+
 <style>
 	#login-form{
 		margin-top: 2em;
@@ -23,33 +31,43 @@ foreach(@array(
 <article class="app_content">
 	<div class="row">
 		<div class="span6 offset3 col-md-6 col-md-offset-3">
-			
+
 			<div class="row">
-				<div id="login-form" class="span2 offset2 col-md-2">
-					<form  method="post" action="<?=$CFG["URL"]["base"];?>login/<?=$auth_type;?><?=$CFG["URL"]["ext"];?>">
-						<input name="login" type="text" required class="input span2" value="" id="UserEmail" placeholder="Логин" autofocus/>
-						<input name="pass" type="password" required class="input span2" value="" id="pass" placeholder="Пароль"/>
-						<input type="submit" class="btn btn-primary btn-large btn-block" id="loginButton" value="Войти" />
-						<?php if (find_page("form/signup")["uri"] == "form/signup"):?>
-							<a href="form/signup<?=$CFG["URL"]["ext"];?>" class="btn btn-block">Регистрация</a>
-						<?php endif;?>
-					</form>
+				<div class="<?php if($VK_LOGIN):?>span3<?php else:?>span6<?php endif;?>">
+					<div id="login-form" class="span2 col-md-2">
+						<form  method="post" action="<?=$CFG["URL"]["base"];?>login/<?=$auth_type;?><?=$CFG["URL"]["ext"];?>">
+							<input name="login" type="text" required class="input span2" value="" id="UserEmail" placeholder="Логин" autofocus/>
+							<input name="pass" type="password" required class="input span2" value="" id="pass" placeholder="Пароль"/>
+							<input type="submit" class="btn btn-primary btn-large btn-block" id="loginButton" value="Войти" />
+							<?php if (find_page("form/signup")["uri"] == "form/signup"):?>
+								<a href="form/signup<?=$CFG["URL"]["ext"];?>" class="btn btn-block">Регистрация</a>
+							<?php endif;?>
+						</form>
+					</div>
 				</div>
-			</div>
+                <?php if ($VK_LOGIN):?>
+                    <div class="span3">
+                        <div id="vk_auth"></div>
+                        <script type="text/javascript">
+                            VK.Widgets.Auth("vk_auth", {authUrl: 'login/vkontakte.html'});
+                        </script>
+                    </div>
+                <?php endif;?>
+            </div>
 			<div class="row">
 				<p class="text-center">
 					Возникли вопросы?<br>
 					<a href="mailto:info@optimit.ru">Обратитесь в службу поддержки</a>
 				</p>
 			</div>
-		</div> 
+		</div>
 	</div> <!-- /.row -->
 </article> <!-- /.app_content -->
 
 <?php if ($auth_type == "http_basic"):?>
 	<script>
 		<?php  // http://www.peej.co.uk/articles/rich-user-experience.html ?>
-		function getHTTPObject() { 
+		function getHTTPObject() {
 			if (typeof XMLHttpRequest != 'undefined') {
 				return new XMLHttpRequest();
 			} try {
@@ -61,13 +79,13 @@ foreach(@array(
 			}
 			return false;
 		}
-		
+
 		<?php  // http://www.peej.co.uk/articles/http-auth-with-html-forms.html ?>
-		function login() {         
+		function login() {
 			var http = getHTTPObject();
 			var username = document.getElementById("UserEmail").value;
 			var pass = document.getElementById("pass").value;
-			
+
 			http.open("get", this.action, false, username, pass);
 			http.send("");
 			if (http.status == 200) {
@@ -80,7 +98,7 @@ foreach(@array(
 		$(function(){
 			$("#login-form form").submit(login);
 		})
-		
+
 	</script>
 <?php endif;?>
 

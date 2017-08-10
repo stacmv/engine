@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pages>
+	<page uri="login/vkontakte" comment="Вход через ВКонтакте">
+		<params>
+			<uid><type>string</type><source>request</source></uid>
+			<first_name><type>string</type><source>request</source></first_name>
+			<last_name><type>string</type><source>request</source></last_name>
+			<photo><type>string</type><source>request</source></photo>
+			<photo_rec><type>string</type><source>request</source></photo_rec>
+			<hash><type>string</type><source>request</source></hash>
+		</params>
+		<actions>login_vkontakte</actions>
+	</page>
+	
+</pages>

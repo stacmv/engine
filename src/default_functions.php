@@ -334,12 +334,17 @@ if (!function_exists("get_page_files")){
 
         $pages_files = array_filter($pages_files, function($file){ return file_exists($file);});
 
-        $extra_pages = array_merge( glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE), glob(SITE_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE) );
+        $extra_pages = array_merge(
+                glob(ENGINE_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE),
+                glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE),
+                glob(SITE_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE)
+        );
         if ( ! empty($extra_pages) ){
             foreach($extra_pages as $file){
-                $start = strlen(APP_DIR . "settings/");
-                $length  = strlen($file) - strlen(".pages.json") - $start;
-                $key = substr($file, $start, $length);
+                // $start = strlen(APP_DIR . "settings/");
+                // $length  = strlen($file) - strlen(".pages.json") - $start;
+                // $key = substr($file, $start, $length);
+                $key = basename($file);
                 $pages_files[$key] = $file;
             };
             unset($file, $start,$length, $key);
@@ -347,6 +352,7 @@ if (!function_exists("get_page_files")){
 
          dosyslog(__FUNCTION__.get_callee().": DEBUG: Pages_files: ".implode(", ", array_values($pages_files)));
 
+        // dump($pages_files,"page_files");die();
         return $pages_files;
 
     }

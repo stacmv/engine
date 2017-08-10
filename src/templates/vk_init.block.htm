@@ -1,0 +1,5 @@
+<?php if (!empty($CFG["VKONTAKTE"]["app_id"])):?>
+<script type="text/javascript">
+  VK.init({apiId: <?=$CFG["VKONTAKTE"]["app_id"];?>});
+</script>
+<?php endif;?>
