@@ -20,7 +20,7 @@
 			 if (!empty($field["value"])){
 				 if (is_scalar($field["value"]) && ($field["values"] == $value) ){
 					 $selected = true;
-				 }elseif(in_array($value, array_map(function($f){return $f["value"];}, $field["values"]))){
+				 }elseif(in_array($value, $field["value"])){
 					$selected = true;
 				 }
 			 };

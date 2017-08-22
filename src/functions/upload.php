@@ -119,6 +119,7 @@ function upload_files(FormData $data, $storage=""){
     };
     
     
+    $files_uploaded = array();
     
     $fields = form_get_fields($data->db_table, $data->form_name);
     
@@ -126,12 +127,8 @@ function upload_files(FormData $data, $storage=""){
         return ( ($field["type"] == "file") || (isset($_FILES["to"]["name"][$field["name"]])) ) ;
     });
     
-    
-    dosyslog(__FUNCTION__.get_callee().": DEBUG: Определены имена полей с файлами для формы '".$data->form_name.": ".implode(", ", array_map(function($field){return $field["name"];}, $file_fields))." .");
-    
-    $files_uploaded = array();
-    
     if ( ! empty($file_fields) ){
+        dosyslog(__FUNCTION__.get_callee().": DEBUG: Определены имена полей с файлами для формы '".$data->form_name.": ".implode(", ", array_map(function($field){return $field["name"];}, $file_fields))." .");
         foreach($file_fields as $field){
             list($res, $dest_file) = upload_file($field["name"], $storage);
             dosyslog(__FUNCTION__.get_callee().": DEBUG: Пытались загрузить файл для поля '".$field["name"]."' формы '".$data->form_name."'. ..." . ($res ? "успешно" : "безуспешно") . ".");

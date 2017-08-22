@@ -12,7 +12,11 @@
 	<option></option>
 	<?php $in_optgroup = false;?>
 	<?php foreach($field["values"] as $v):?>
-		<?php $value = $v["value"]; $caption = $v["caption"];?>
+        <?php if ($field["form_values"] == "lst"):?>
+            <?php $value = $caption = $v;?>
+        <?php else:?>
+		    <?php $value = $v["value"]; $caption = $v["caption"];?>
+        <?php endif;?>
 		<?php if ($value == "optgroup"):?>
 			<?php if ($in_optgroup):?>
 				</optgroup>
