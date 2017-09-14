@@ -1,9 +1,17 @@
-<?php $images = get_images($repo_name, $item["uid"]);?>
-<?php if ($images):?>
-	<span class="label label-success">Есть</span>
+<?php $uid = isset($item["uid"]) ? $item["uid"] : $item["id"];?>
+<?php $images = get_images($repo_name, $field["name"], $uid);?>
+<?php if (!$images):?>
+	<?php $image = $item[$field["name"]];?>
 <?php else:?>
-	<span class="label label-important">Нет</span>
-	
+	<?php $image = $images[0];?>
+<?php endif;?>
+
+<?php if ($image):?>
+	<div style="width:64px">
+		<img class="img-responssive" src="<?=$image;?>">
+	</div>
+<?php else:?>
+	<span class="label label-important">Нет</span>	
 <?php endif;?>
 
 
