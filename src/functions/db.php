@@ -1634,7 +1634,7 @@ function db_prepare_value($value, $field_type){
         case "boolean":
              if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
                  return 1;
-             }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false") )){
+             }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false", "null") )){
                  return null;
              }else{
                  return (boolean) $value ? 1 : null;
@@ -1645,10 +1645,14 @@ function db_prepare_value($value, $field_type){
                 $res = strtotime($value);
             }else{   // Check if value is valid timestamp, if not (i.e it's string "yes", "on", ... ) generate current timestamp
 
-                list($month, $day, $year) = explode("/", date("m/d/Y", $value));
-                if ( ! checkdate($month, $day, $year) ){
-                    dosyslog(__FUNCTION__.get_callee().": ERROR: Invalid timestamp: '".$value."'.");
-                    $res = time();
+                if(in_array( $value, array("", "0", "no", "n", "N", "off", "false", "null") )){
+                    return null;
+                }else{
+                    list($month, $day, $year) = explode("/", date("m/d/Y", $value));
+                    if ( ! checkdate($month, $day, $year) ){
+                        dosyslog(__FUNCTION__.get_callee().": ERROR: Invalid timestamp: '".$value."'.");
+                        $res = time();
+                    };
                 };
             };
             break;

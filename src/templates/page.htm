@@ -16,7 +16,7 @@ if (!isset($page_fluid)) $page_fluid = false;
     <title><?=$_PAGE["title"];?></title>
 	<base href="<?=$CFG["URL"]["base"];?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	
+
 	<style>
 		.app_content {margin-top: 70px;}
 	</style>
@@ -27,7 +27,7 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<link rel="stylesheet" href="assets/bs2/css/datepicker.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/bootstrap-editable.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/custom.css">
-	
+
 	%%assets_css%%
 
 	<script src="assets/bs2/js/jquery.js"></script>
@@ -43,10 +43,10 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<script src="assets/bs2/js/jquery.ui.datepicker-ru.js"></script>
 	<script src="assets/bs2/js/jquery.table.js"></script>
 	<script src="assets/bs2/js/jquery.autosize.min.js"></script>
-	
+
 	<!-- Editor -->
 	<script src="assets/bs2/js/epiceditor.min.js"></script>
-	
+
 	%%assets_js%%
 </head>
 <body>
@@ -54,11 +54,11 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<div class="navbar-inner">
 		<div class="container">
 			<a href="<?php if($_USER->is_authenticated()):?><?=!empty($CFG["URL"]["dashboard"]) ? $CFG["URL"]["dashboard"] : "index";?><?php else:?>index<?php endif;?><?=$CFG["URL"]["ext"];?>" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
-			
+
 			%%topmenu%%
-			
+
 			%%login_logout_link%%
-			
+
 		</div>
 		<div class="navbar-overlay"></div>
 	</div>
@@ -70,9 +70,9 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<?php if (!empty($_SESSION["msg"])):?>
 		<?=get_content("msg");?>
 	<?php endif;?>
-	
+
 	<?=get_content("content");?>
-	   
+
 </div>
 
 <div style="height:100px">&nbsp;</div>
@@ -80,15 +80,15 @@ if (!isset($page_fluid)) $page_fluid = false;
 <div class="navbar navbar-fixed-bottom">
 	<div class="navbar-inner">
 		<div class="container footer-margin-top">
-			
+
 			<div class="muted text-muted">&copy; 2015<?php if(date("Y")>2015):?>&ndash;<?=date("Y");?><?php endif;?> &laquo;<a href="<?=$CFG["URL"]["base"];?>"><?php if (!empty($CFG["GENERAL"]["company_name"])):?><?=$CFG["GENERAL"]["company_name"];?><?php else:?><?=$CFG["GENERAL"]["app_name"];?><?php endif;?></a>&raquo; &nbsp;&nbsp;&nbsp; <small class="muted">Версия: <?=$CFG["GENERAL"]["app_version"];?></small>
-				
+
 				<div class="pull-right optimit"><small>Поддержка &laquo;ОптимИТ&raquo;</small></div>
 			</div>
-			
+
 		</div>
 	</div>
-</div> 
+</div>
 
 
 
@@ -110,7 +110,7 @@ $(function(){
 	});
 
 	// Monitor dynamic inputs
-	$(document).on('change', ':input', function(){ //triggers change in all input fields including text type
+	$(document).on('change', 'form :input', function(){ //triggers change in all input fields including text type
 		window.optimit.app.unsaved = true;
 	});
 	$('input[type=submit]').click(function() {

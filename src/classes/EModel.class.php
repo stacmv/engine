@@ -271,7 +271,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         }else{
             if (DEV_MODE){
                 dosyslog(__METHOD__.get_callee().": FATAL ERROR: Neither property '".$offset."' nor method '"."get".ucfirst($offset)."' are exists in class '".__CLASS__."'.");
-                die("Code: ".__CLASS__."-".__LINE__."-".$offset);
+                throw new LogicException("Code: ".__CLASS__."-".__LINE__."-".$offset);
             };
             return null;
         }
