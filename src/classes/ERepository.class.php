@@ -183,7 +183,8 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         }, $fields_import);
         $field_labels = array_filter($field_labels); // in case field has no label
 
-        $map = array_merge( array_combine($field_labels, $field_names), array_combine($field_names, $field_names) );
+        // Map data keys to DB fields
+        $map = array_merge( array_combine($field_labels, array_keys($field_labels)), array_combine($field_names, $field_names) );
 
         // Map data keys
         $data = array_map(function($record) use ($map){
@@ -197,13 +198,31 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         }, $data);
 
 
-        $this->storage->beginTransaction();
+        $dbh = db_set($this->repo_name, array(
+            "PRAGMA schema.synchronous = 0",
+            "PRAGMA schema.journal_mode = OFF",
+        ));
+        $insert_sql = db_create_insert_query($this->repo_name, array_keys($data[0]));
+        $stmt = $dbh->prepare($insert_sql);
+        $dbh->beginTransaction();
         foreach($data as $k=>$record){
-            $modelClass = static::_getModelClassName($this->repo_name);
-            $model = new $modelClass($record);
-            $res[$k] = $this->insert($model, $import_id);
+            if (!$record["uid"]){
+                $record["uid"] = glog_codufy($record["name"]);
+            };
+            try{
+                if (!$stmt->execute(array_values($record))){
+                    throw new Exception("SQL Error:" . $stmt->errorInfo()[2] . ". Record: '".json_encode($record)."'.", 1);
+                };
+            }catch(Exception $e){
+                if (strpos($e->getMessage(), "UNIQUE constraint failed: products.uid") !== false){
+                    $res["errors"] = "ОШИБКА! Не уникальный артикул '".$record["uid"]."' в строке '".($k+1)."'. Товар пропущен и не добавлен в БД.";
+                }else{
+                    die($e->getMessage());
+                };
+            }
         };
-        $this->storage->commit();
+        $dbh->commit();
+        $dbh = null;
 
         return $res;
     }

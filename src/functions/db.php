@@ -1634,7 +1634,7 @@ function db_prepare_value($value, $field_type){
         case "boolean":
              if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
                  return 1;
-             }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false", "null") )){
+             }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false") )){
                  return null;
              }else{
                  return (boolean) $value ? 1 : null;
@@ -1645,14 +1645,10 @@ function db_prepare_value($value, $field_type){
                 $res = strtotime($value);
             }else{   // Check if value is valid timestamp, if not (i.e it's string "yes", "on", ... ) generate current timestamp
 
-                if(in_array( $value, array("", "0", "no", "n", "N", "off", "false", "null") )){
-                    return null;
-                }else{
-                    list($month, $day, $year) = explode("/", date("m/d/Y", $value));
-                    if ( ! checkdate($month, $day, $year) ){
-                        dosyslog(__FUNCTION__.get_callee().": ERROR: Invalid timestamp: '".$value."'.");
-                        $res = time();
-                    };
+                list($month, $day, $year) = explode("/", date("m/d/Y", $value));
+                if ( ! checkdate($month, $day, $year) ){
+                    dosyslog(__FUNCTION__.get_callee().": ERROR: Invalid timestamp: '".$value."'.");
+                    $res = time();
                 };
             };
             break;
@@ -1678,4 +1674,35 @@ function db_prepare_value($value, $field_type){
 function db_quote($value){
     $dbh = new PDO("sqlite::memory:");
     return $dbh->quote($value);
+}
+
+/**
+ * Renames sqlite db file
+ *
+ * @param string $old_name old db_name (filename without .db extension)
+ * @param [type] $new_name new file name without .db extension
+ * @throws LogicException if $old_name DB file is not exists
+ * @return boolean
+ */
+function db_rename($old_name, $new_name){
+    global $_DB;
+    $db_name = db_get_name($old_name);
+
+    if (!empty($_DB[$db_name])){
+        // Close db if opened
+        $_DB[$db_name] = null;
+        unset($_DB[$db_name]);
+    }
+
+    $dir = dirname($new_name) . "/";
+    $filename = basename($new_name) . ".db";
+
+    if (!is_dir($dir)) mkdir($dir, 0777, true);
+    $filename = glog_codify($filename, GLOG_CODIFY_FILENAME);
+
+    if (file_exists(DATA_DIR . $old_name . ".db")){
+        return rename(DATA_DIR . $old_name . ".db", $dir . $filename);
+    }else{
+        throw new LogicException("DB file is not exists.");
+    }
 }

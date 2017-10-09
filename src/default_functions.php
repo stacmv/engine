@@ -20,6 +20,12 @@ if (!function_exists("cfg_get_filename")){
             die("Code: df-".__LINE__);
         };
 
+        // Modules support
+        $add_modules_paths = function($path){
+            $path = array_merge($path, engine_modules_dirs());
+            return $path;
+        };
+        //
 
 
         $path = array();
@@ -28,6 +34,7 @@ if (!function_exists("cfg_get_filename")){
             $path[] = ENGINE_DIR;
             break;
         case ENGINE_SCOPE_APP:
+            $path = $add_modules_paths($path);
             $path[] = APP_DIR;
             break;
         case ENGINE_SCOPE_SITE:
@@ -36,6 +43,7 @@ if (!function_exists("cfg_get_filename")){
         case ENGINE_SCOPE_ALL:
         default:
             $path[] = SITE_DIR;
+            $path = $add_modules_paths($path);
             $path[] = APP_DIR;
             $path[] = ENGINE_DIR;
         };
@@ -247,16 +255,21 @@ if (!function_exists("get_db_files")){
         if (is_null($db_files)){
 
             $db_files = array();
-            $specific_dbs = glob(APP_DIR . "settings/*.db.xml");
-            if ( ! empty($specific_dbs) ){
-                foreach($specific_dbs as $file){
-                    $start = strlen(APP_DIR . "settings/");
-                    $length  = strlen($file) - strlen(".db.xml") - $start;
-                    $key = substr($file, $start, $length);
-                    $db_files[$key] = $file;
-                };
-                unset($file, $start,$length, $key);
-            }
+            // APP specific and modules db files
+            $paths = array_merge(engine_modules_dirs(), array(APP_DIR));
+
+            foreach ($paths as $path){
+                $specific_dbs = glob($path . "settings/*.db.xml");
+                if ( ! empty($specific_dbs) ){
+                    foreach($specific_dbs as $file){
+                        $start = strlen($path . "settings/");
+                        $length  = strlen($file) - strlen(".db.xml") - $start;
+                        $key = substr($file, $start, $length);
+                        $db_files[$key] = $file;
+                    };
+                    unset($file, $start,$length, $key);
+                }
+            };
 
 
             $db_files["site"]   = cfg_get_filename("settings", "db.xml", ENGINE_SCOPE_SITE);
@@ -337,6 +350,9 @@ if (!function_exists("get_page_files")){
         $extra_pages = array_merge(
                 glob(ENGINE_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE),
                 glob(APP_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE),
+                array_reduce(engine_modules_dirs(), function($modules_page_files, $module_dir){
+                    return array_merge($modules_page_files, glob($module_dir . "settings/*.pages.{json,xml}", GLOB_BRACE));
+                }, array()),
                 glob(SITE_DIR . "settings/*.pages.{json,xml}", GLOB_BRACE)
         );
         if ( ! empty($extra_pages) ){
