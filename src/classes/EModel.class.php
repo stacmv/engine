@@ -245,7 +245,16 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     }
 
     public function offsetExists($offset) {
-        return isset($this->data[$offset]) || isset($this->data["extra"][$offset]);
+
+        if (method_exists($this, "get".ucfirst($offset)) ){
+            return true;
+        } elseif (array_key_exists($offset, $this->data)) {
+            return true;
+        } elseif (isset($this->data["extra"][$offset])) {
+            return true;
+        }else{
+            return false;
+        };
 
     }
 

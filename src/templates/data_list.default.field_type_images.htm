@@ -1,0 +1,10 @@
+<?php $imgs = get_images($repo_name, $field["name"], !empty($item["uid"]) ? $item["uid"] : $item["id"]);?>
+<?php if (!empty($imgs)):?>
+	<span class="label label-success"><?=count($imgs);?></span>
+<?php else:?>
+	<span class="label label-important">Нет</span>
+	
+<?php endif;?>
+
+
+
