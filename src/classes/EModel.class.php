@@ -37,26 +37,29 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         $this->state_field = isset($this->fields[$this->model_name . "_state"]) ? $this->model_name . "_state" : (isset($this->fields["state"]) ? "state" : null);
 
         // Related tables from the same db
-        $db_table = $this->repo_name;
+
+        // This code is disabled since it prevents proper object serializations used in _cache_key()
+
+        // $db_table = $this->repo_name;
 
 
-        if (db_get_name($db_table) == db_get_table($db_table)){
+        // if (db_get_name($db_table) == db_get_table($db_table)){
 
-            if (is_null($one2many)){
-                $tables = db_get_tables_list($db_table, $skipHistory = true);
+        //     if (is_null($one2many)){
+        //         $tables = db_get_tables_list($db_table, $skipHistory = true);
 
-                $foreign_key = $this->model_name . "_id";
-                $one2many = array_filter($tables, function($dbt) use ($foreign_key){
-                    $fields = Repository::fields($dbt);
-                    return isset($fields[$foreign_key]);
-                });
+        //         $foreign_key = $this->model_name . "_id";
+        //         $one2many = array_filter($tables, function($dbt) use ($foreign_key){
+        //             $fields = Repository::fields($dbt);
+        //             return isset($fields[$foreign_key]);
+        //         });
 
-                $one2many = array_map(function($repo_name){
-                    return ERepository::create($repo_name);
-                }, $one2many);
-            };
-            $this->one2many = $one2many;
-        }
+        //         $one2many = array_map(function($repo_name){
+        //             return ERepository::create($repo_name);
+        //         }, $one2many);
+        //     };
+        //     $this->one2many = $one2many;
+        // }
 
     }
 
