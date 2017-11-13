@@ -238,7 +238,7 @@ function SETACTIONLIST(){
         $_PAGE["actions"] = array();
     };
     if ( ! empty($_DEFAULT_ACTIONS) ){
-        $_PAGE["actions"] = array_merge($_PAGE["actions"], $_DEFAULT_ACTIONS);
+        $_PAGE["actions"] = array_merge( $_DEFAULT_ACTIONS["before"], $_PAGE["actions"], $_DEFAULT_ACTIONS["after"]);
     };
 
 

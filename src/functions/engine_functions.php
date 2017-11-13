@@ -187,14 +187,18 @@ function redirect_301($redirect_uri = "", array $params = array(), $hash_uri = "
     $_RESPONSE["headers"]["HTTP"] = "HTTP/1.1 301 Moved Permanently";
     dosyslog(__FUNCTION__.get_callee().": INFO: 301 redirect mode ON.");
 };
-function register_default_action($action){ // регистрирует функцию, которая должна выполняться как action для каждой страницы
+function register_default_action($action, $prepend = false){ // регистрирует функцию, которая должна выполняться как action для каждой страницы
     global $_DEFAULT_ACTIONS;
 
     // Do not invoke inside this function any functions defined in other files since they may not be loaded yet.
 
-    if ( ! isset($_DEFAULT_ACTIONS) ) $_DEFAULT_ACTIONS = array();
+    if ( ! isset($_DEFAULT_ACTIONS) ) $_DEFAULT_ACTIONS = array("before" => array(), "after" => array());
 
-    $_DEFAULT_ACTIONS[] = $action;
+    if ($prepend){
+        $_DEFAULT_ACTIONS["before"][] = $action;
+    }else{
+        $_DEFAULT_ACTIONS["after"][] = $action;
+    }
 
 }
 
