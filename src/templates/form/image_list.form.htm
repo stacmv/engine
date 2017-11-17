@@ -2,14 +2,14 @@
 $id = "il".uniqid();
 ?>
 <div class="image-list" id="<?=$id;?>">
-	<input type="hidden" name="to[<?=$field["name"];?>]" value="null">
+	<input type="hidden" name="to[<?=$field["name"];?>]" value="null"  class="image-list-input">
 	<?php if (!empty($field["value"])):?>
 		<h6>Загруженные картинки</h6>
 		<div class="image-line">
 			<?php if(!empty($field["value"])):?>
 				<?php foreach($field["value"] as $image):?>
 					<div class="image">
-						<input type="hidden" name="<?=$field["name_to"];?>" value="<?=$image;?>">
+						<input type="hidden" name="<?=$field["name_to"];?>" value="<?=$image;?>" class="image-list-input">
 						<img src="<?=$image;?>">
 						<br><a href="#" class="btn-del">&times; Удалить</a>
 					</div>
@@ -20,7 +20,7 @@ $id = "il".uniqid();
 	<?php endif;?>
 	<h6>Загрузить новые картинки</h6>
 	<ol class="file-inputs">
-		<li><input type="file" name="<?=$field["name_to"];?>"></li>
+		<li><input type="file" name="<?=$field["name_to"];?>" class="image-list-input"></li>
 	</ol>
 	<a href="#" class="btn btn-default btn-add"><i class="glyphicon glyphicon-plus"></i> Еще один файл</a>
 	<?php if (!empty($field["hint"])):?>

@@ -3,14 +3,14 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     global $CFG;
     global $_SITE;
     global $_USER; // for testing in DEV_MODE all emails will be sent to current user if authenticated (supposed tester) email;
-    
+
     $http_host = ! empty($_SERVER["HTTP_HOST"]) ? $_SERVER["HTTP_HOST"] : "";
     $ip = ! empty($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "_unknown_";
     $qs = ! empty($_SERVER["QUERY_STRING"]) ? $_SERVER["QUERY_STRING"] : "";
-    
-    
+
+
     $log_msg_prolog = __FUNCTION__.get_callee() . ": INFO: ".$template." e-mail for user ".$emailOrUserId . " ... ";
-    
+
     // Check site settings
     if (isset($_SITE["site_notifications_to_send"])){ // site has any notification settings
         if (empty($_SITE["site_notifications_to_send"]) || ! in_array($template, $_SITE["site_notifications_to_send"])){
@@ -18,10 +18,10 @@ function send_message($emailOrUserId, $template, $data, $options=""){
             return true;
         };
     };
-    
+
     // Check user
     if (is_numeric($emailOrUserId)){
-        
+
         $user = db_get("users", $emailOrUserId, DB_RETURN_DELETED);
         if (empty($user) ){
             dosyslog(__FUNCTION__.": User width id '".$emailOrUserId."' is not found. Message could not be sent.");
@@ -36,9 +36,9 @@ function send_message($emailOrUserId, $template, $data, $options=""){
         $email = $user["email"];
     }else{
         $email = $emailOrUserId;
-        
+
     };
-    
+
     // Check e-mail
     if( ! filter_var($email, FILTER_VALIDATE_EMAIL) ){
         dosyslog($log_msg_prolog . " will not be sent since specified email is not valid: '".$email."'.");
@@ -47,11 +47,11 @@ function send_message($emailOrUserId, $template, $data, $options=""){
         };
         return false;
     };
-    
-    
+
+
     $message_id = md5($email . $template . serialize($data));
     $data["tracking_pixel_url"] = $CFG["URL"]["base"] . "/reg_msg_opened/" . $message_id . $CFG["URL"]["ext"];
-    
+
     // parse template.
     if (isset($options["template_parsed"])){
         $subject = $options["template_parsed"]["subject"];
@@ -63,20 +63,20 @@ function send_message($emailOrUserId, $template, $data, $options=""){
             if ($t == "") die("Code: df-".__LINE__); // убиваемся при ошибке конфигурирования (пустой шаблон), но работаем, если произошла ошибка чтения в продакшене
             return false;
         };
-                
+
         $tmp = @explode("\n\n",$t,2);
         $subject = isset($tmp[0]) ? $tmp[0] : "";
         $message = isset($tmp[1]) ? $tmp[1] : "";
     };
     $to = $email;
-    
-            
+
+
     if (!$subject){
         dosyslog(__FUNCTION__.": WARNING: Subject is not set in email template '".$template."'.");
         $subject = "Email from " . $http_host;
     };
     if (!$message) dosyslog(__FUNCTION__.": WARNING: Empty message body in template '".$template."'.");
-    
+
     // //////
     if (DEV_MODE){
         if ( $_USER->is_authenticated() ){ // current user (tester) is authenticated
@@ -85,16 +85,19 @@ function send_message($emailOrUserId, $template, $data, $options=""){
             if (!$to){
                 die("Code: mail-".__LINE__."-Set_your_email_in_profile!");
             }
-        };
+        }else{
+            dosyslog($log_msg_prolog . " sending to email " . $email . "  (really not sent, since is in DEV_MODE and user is not authenticated) with message_id:" . $message_id . " ... success . IP:" . $ip . ". Query string:'" . $qs . "'.");
+            return true;
+        }
     };
     // //////
-    
+
     $from_email = ! empty($CFG["GENERAL"]["admin_email"]) ? $CFG["GENERAL"]["admin_email"] : "info@optimit.ru";
     $reply_to_email = ! empty($CFG["GENERAL"]["admin_email"]) ? $CFG["GENERAL"]["admin_email"] : "info@optimit.ru";
-    
+
     $res = @mail($to, $subject, $message, "FROM:".$from_email."\nREPLY-TO:".$reply_to_email."\ncontent-type: text/html; charset=UTF-8");
-    
+
     dosyslog($log_msg_prolog . " sending to email " . $email . "  " . ($to != $email ? "(really sent to " . $to . ")" : "") . " with message_id:" . $message_id . " ... " . ($res? "success" : "fail") . ". IP:" . $ip . ". Query string:'" . $qs . "'.");
-     
+
     return $res;
 };

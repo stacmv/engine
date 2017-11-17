@@ -42,7 +42,18 @@ class FormData{
                 $this->files[ $field_name ] = $uploaded_file_name; // string or array of strings
 
                 $this->changes->from[ $field_name ] = isset($params["from"][ $field_name ]) ? $params["from"][ $field_name ] : null;
-                $this->changes->to[ $field_name ] = $uploaded_file_name;
+                if (!empty($params["to"][ $field_name ]) && (db_get_field_type($this->db_table, $field_name) == "list")){ // $field_name represents the list of files. $uploaded_file_name is newly uploaded, but old filename from $params["to"][ $field_name ] must be stored.
+                    $uploaded_files = $params["to"][ $field_name ];
+                    if ($uploaded_files == "null"){ $uploaded_files = array();};
+                    if (is_array($uploaded_file_name)){
+                        $uploaded_files = array_merge($uploaded_files, $uploaded_file_name);
+                    }else{
+                        $uploaded_files[] = $uploaded_file_name;
+                    };
+                    $this->changes->to[ $field_name ] = $uploaded_files;
+                }else{
+                    $this->changes->to[ $field_name ] = $uploaded_file_name;
+                };
             };
         };
 

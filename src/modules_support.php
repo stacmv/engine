@@ -8,6 +8,11 @@ function engine_modules_dir(){
 function engine_modules_dirs(){
     $modules_dir = engine_modules_dir(). "*";
     $tmp = glob( $modules_dir, GLOB_ONLYDIR | GLOB_MARK);
+
+    // Make all paths are unix-like even on Windows
+    $tmp = array_map(function($path){
+        return implode("/", explode(DIRECTORY_SEPARATOR, $path));
+    }, $tmp);
     return $tmp;
 }
 function engine_modules_functions(){

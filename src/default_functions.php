@@ -161,7 +161,7 @@ if (!function_exists("dosyslog")){
     };
 };
 if (!function_exists("find_page")){
-    function find_page($uri){
+    function find_page($uri, $http_method = "get"){
         global $CFG;
 
         $pages = get_pages();
@@ -230,6 +230,18 @@ if (!function_exists("find_page")){
             dosyslog(__FUNCTION__.": FATAL ERROR: Can not load pages files.");
             die("Code: df-".__LINE__);
         };
+
+        //
+        if (isset($page["rest"]) && ($page["rest"] == "true") ){
+            if (!empty($page[$http_method])){
+                $page = array_merge($page, array_map(function($node_value){
+                    return is_array($node_value) ? $node_value : array($node_value); // all nodes: actions, acl, params, templates shoudls be arrays
+                }, $page[$http_method]));
+            }else{
+                dosyslog(__FUNCTION__.": FATAL ERROR: Method '".$http_method."' is not supported for page '".$page["uri"]."'.");
+                die("Code: df-".__LINE__);
+            }
+        }
 
         return $page;
     };

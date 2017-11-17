@@ -280,6 +280,15 @@ function SETPARAMS(){
 
         foreach ($_PAGE["params"] as $fparam_name=>$fparam){
             $tmp = NULL;
+            if ( ($fparam_name=="comment") && !isset($fparam["source"])){ // special case - there are both param named "comment" and <!-- --> comments in XML
+                $tmp = array_filter($fparam);
+                $fparam = reset($tmp);
+                unset($tmp);
+            }
+            if (empty($fparam["source"])){
+                die("Code: e-".__LINE__."-".$_PAGE["uri"]."-".$fparam_name."-source");
+            };
+
             switch ($fparam["source"]){
                 case "config":
                     $tmp = isset($CFG[$fparam_name]) ? $CFG[$fparam_name] : null;
