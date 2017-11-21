@@ -61,7 +61,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         global $CFG;
 
         if (!$url_template){
-            $url_template = $this->repo_name . $CFG["URL"]["ext"] . "?page=%%page%%";
+            $url_template = db_get_meta($this->repo_name, "model_uri_prefix") . $this->repo_name . $CFG["URL"]["ext"] . "?page=%%page%%";
         };
         if (!empty($uri_params)){
           $url_template .= "&".http_build_query($uri_params);
@@ -206,8 +206,8 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         $stmt = $dbh->prepare($insert_sql);
         $dbh->beginTransaction();
         foreach($data as $k=>$record){
-            if (!$record["uid"]){
-                $record["uid"] = glog_codufy($record["name"]);
+            if (!isset($record["uid"]) && in_array("uid", $field_names)){
+                $record["uid"] = glog_codify($record["name"]);
             };
             try{
                 if (!$stmt->execute(array_values($record))){
