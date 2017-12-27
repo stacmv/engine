@@ -5,21 +5,44 @@ function form_prepare($db_table, $form_name, $object=""){
 
     dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . ").");
 
-    // Подготовка данных для полей формы
-    $fields = array();
-    $table = form_get_fields($db_table, $form_name);
+    $subform_prepare = function($db_table, $form_name, $object){
+        // Подготовка данных для полей формы
+        $fields = array();
+        $table = form_get_fields($db_table, $form_name);
 
-    foreach($table as $v){
-        $is_stand_alone = false;
-        $value = isset($_SESSION["to"][$v["name"]])  ? $_SESSION["to"][$v["name"]] : ( !empty($object[ $v["name"] ]) ? $object[ $v["name"] ] : "");
-        $value_from = ! empty($object[ $v["name"] ]) ? $object[ $v["name"] ] : "";
-        $fields[ $v["name"] ] = form_prepare_field($v, $is_stand_alone, $value, $value_from);
-    }
-    unset($v);
+        foreach($table as $v){
+            $is_stand_alone = false;
+            $value = isset($_SESSION["to"][$v["name"]])  ? $_SESSION["to"][$v["name"]] : ( !empty($object[ $v["name"] ]) ? $object[ $v["name"] ] : "");
+            $value_from = ! empty($object[ $v["name"] ]) ? $object[ $v["name"] ] : "";
+            $fields[ $v["name"] ] = form_prepare_field($v, $is_stand_alone, $value, $value_from);
+        }
+        unset($v);
 
-    dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){ return $i["name"];}, $fields)) );
+        dosyslog(__FUNCTION__.": DEBUG: " . get_callee() .": (" . $db_table . ", " . $form_name . "): created fields: " . implode(",", array_map( function($i){ return $i["name"];}, $fields)) );
+        return $fields;
+    };
 
-    return $fields;
+    if (db_get_meta($db_table, $form_name."_tabs")){
+        $tabs_config = form_tabs_config($db_table, $form_name);
+
+
+        $form_tabs = array_map(function($tab) use ($db_table, $tabs_config, $subform_prepare, $object){
+            return array(
+                "tab" => $tab,
+                "caption" => $tabs_config[$tab],
+                "fields" => $subform_prepare($db_table, $tab, $object),
+            );
+        }, array_keys($tabs_config));
+
+        return array(
+            "form_tabbed" => true,
+            "tabs" => $form_tabs,
+        );
+
+    };
+
+    return $subform_prepare($db_table, $form_name, $object);
+
 }
 function form_prepare_field($field, $is_stand_alone = false, $value = "", $value_from = ""){
 
@@ -164,6 +187,20 @@ function form_prepare_view_item(EModel $item, $fields){
 
     return json_decode(json_encode($item), true);
 
+
+}
+function form_tabs_config($db_table, $form_name){
+    $schema = db_get_meta($db_table, $form_name."_tabs");
+
+    $tabs_schema = explode("|", $schema);
+
+    $config = array();
+    foreach ($tabs_schema as $tab_str){
+        list($tab, $caption) = array_map("trim", explode(":", $tab_str));
+        $config[$tab] = $caption;
+    }
+
+    return $config;
 
 }
 function form_get_fields($db_table, $form_name){

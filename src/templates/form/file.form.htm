@@ -1,7 +1,7 @@
 <div class="<?=$field["name"];?>-container">
   <input type="hidden" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>_cur_file" <?php if (isset($field["value"])):?>value="<?=$field["value"];?>"<?php endif;?>>
   <?php if(!empty($field["value"])):?>
-    <img src="<?=$field["value"];?>" style="max-width:100%" class="img-polaroid">
+    <img src="<?=$field["value"];?>" style="max-width:90%" class="img-polaroid">
     <br>
     <a href="" class="close cmdClear">&times; <small>удалить</small></a>
   <?php endif;?>

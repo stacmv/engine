@@ -3,6 +3,7 @@ class FormData{
     private $db_table;
     private $form_name;
     private $id;
+    private $fields;
     private $files;
     private $changes;
     private $is_valid;
@@ -29,7 +30,17 @@ class FormData{
             $this->form_name = $action . "_" . db_get_obj_name($db_table);
         };
 
+        // Установка полей формы
+        $fields_form = form_prepare($this->db_table, $this->form_name);
 
+        if (!empty($fields_form["form_tabbed"])){ // form with tabs
+            $fields_form = array_reduce($fields_form["tabs"], function($fields_form, $tab){
+                $fields_form = array_merge($fields_form, $tab["fields"]);
+                return $fields_form;
+            }, array());
+        }
+
+        $this->fields = $fields_form;
 
 
         // Обработка загружаемых файлов
@@ -42,18 +53,7 @@ class FormData{
                 $this->files[ $field_name ] = $uploaded_file_name; // string or array of strings
 
                 $this->changes->from[ $field_name ] = isset($params["from"][ $field_name ]) ? $params["from"][ $field_name ] : null;
-                if (!empty($params["to"][ $field_name ]) && (db_get_field_type($this->db_table, $field_name) == "list")){ // $field_name represents the list of files. $uploaded_file_name is newly uploaded, but old filename from $params["to"][ $field_name ] must be stored.
-                    $uploaded_files = $params["to"][ $field_name ];
-                    if ($uploaded_files == "null"){ $uploaded_files = array();};
-                    if (is_array($uploaded_file_name)){
-                        $uploaded_files = array_merge($uploaded_files, $uploaded_file_name);
-                    }else{
-                        $uploaded_files[] = $uploaded_file_name;
-                    };
-                    $this->changes->to[ $field_name ] = $uploaded_files;
-                }else{
-                    $this->changes->to[ $field_name ] = $uploaded_file_name;
-                };
+                $this->changes->to[ $field_name ] = $uploaded_file_name;
             };
         };
 
@@ -127,7 +127,8 @@ class FormData{
 
 
         $object = $this->id  ? db_get($this->db_table, $this->id) : null;
-        $fields_form = form_prepare($this->db_table, $this->form_name, $object);
+        $fields_form = $this->fields;
+
         $changes_to = $this->changes->to;
 
         foreach($fields_form as $field){
@@ -186,4 +187,6 @@ class FormData{
             dosyslog(__METHOD__.get_callee().": WARNING: Form '".$this->form_name."' validation errors: '".json_encode_array($this->errors)."', form data: '". json_encode($this->changes)."'.");
         };
     }
+
+
 }

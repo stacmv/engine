@@ -964,8 +964,7 @@ function db_get_field_type($db_table, $field_name){
     if (DEV_MODE) die("Code: db-".__LINE__."-".$field_name."-type");
     return "";
 }
-function db_get_list($db_table, array $fields = array("id"), $limit=""){
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+function db_get_list($db_table, array $fields = array("id"), $limit="", $flags = 0){
     // ДОРАБОТАТЬ: проверить существования поля $field в БД.
 
     $dbh = db_set($db_table);
@@ -975,7 +974,7 @@ function db_get_list($db_table, array $fields = array("id"), $limit=""){
     $table_name = db_get_table($db_table);
 
     if($dbh) {
-        $query = "SELECT DISTINCT ".implode(", ",$fields)." FROM ".$table_name.($limit?" LIMIT ".((int)$limit):"").";";
+        $query = "SELECT DISTINCT ".implode(", ",$fields)." FROM ".$table_name.($limit?" LIMIT ".((int)$limit):"").($flags & DB_RETURN_NEW_FIRST ? " ORDER BY id DESC" : "").";";
 
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
         $res = $dbh->query($query);
