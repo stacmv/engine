@@ -980,7 +980,7 @@ function db_get_list($db_table, array $fields = array("id"), $limit="", $flags =
         $res = $dbh->query($query);
         if ($res){
             $tmp = $res->fetchAll(PDO::FETCH_ASSOC);
-            if (count($fields == 1)){
+            if (count($fields) == 1){
                 foreach($tmp as $k=>$v){
                     if ( ! empty($v["id"]) ){
                         $result[ $v["id"] ] = $v;
@@ -1016,7 +1016,7 @@ function db_get_table_columns($db_table){
 function db_get_table_schema($db_table){
 
     global $CFG;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    if (cached()) return cache();
 
     $db = false;
     $table = false;
@@ -1067,8 +1067,7 @@ function db_get_table_schema($db_table){
     unset($v, $tmp);
     //
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    return $table;
+    return cache($table);
 };
 function db_get_tables($db_name = ""){
 
@@ -1215,7 +1214,7 @@ function db_insert($db_table, ChangesSet $data){
     if ($res){
         $result = $dbh->lastInsertId();
 
-        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Inserted " . count($data) . " records." : "Insert failed.") . " Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
+        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
 
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
@@ -1372,8 +1371,9 @@ function db_set($db_table){
         };
 
         if ( ! (int) $dbh->query($query_table_check)->fetchColumn() ){
-            dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not create table '" . $db_table ."'.");
-            die("platform_db:db-set-4");
+            $err_msg = " Can not create table '" . $db_table ."'.";
+            dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . $err_msg);
+            die("db-set-4".(DEV_MODE ? $err_msg : ""));
         }else{
             $_DB[$db_name]["tables"][] = $table_name;
         };
