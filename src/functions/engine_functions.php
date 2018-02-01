@@ -111,7 +111,7 @@ function get_filename($name, $ext = "") {//
 	return $result;
 };
 function month_name($month_num, $genitive = false){
-    return glog_month_name($month_num, $genitive);
+    return glog_month_name($month_num, $genitive ? "genitive" : false);
 }
 
 function clear_actions(){
