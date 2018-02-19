@@ -1,0 +1,32 @@
+<?php
+foreach(@array(
+  $fields_form,
+) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
+?>
+
+<?php $form_tabs = $fields_form["tabs"]; // сохраняем, т.к. $fields_form будет перезаписана ниже ?>
+<ul class="nav nav-tabs">
+    <?php foreach($form_tabs as $k => $tab):?>
+        <li <?= ($k == 0) ? 'class="active"' : "";?>>
+            <a href="<?=$_URI;?><?=$CFG["URL"]["ext"];?>#<?=$tab["tab"];?>"><?=$tab["caption"];?></a>
+        </li>
+    <?php endforeach;?>
+</ul>
+
+<div class="tab-content">
+    <?php foreach($form_tabs as $k => $tab):?>
+        <div class="tab-pane  <?= ($k == 0) ? 'active' : "";?>" id="<?=$tab["tab"];?>">
+
+            <?php $fields_form = $tab["fields"];?>
+            <?php include cfg_get_filename("templates", "form_generate.block.htm");?>
+
+        </div>
+    <?php endforeach;?>
+</div>
+
+<script>
+$('.nav-tabs a').click(function (e) {
+  e.preventDefault();
+  $(this).tab('show');
+});
+</script>

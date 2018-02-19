@@ -5,15 +5,22 @@ foreach(@array(
 	$repo_name,
 	$object,
 	$object_name,
+    $fields_form,
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 ?>
 <form class="form-horizontal" action="<?=$action;?>/<?=$object_name;?><?=$CFG["URL"]["ext"];?>" method="post" enctype="multipart/form-data">
 	<?php if ( isset($object["id"]) ):?>
 		<input type="hidden" name="id" value="<?=$object["id"];?>">
 	<?php endif;?>
-	
-	<?php include cfg_get_filename("templates", "form_generate.block.htm");?>
-		
+
+    <?php if (!empty($fields_form["form_tabbed"])): // form with subforms in tabs ?>
+
+        <?php include cfg_get_filename("templates", "form_tabbed_generate.block.htm");?>
+
+    <?php else: // regular form ?>
+	    <?php include cfg_get_filename("templates", "form_generate.block.htm");?>
+    <?php endif;?>
+
 	<div class="pull-right">
 		<input class="btn btn-success" type="submit" value="Сохранить">
 		<?php if (!isset($cancel_btn) || ($cancel_btn !== false)):?>

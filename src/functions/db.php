@@ -964,8 +964,7 @@ function db_get_field_type($db_table, $field_name){
     if (DEV_MODE) die("Code: db-".__LINE__."-".$field_name."-type");
     return "";
 }
-function db_get_list($db_table, array $fields = array("id"), $limit=""){
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+function db_get_list($db_table, array $fields = array("id"), $limit="", $flags = 0){
     // ДОРАБОТАТЬ: проверить существования поля $field в БД.
 
     $dbh = db_set($db_table);
@@ -975,13 +974,13 @@ function db_get_list($db_table, array $fields = array("id"), $limit=""){
     $table_name = db_get_table($db_table);
 
     if($dbh) {
-        $query = "SELECT DISTINCT ".implode(", ",$fields)." FROM ".$table_name.($limit?" LIMIT ".((int)$limit):"").";";
+        $query = "SELECT DISTINCT ".implode(", ",$fields)." FROM ".$table_name.($limit?" LIMIT ".((int)$limit):"").($flags & DB_RETURN_NEW_FIRST ? " ORDER BY id DESC" : "").";";
 
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
         $res = $dbh->query($query);
         if ($res){
             $tmp = $res->fetchAll(PDO::FETCH_ASSOC);
-            if (count($fields == 1)){
+            if (count($fields) == 1){
                 foreach($tmp as $k=>$v){
                     if ( ! empty($v["id"]) ){
                         $result[ $v["id"] ] = $v;
@@ -1017,7 +1016,7 @@ function db_get_table_columns($db_table){
 function db_get_table_schema($db_table){
 
     global $CFG;
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    if (cached()) return cache();
 
     $db = false;
     $table = false;
@@ -1068,8 +1067,7 @@ function db_get_table_schema($db_table){
     unset($v, $tmp);
     //
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-    return $table;
+    return cache($table);
 };
 function db_get_tables($db_name = ""){
 
@@ -1216,7 +1214,7 @@ function db_insert($db_table, ChangesSet $data){
     if ($res){
         $result = $dbh->lastInsertId();
 
-        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Record inserted." : "Insert failed.") . " Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
+        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
 
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
@@ -1320,8 +1318,8 @@ function db_search_substr($db_table, $field, $search_query, $limit=100, $flags =
 
     return array($res, $count);
 }
-function db_set($db_table){
-    global $_DB;
+function db_set($db_table, $init_queries = null ){
+    if (cached()) return cache();
 
     if ( ! defined("DATA_DIR") ) {
         dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " DATA_DIR is not defined.");
@@ -1337,50 +1335,42 @@ function db_set($db_table){
 	$db_name = db_get_name($db_table);
     $table_name = db_get_table($db_table);
 
-    if ( empty($_DB[$db_name]) ) $_DB[$db_name] = array("handler"=>null, "tables"=>array());
-
-    if ( empty($_DB[$db_name]["handler"]) ) {
-        try{
-            $dbh = new PDO("sqlite:" . DATA_DIR . $db_name . ".db");
-            $_DB[$db_name]["handler"] = $dbh;
-        }catch(PDOException $e){
-            dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " DB ".$db_name." can not be opened/created in directory '".DATA_DIR."'. PDO message:".$e->getMessage() );
-            die("platform_db:db-set-3");
+    try{
+        $dbh = new PDO("sqlite:" . DATA_DIR . $db_name . ".db");
+        if ($init_queries){
+            foreach($init_queries as $query){
+                $dbh->query($query);
+            };
         };
-
-    }else{
-
-        $dbh = $_DB[$db_name]["handler"];
-
+    }catch(PDOException $e){
+        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " DB ".$db_name." can not be opened/created in directory '".DATA_DIR."'. PDO message:".$e->getMessage() );
+        die("platform_db:db-set-3");
     };
 
-    if ( ! in_array($table_name, $_DB[$db_name]["tables"]) ){
-        // Проверка существования таблицы
-        $query_table_check = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name=".$dbh->quote($table_name).";";
-        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query_table_check."'.");
-        //
 
-        if ( ! (int) ($dbh->query($query_table_check)->fetchColumn()) ){  // создаем таблицу, если она не сущестует
-            $query = db_create_table_query($db_table);
-            // dump($query,"q");
-            dosyslog(__FUNCTION__.": INFO: " . get_callee() . " Creating table ".$db_table.".");
+    // Проверка существования таблицы
+    $query_table_check = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name=".$dbh->quote($table_name).";";
+    if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query_table_check."'.");
+    //
 
-            if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
-            $res = $dbh->query($query);
-            if (!$res) {
-                dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh).". Query: ".$query);
-            };
+    if ( ! (int) ($dbh->query($query_table_check)->fetchColumn()) ){  // создаем таблицу, если она не сущестует
+        $query = db_create_table_query($db_table);
+        dosyslog(__FUNCTION__.": INFO: " . get_callee() . " Creating table ".$db_table.".");
+
+        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$query."'.");
+        $res = $dbh->query($query);
+        if (!$res) {
+            dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh).". Query: ".$query);
         };
 
         if ( ! (int) $dbh->query($query_table_check)->fetchColumn() ){
-            dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Can not create table '" . $db_table ."'.");
-            die("platform_db:db-set-4");
-        }else{
-            $_DB[$db_name]["tables"][] = $table_name;
+            $err_msg = " Can not create table '" . $db_table ."'.";
+            dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . $err_msg);
+            die("db-set-4".(DEV_MODE ? $err_msg : ""));
         };
     };
 
-	return $dbh;
+	return cache($dbh);
 };
 function db_select($db_table, $select_query, $flags=0){
 

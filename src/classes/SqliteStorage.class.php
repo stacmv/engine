@@ -88,8 +88,8 @@ class SqliteStorage extends EStorage
 
 
         if ($this->sql_result){
-            $v = array_shift($this->sql_result);
-            return $v;
+            $tmp =  array_values($this->sql_result);
+            return $tmp[0];
         }else{
             return false;
         }

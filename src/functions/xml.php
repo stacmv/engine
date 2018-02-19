@@ -14,7 +14,7 @@ function xml_load($resource_type, $resource, $dont_stop_on_errors = false){
         dosyslog(__FUNCTION__.": ERROR: Wrong resource_type '".$resource_type."'. Should be 'file' or 'string'.");
         return null;
     };
-    
+
     if (!$sxe) {
         foreach(libxml_get_errors() as $error) {
             $error_type = $dont_stop_on_errors ? "ERROR:" : "FATAL ERROR:";
@@ -23,12 +23,12 @@ function xml_load($resource_type, $resource, $dont_stop_on_errors = false){
             }else{
                 dosyslog(__FUNCTION__.": ".$error_type . get_callee() .": XML ERROR in string: " . trim($error->message) );
             };
-            if ( ! $dont_stop_on_errors) die("Code: ex-".__LINE__);
+            if ( ! $dont_stop_on_errors) die("Code: ex-".__LINE__."-".basename($resource).(DEV_MODE ? "-".trim($error->message) : ""));
             libxml_clear_errors();
         }
     }
     libxml_use_internal_errors(false);
-    
+
     return $sxe;
 }
 function xml_load_file($file, $dont_stop_on_errors = false){
