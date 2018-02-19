@@ -95,6 +95,25 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
         };
     };
 
+
+    // On After Add Hook
+    $callback = db_get_meta($db_table, "onafteradd");
+    if ($callback){
+        if (function_exists($callback)){
+            $params = array(
+                "args"     => func_get_args(),
+                "formdata" => $formdata,
+                "res"      => $res,
+                "reason"   => $reason,
+                "added_id" => $added_id,
+            );
+            call_user_func($callback, $params);
+        }else{
+            dosyslog(__FUNCTION__.": ERROR: OnAfterAdd callback function for db table '".$db_table."' is not defined: '".$callback."'.");
+        }
+    }
+
+
     return array($res, $reason);
 
 };
@@ -239,6 +258,22 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
         };
     }
 
+    // On After Edit Hook
+    $callback = db_get_meta($db_table, "onafteredit");
+    if ($callback){
+        if (function_exists($callback)){
+            $params = array(
+                "args"     => func_get_args(),
+                "formdata" => $formdata,
+                "res"      => $res,
+                "reason"   => $reason,
+            );
+            call_user_func($callback, $params);
+        }else{
+            dosyslog(__FUNCTION__.": ERROR: OnAfterEdit callback function for db table '".$db_table."' is not defined: '".$callback."'.");
+        }
+    }
+
     return array($res, $reason);
 
 };
@@ -320,7 +355,22 @@ function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_
         redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"]."/".$id);
     };
 
-    if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+    // On After Delete Hook
+    $callback = db_get_meta($db_table, "onafterdelete");
+    if ($callback){
+        if (function_exists($callback)){
+            $params = array(
+                "args"     => func_get_args(),
+                "formdata" => $formdata,
+                "res"      => $res,
+                "reason"   => $reason,
+                "added_id" => $added_id,
+            );
+            call_user_func($callback, $params);
+        }else{
+            dosyslog(__FUNCTION__.": ERROR: OnAfterDelete callback function for db table '".$db_table."' is not defined: '".$callback."'.");
+        }
+    }
 
     return array($res, $reason);
 };

@@ -39,7 +39,7 @@ function set_session_msg($message, $class="info", array $options=array() ){
 
     //
     
-    if ($IS_AJAX){
+    if ($IS_AJAX && !isset($options["ignoreAjax"])){
         if ( ! isset($_DATA["msg"]) || ! is_array($_DATA["msg"]) ) $_DATA["msg"] = array();
         $_DATA["msg"][] = $msg;
     } else {
