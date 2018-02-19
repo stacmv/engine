@@ -11,13 +11,27 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     };
 
     $result = "";
+    $params = $_PARAMS;
 
-    // Проверка прав доступа
-        if ( ! user_has_access_by_ip() ){
-            dosyslog(__FUNCTION__ . ": WARNING: Отказ в обслуживании.");
-            return array(false, "deny");
+    // On Before Add Hook
+    $callback = db_get_meta($db_table, "onbeforeadd");
+    if ($callback){
+        if (function_exists($callback)){
+            $callback_params = array(
+                "args"     => func_get_args(),
+                "params"   => $params,
+            );
+            $callback_res = call_user_func($callback, $callback_params);
+            if (false === $callback_res["res"]){
+                return array($callback_res[$res], $callback_res["reason"]);
+            }else{
+                $params = $callback_res["params"];
+            }
+
+        }else{
+            dosyslog(__FUNCTION__.": ERROR: OnBeforeAdd callback function for db table '".$db_table."' is not defined: '".$callback."'.");
         }
-    //
+    }
 
 
     //
@@ -100,14 +114,14 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
     $callback = db_get_meta($db_table, "onafteradd");
     if ($callback){
         if (function_exists($callback)){
-            $params = array(
+            $callback_params = array(
                 "args"     => func_get_args(),
                 "formdata" => $formdata,
                 "res"      => $res,
                 "reason"   => $reason,
                 "added_id" => $added_id,
             );
-            call_user_func($callback, $params);
+            call_user_func($callback, $callback_params);
         }else{
             dosyslog(__FUNCTION__.": ERROR: OnAfterAdd callback function for db table '".$db_table."' is not defined: '".$callback."'.");
         }
@@ -180,21 +194,38 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 
-    // Проверка прав доступа
-        if ( ! user_has_access_by_ip() ){
-            dosyslog(__FUNCTION__ . ": WARNING: Отказ в обслуживании.");
-            return array(false, "deny");
+    $params = $_PARAMS;
+
+    // On Before Edit Hook
+    $callback = db_get_meta($db_table, "onbeforeedit");
+    if ($callback){
+        if (function_exists($callback)){
+            $callback_params = array(
+                "args"     => func_get_args(),
+                "params"   => $params,
+            );
+            $callback_res = call_user_func($callback, $callback_params);
+            if (false === $callback_res["res"]){
+                return array($callback_res[$res], $callback_res["reason"]);
+            }else{
+                $params = $callback_res["params"];
+            }
+
+        }else{
+            dosyslog(__FUNCTION__.": ERROR: OnBeforeEdit callback function for db table '".$db_table."' is not defined: '".$callback."'.");
         }
+    }
+
     //
-    $id = ! empty($_PARAMS["id"]) ? $_PARAMS["id"] : null;
+    $id = ! empty($params["id"]) ? $params["id"] : null;
     if ( ! $id ){
         dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'id' is not set. Check form or pages file.");
         die("Code: ea-".__LINE__);
     };
 
     if ( ! $db_table ){
-        $object = $_PARAMS["object"];
-        $db_table = db_get_db_table($_PARAMS["object"]);;  //uri: edit/account.html, but db = accounts; edit/user => users.
+        $object = $params["object"];
+        $db_table = db_get_db_table($params["object"]);;  //uri: edit/account.html, but db = accounts; edit/user => users.
     }else{
         $object = db_get_obj_name($db_table);
     }
@@ -205,7 +236,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     };
 
 
-    $formdata = new FormData($db_table, $_PARAMS);
+    $formdata = new FormData($db_table, $params);
 
     if ($formdata->is_valid){
 
@@ -218,7 +249,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     }
 
     if (! $res){
-        $_SESSION["to"] = $_PARAMS["to"];
+        $_SESSION["to"] = $params["to"];
         $_SESSION["form_errors"] = $formdata->errors;
     }else{
         unset($_SESSION["to"]);
@@ -253,7 +284,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             };
         }else{
             if ( ! is_null($redirect_on_fail) ){
-                redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$_PARAMS["object"] ."/".$_PARAMS["id"]);
+                redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$params["object"] ."/".$params["id"]);
             };
         };
     }
@@ -262,13 +293,13 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
     $callback = db_get_meta($db_table, "onafteredit");
     if ($callback){
         if (function_exists($callback)){
-            $params = array(
+            $callback_params = array(
                 "args"     => func_get_args(),
                 "formdata" => $formdata,
                 "res"      => $res,
                 "reason"   => $reason,
             );
-            call_user_func($callback, $params);
+            call_user_func($callback, $callback_params);
         }else{
             dosyslog(__FUNCTION__.": ERROR: OnAfterEdit callback function for db table '".$db_table."' is not defined: '".$callback."'.");
         }
