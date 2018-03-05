@@ -126,9 +126,11 @@ function _file_cache($command, $key, $value, $ttl){
         case "set": // set into cache
             $key_file = get_file_cached_file($key, $ttl);
             if (is_array($value)){
-                $value = "json_encode\n" . json_encode($value);
-            };
-            if (file_put_contents($key_file, $value)){
+                $content = "json_encode\n" . json_encode($value);
+            }else{
+                $content = $value;
+            }
+            if (file_put_contents($key_file, $content)){
                 $file_cache[$key] = $key_file;
                 dosyslog(__FUNCTION__.get_callee().": NOTICE: Запись: ".$key." в " . $key_file . ", валиден до ".glog_isodate(get_file_cached_time($key_file), true).".");
             }else{

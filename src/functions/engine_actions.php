@@ -35,7 +35,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
 
 
     //
-    $formdata = new FormData($db_table, $_PARAMS);
+    $formdata = new FormData($db_table, $params);
 
 
     if ($formdata->is_valid){
@@ -196,6 +196,23 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 
     $params = $_PARAMS;
 
+    $id = ! empty($params["id"]) ? $params["id"] : null;
+    if ( ! $id ){
+        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'id' is not set. Check form or pages file.");
+        die("Code: ea-".__LINE__);
+    };
+    if ( ! $db_table ){
+        $object = $params["object"];
+        $db_table = db_get_db_table($params["object"]);;  //uri: edit/account.html, but db = accounts; edit/user => users.
+    }else{
+        $object = db_get_obj_name($db_table);
+    }
+
+    if ( ! $object ){
+        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'object' is not set. Check form or pages file.");
+        die("Code: ea-".__LINE__);
+    };
+
     // On Before Edit Hook
     $callback = db_get_meta($db_table, "onbeforeedit");
     if ($callback){
@@ -215,25 +232,8 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             dosyslog(__FUNCTION__.": ERROR: OnBeforeEdit callback function for db table '".$db_table."' is not defined: '".$callback."'.");
         }
     }
-
     //
-    $id = ! empty($params["id"]) ? $params["id"] : null;
-    if ( ! $id ){
-        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'id' is not set. Check form or pages file.");
-        die("Code: ea-".__LINE__);
-    };
 
-    if ( ! $db_table ){
-        $object = $params["object"];
-        $db_table = db_get_db_table($params["object"]);;  //uri: edit/account.html, but db = accounts; edit/user => users.
-    }else{
-        $object = db_get_obj_name($db_table);
-    }
-
-    if ( ! $object ){
-        dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'object' is not set. Check form or pages file.");
-        die("Code: ea-".__LINE__);
-    };
 
 
     $formdata = new FormData($db_table, $params);
