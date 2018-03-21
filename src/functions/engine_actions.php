@@ -584,25 +584,12 @@ function not_auth_action(){
 function not_logged_action(){
     global $CFG;
     global $_DATA;
+    global $_URI;
 
     logout();
     redirect("form/login");
-
-    // $auth_types = get_auth_types();
-    // $auth_type = !empty($_SESSION["auth_type"]) ? $_SESSION["auth_type"] : $auth_types[0];
-
-    // $not_logged_page_template  =  "not_logged_" . $auth_type . ".page.htm";
-    // $not_logged_block_template = "not_logged_" . $auth_type . ".block.htm";
-    // if ( file_exists(cfg_get_filename("templates", $not_logged_page_template)) ){
-        // set_template_file("page", $not_logged_page_template);
-    // }elseif( file_exists(cfg_get_filename("templates",$not_logged_block_template)) ){
-        // set_template_file("content", $not_logged_block_template);
-    // }else{
-        // set_content("page", "<h1>Требуется авторизация</h1><p><a href='login".$CFG["URL"]["ext"]."'>Войти</a></p>");
-    // };
-
-    // $_DATA["auth_type"] = $auth_type;
-
+    return_url_clear();
+    return_url_push($_URI);
 
 }
 function redirect_action(){
@@ -814,7 +801,7 @@ function show_login_form_action(){
     $auth_types = get_auth_types();
     $_DATA["auth_type"] = isset($auth_types[0]) ? $auth_types[0] : "simple";
 
-    return_url_push($CFG["URL"]["dashboard"]);
+    // return_url_push($CFG["URL"]["dashboard"]);
 
 
     // There no users yet -- link to add first user
