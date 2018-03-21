@@ -341,8 +341,7 @@ function form_get_field_values($field, $key = "form_values"){
         }elseif ( function_exists($field[$key]) ){
             $values = call_user_func($field[$key]);
         }else{
-            dosyslog(__FUNCTION__.": ERROR: Values for select field '" . $field["name"] . "' have unknown format. Check DB config.");
-            die("Code: efrm-".__LINE__."-".$field["name"]."->".$field[$key]);
+            $values = array($field[$key]);
         }
 
         if ( is_array($values) && ! empty($values) ){

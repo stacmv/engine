@@ -169,7 +169,9 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
         return $this;
 
     }
-    public function import($data, $options = 0){
+    public function import(array $data, $options = 0){
+
+        if (empty($data)) throw new Exception("Empty data for import.");
 
         $import_id = uniqid("import");
         $res = array();
@@ -202,7 +204,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
             "PRAGMA schema.synchronous = 0",
             "PRAGMA schema.journal_mode = OFF",
         ));
-        $insert_sql = db_create_insert_query($this->repo_name, array_keys($data[0]));
+        $insert_sql = db_create_insert_query($this->repo_name, array_keys(array_values($data)[0]));
         $stmt = $dbh->prepare($insert_sql);
         $dbh->beginTransaction();
         foreach($data as $k=>$record){

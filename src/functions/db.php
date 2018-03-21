@@ -1461,6 +1461,12 @@ function db_parse_result($db_table, $result){
 function db_parse_value($value, $field_type){
 
     switch($field_type){
+    case "number":
+        $value = (int) $value;
+        break;
+    case "double":
+        $value = (double) $value;
+        break;
     case "money":
         if (preg_match("/\.\d\d$/", $value)){ // for backward compatibility
             // do nothing
@@ -1632,11 +1638,13 @@ function db_prepare_value($value, $field_type){
              };
              break;
         case "timestamp": // prepare as timestamp
-            if($value == glog_isodate($value)){ // Check if value is date, convert to timestamp
+            if (true === $value){
+                return time();
+            }elseif($value == glog_isodate($value)){ // Check if value is date, convert to timestamp
                 $res = strtotime($value);
             }else{   // Check if value is valid timestamp, if not (i.e it's string "yes", "on", ... ) generate current timestamp
 
-                if(in_array( $value, array("", "0", "no", "n", "N", "off", "false", "null") )){
+                if(in_array( $value, array("", "0", "no", "n", "N", "off", "false", "null"), true )){
                     return null;
                 }else{
                     list($month, $day, $year) = explode("/", date("m/d/Y", $value));

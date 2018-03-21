@@ -1,7 +1,11 @@
 <div class="<?=$field["name"];?>-container">
   <input type="hidden" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>_cur_file" <?php if (isset($field["value"])):?>value="<?=$field["value"];?>"<?php endif;?>>
   <?php if(!empty($field["value"])):?>
-    <img src="<?=$field["value"];?>" style="max-width:90%" class="img-polaroid">
+    <?php if (is_image($field["value"])):?>
+      <img src="<?=$field["value"];?>" style="max-width:90%" class="cur_file img-polaroid">
+    <?php else:?>
+      <a href="<?=$field["value"];?>" download  class="cur_file"><?=basename($field["value"]);?></a>
+  <?php endif;?>
     <br>
     <a href="" class="close cmdClear">&times; <small>удалить</small></a>
   <?php endif;?>
@@ -22,7 +26,7 @@
     $(".<?=$field["name"];?>-container").find("a.cmdClear").on("click", function (e) {
       e.preventDefault();
       $("#<?=$field["name"];?>_cur_file").val("");
-      $(this).parent().find("img").remove();
+      $(this).parent().find(".cur_file").remove();
       $(this).remove();
       return false;
     });
