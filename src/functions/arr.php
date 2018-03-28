@@ -1,18 +1,36 @@
 <?php
 function arr_index(array $arr, $key = "id"){
-    
+
     return array_reduce($arr, function($arr, $item) use ($key){
-        $arr[$item[$key]] = $item;
+        $arr_key = arr__key($item[$key]);
+        $arr[$arr_key] = $item;
         return $arr;
     }, array());
-    
+
 }
 function arr_group(array $arr, $key){
-    
+
     return array_reduce($arr, function($arr, $item) use ($key){
-        if (!isset($arr[$item[$key]])) $arr[$item[$key]] = array();
-        $arr[$item[$key]][] = $item;
+        $arr_key = arr__key($item[$key]);
+        if (!isset($arr[$arr_key])) $arr[$arr_key] = array();
+        $arr[$arr_key][] = $item;
         return $arr;
     }, array());
-    
+
+}
+
+function arr__key($key_value){
+    $type = gettype($key_value);
+
+    // Only integer and string keys are allowed as array keys
+    switch($type){
+        case "float":
+        case "double":
+            // by default PHP will cast double to integer, so data will bee lost (for irrational or big numbers)
+            return (string) $key_value;
+        case "integer":
+        case "string":
+        default:
+            return $key_value;
+    }
 }
