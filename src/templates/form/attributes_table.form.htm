@@ -102,7 +102,7 @@ $(function(){
         if (e) e.preventDefault();
 
         var state_value = state.value || [];
-        state_value.push({<?=implode(": \"\", ", array_keys($schema));?>}); <?php // empty row: each key with "" value, eg key1: "", key2: "" ?>
+        state_value.push(<?= json_encode(array_combine(array_keys($schema), array_fill(0,count($schema),"")));?>); <?php // empty row: each key with "" value, eg key1: "", key2: "" ?>
         setState("value", state_value);
         render();
     }
@@ -116,6 +116,8 @@ $(function(){
           render();
         };
     }
+
+    window.optimit.app["attributes_table.form"] = {api: {addEmptyRow: addEmptyRow, inputChanged: inputChanged}};
 
 })
 </script>
