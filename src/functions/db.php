@@ -11,7 +11,7 @@ define("DB_RETURN_ONE",4);  // флаг для db_find(), что надо вер
 define("DB_RETURN_DELETED",8);  // флаг для db_get() и db_find(), что надо вернуть и удаленные записи тоже
 define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get() и db_select(), что надо вернуть записи с ключами, равными id, а не порядковым номрам
 define("DB_RETURN_NEW_FIRST", 128); // флаг для db_get() и db_select(), что надо вернуть записи в порядке убывания created
-
+define("DB_USE_DBH_PROVIDED", 256); // флаг для db_select(), что надо использовать переданный 4 паарметром db handler (объект класса PDO), а не получать его по имени таблицы
 $_DB = array();
 
 /* *********************************************************** */
@@ -416,6 +416,7 @@ function db_create_table_query($db_table){
             case "number":        $tmp .= " NUMERIC NOT NULL ON CONFLICT REPLACE DEFAULT 0"; break;
             case "money":         $tmp .= " NUMERIC NOT NULL ON CONFLICT REPLACE DEFAULT 0"; break;
             case "timestamp":     $tmp .= " NUMERIC"; break;
+            case "boolean":       $tmp .= " NUMERIC"; break;
             case "string":        $tmp .= " TEXT"; break;
             case "json": $tmp .=" TEXT"; break;
         };
@@ -1339,7 +1340,7 @@ function db_set($db_table, $init_queries = null ){
         $dbh = new PDO("sqlite:" . DATA_DIR . $db_name . ".db");
         if ($init_queries){
             foreach($init_queries as $query){
-                $dbh->query($query);
+                $query_res = $dbh->exec($query);
             };
         };
     }catch(PDOException $e){
@@ -1372,10 +1373,12 @@ function db_set($db_table, $init_queries = null ){
 
 	return cache($dbh);
 };
-function db_select($db_table, $select_query, $flags=0){
+function db_select($db_table, $select_query, $flags=0, $dbh = null){
 
     $result = array();
-    $dbh = db_set($db_table);
+    if ( ! ($flags & DB_USE_DBH_PROVIDED)){
+        $dbh = db_set($db_table);
+    };
 
     $select_query = trim($select_query);
 

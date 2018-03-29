@@ -266,9 +266,9 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
     public function update(EModel $model, $comment=""){
         return $this->storage->update($this->repo_name . "/" . $model["id"], $model->changes(), $comment);
     }
-    public function where($whereClause, $value = "", $operator = ""){
+    public function where($whereClause, $value = null, $operator = ""){
 
-        if (is_string($whereClause) && $value){
+        if (is_string($whereClause) && !is_null($value)){
             switch(strtolower($operator)){
             case "in":
                 if (is_scalar($value)){
