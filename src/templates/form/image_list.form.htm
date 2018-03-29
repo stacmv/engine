@@ -7,9 +7,9 @@ $id = "il".uniqid();
 		<h6>Загруженные картинки</h6>
 		<div class="image-line">
 			<?php if(!empty($field["value"])):?>
-				<?php foreach($field["value"] as $image):?>
+				<?php foreach($field["value"] as $k=>$image):?>
 					<div class="image">
-						<input type="hidden" name="<?=$field["name_to"];?>" value="<?=$image;?>" class="image-list-input">
+						<input type="hidden" name="to[<?=$field["name"];?>][<?=$k;?>]" value="<?=$image;?>" class="image-list-input">
 						<img src="<?=$image;?>">
 						<br><a href="#" class="btn-del">&times; Удалить</a>
 					</div>
@@ -20,7 +20,7 @@ $id = "il".uniqid();
 	<?php endif;?>
 	<h6>Загрузить новые картинки</h6>
 	<ol class="file-inputs">
-		<li><input type="file" name="<?=$field["name_to"];?>" class="image-list-input"></li>
+		<li><input type="file" name="to[<?=$field["name"];?>][<?=++$k;?>]" class="image-list-input"></li>
 	</ol>
 	<a href="#" class="btn btn-default btn-add"><i class="glyphicon glyphicon-plus"></i> Еще один файл</a>
 	<?php if (!empty($field["hint"])):?>
@@ -30,11 +30,13 @@ $id = "il".uniqid();
 
 <script>
 $(function(){
+    var k = <?=$k+1;?>;
 	$("#<?=$id;?> .btn-add").on("click", function(e){
 		e.preventDefault();
 		$ol = $("#<?=$id;?> .file-inputs");
-		$li = $('<li><input type="file" name="<?=$field["name_to"];?>"></li>');
+		$li = $('<li><input type="file" name="to[<?=$field["name"];?>]['+k+']"></li>');
 		$ol.append($li);
+        k++;
 		return false;
 	});
 	$("#<?=$id;?> .btn-del").on("click", function(e){

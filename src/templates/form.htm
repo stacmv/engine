@@ -22,7 +22,8 @@ foreach(@array(
     <?php endif;?>
 
 	<div class="pull-right">
-		<input class="btn btn-success" type="submit" value="Сохранить">
+		<input class="btn btn-success" type="submit" value="Сохранить и закрыть">
+		<input class="btn" type="submit" name="continue_edit" value="Сохранить">
 		<?php if (!isset($cancel_btn) || ($cancel_btn !== false)):?>
 			<a class="btn btn-default" href="<?=( !empty($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : $repo_name . $CFG["URL"]["ext"] );?>">Отменить</a>
 		<?php endif;?>

@@ -56,7 +56,8 @@
 			"id": {"type": "string", "source": "post"},
 			"from": {"type": "array", "source": "post"},
 			"to": {"type": "array", "source": "post"},
-			"form_name": {"type": "string", "source": "post"}
+            "form_name": {"type": "string", "source": "post"},
+            "continue_edit": {"type": "string", "source": "post"}
         },
         "actions":[ "edit_data" ],
         "acl": [ "access" ]

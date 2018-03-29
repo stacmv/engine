@@ -196,6 +196,8 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 
     $params = $_PARAMS;
 
+
+
     $id = ! empty($params["id"]) ? $params["id"] : null;
     if ( ! $id ){
         dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'id' is not set. Check form or pages file.");
@@ -212,6 +214,11 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
         dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter 'object' is not set. Check form or pages file.");
         die("Code: ea-".__LINE__);
     };
+
+    if (!empty($params["continue_edit"])){  // if user want to countinue editing, force return url to editing form
+        $redirect_on_success = $redirect_on_fail = "form/edit/".$object."/".$id;
+    }
+
 
     // On Before Edit Hook
     $callback = db_get_meta($db_table, "onbeforeedit");
