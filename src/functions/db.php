@@ -1471,11 +1471,7 @@ function db_parse_value($value, $field_type){
         $value = (double) $value;
         break;
     case "money":
-        if (preg_match("/\.\d\d$/", $value)){ // for backward compatibility
-            // do nothing
-        }else{
-            $value = (string) bcadd($value/100, 0, DB_MONEY_PRECISION);
-        }
+        $value = (string) bcadd($value/100, 0, DB_MONEY_PRECISION);
         break;
     case "phone":
         if (!preg_match("/\d{10}$/", $value)){
