@@ -626,83 +626,17 @@ function register_message_opened_action(){  // трекинг открытия �
 
 }
 
-function set_search_filter_action(){
-    global $_PARAMS;
-    global $_DATA;
-
-    $repo_name = ! empty($_PARAMS["model"]) ? $_PARAMS["model"] : null;
-    if (!$repo_name) {
-        die("Code: ea-".__LINE__."-model");
-    };
-
-    $fields = form_get_fields($repo_name, "search_".$repo_name);
-    if (!$fields) return ;
-
-    $search_query = $_PARAMS["search"];
-
-    $_DATA["search_query"] = $search_query;
-    $_DATA["search_placeholder"] = implode(", ", array_filter(array_map(function($field){
-        return $field["label"];
-    }, $fields)));
-
-    if (!$search_query) return ;
-
-
-
-    $search_where = implode(" OR ", array_filter(array_map(function($field) use ($search_query){
-        if (filter_var($search_query, FILTER_VALIDATE_EMAIL)){
-            if (($field["name"] == "email") || ($field["type"] == "email")){
-                return $field["name"] . " = " . db_quote($search_query);
-            }else{
-                return "";
-            };
-        }elseif (filter_var($search_query, FILTER_VALIDATE_INT)){
-            if (in_array($field["type"], array("autoincrement", "number"))){
-                return $field["name"] . " = " . (int) $search_query;
-            }else{
-                if (!in_array($field["type"], array("email"))){
-                    return $field["name"] . " = " . db_quote($search_query);
-                }return "";
-            }
-        }else{
-            if (!in_array($field["type"], array("email", "autoincrement", "number"))){
-                return $field["name"] . " = " . db_quote($search_query);
-            }else{
-                return "";
-            };
-        };
-    }, $fields)));
-
-    if ($found_count = db_get_count($repo_name, $search_where) > 0){
-        $_DATA["show_data_where"] = $search_where;
-    };
-
-
-    // Поиск по подстроке запускается, если поиск по точному совпадению не дал результатов
-    if (empty($_DATA["show_data_where"])){
-        $found_ids = array_reduce($fields, function($found_ids, $field) use ($repo_name,  $search_query){
-            list($ids, $count) = db_search_substr($repo_name, $field["name"], $search_query, 100, DB_RETURN_ID);
-            if ($count>0){
-                $found_ids = array_merge($found_ids, $ids);
-            };
-
-            return $found_ids;
-        },array());
-
-        if ($found_ids) $found_ids = array_unique($found_ids);
-
-        $_DATA["show_data_where"] = "id IN (" . implode(", ", $found_ids) . ")";
-    };
-
-
-
-}
 function set_topmenu_action(){
     global $_DATA;
 
     $_DATA["topmenu"] = get_topmenu();
 
 };
+function set_xml_content_type_action(){
+    global $_RESPONSE;
+
+    $_RESPONSE["headers"]["Content-type"] = "text/xml; charset=UTF-8";
+}
 function show_data_action(){
     global $_PARAMS;
     global $_DATA;

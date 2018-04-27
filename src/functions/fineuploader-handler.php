@@ -89,7 +89,7 @@ class UploadHandler {
     public function handleUpload($uploadDirectory, $name = null){
 
         if (!is_dir($this->chunksFolder)) mkdir($this->chunksFolder, 077, true);
-        
+
         if (is_writable($this->chunksFolder) &&
             1 == mt_rand(1, 1/$this->chunksCleanupProbability)){
 
@@ -219,8 +219,8 @@ class UploadHandler {
         // $uuid = $tokens[sizeof($tokens)-1];
         $uuid = $_GET["uuid"];
         $uuid = trim($uuid,"/&");
-        
-        
+
+
 
         $target = join(DIRECTORY_SEPARATOR, array($targetFolder, $uuid));
 
@@ -330,9 +330,9 @@ class UploadHandler {
         $val = trim($str);
         $last = strtolower($str[strlen($str)-1]);
         switch($last) {
-            case 'g': $val *= 1024;
-            case 'm': $val *= 1024;
-            case 'k': $val *= 1024;
+            case 'g': $val = (double) $val *  1024;
+            case 'm': $val = (double) $val *  1024;
+            case 'k': $val = (double) $val *  1024;
         }
         return $val;
     }

@@ -7,7 +7,7 @@
 	id="<?=$field["name"];?>"
 	class="form-control input-xxlarge <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
 >
-	
+
 	<?php if (empty($field["value"]) && !empty($field["form_value_default"])):?>
 		<?php $field["value"] = db_parse_value($field["form_value_default"], "list");?>
 	<?php endif;?>
@@ -18,8 +18,10 @@
 		<?php
 			 $selected = false;
 			 if (!empty($field["value"])){
-				 if (is_scalar($field["value"]) && ($field["values"] == $value) ){
-					 $selected = true;
+				 if (is_scalar($field["value"])){
+                     if ($field["value"] == $value) {
+                        $selected = true;
+                     };
 				 }elseif(in_array($value, $field["value"])){
 					$selected = true;
 				 }
@@ -33,13 +35,13 @@
 			<optgroup label="<?=$caption;?>">
 			<?php $in_group = true;?>
 		<?php else:?>
-				
+
 			<?php if ( ! is_int($caption) ):?>
 				<option value="<?=$value;?>" <?php if ( $selected ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
 			<?php else:?>
 				<option <?php if ( $selected ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
 			<?php endif;?>
-			
+
 		<?php endif;?>
 	<?php endforeach;?>
 

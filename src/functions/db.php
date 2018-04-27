@@ -1258,16 +1258,13 @@ function db_last_modified($db_table){
 	return $last_modified ? $last_modified : null;
 }
 function db_search_substr($db_table, $field, $search_query, $limit=100, $flags = 18){
-    static $lower_custom_function_registered = array();
 
     $dbh = db_set($db_table);
 
     // SQLITE3 specific code
     $db_name = db_get_name($db_table);
-    if ( ! isset($lower_custom_function_registered[$db_name]))  $lower_custom_function_registered[$db_name] = false;
-
-    if ( ! $lower_custom_function_registered[$db_name] ) {
-        $lower_custom_function_registered[$db_name] = db_sqlite_register_function($dbh, "lower");
+    if ( ! db_sqlite_register_function($dbh, "lower") ){
+        dosyslog(__FUNCTION__.": ERROR: Can not register 'lower' function with SQLIET db '".$db_name."'. Search results may be incorrect.");
     };
     unset($db_name);
     //
@@ -1275,7 +1272,7 @@ function db_search_substr($db_table, $field, $search_query, $limit=100, $flags =
 
     $table_name = db_get_table($db_table);
 
-    $sql_count = "SELECT count(*) FROM ".$table_name." WHERE lower(" . $field . ") LIKE lower(".$dbh->quote("%".$search_query."%").");";
+    $sql_count = "SELECT count(*) FROM ".$table_name." WHERE lower(" . $field . ") LIKE " . $dbh->quote("%".mb_strtolower($search_query, "UTF-8") ."%").";";
     $stmt_count = $dbh->query($sql_count);
     if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '" . $sql_count . ".");
     if (!$stmt_count){
@@ -1286,14 +1283,14 @@ function db_search_substr($db_table, $field, $search_query, $limit=100, $flags =
     list($count) = $stmt_count->fetchAll(PDO::FETCH_COLUMN, 0);
 
 
-    $sql = "SELECT * FROM ".$table_name." WHERE lower(" . $field . ") LIKE lower(?) AND deleted IS NULL LIMIT ?;";
+    $sql = "SELECT * FROM ".$table_name." WHERE lower(" . $field . ") LIKE ? AND deleted IS NULL LIMIT ?;";
     $stmt = $dbh->prepare($sql);
     if (!$stmt){
         dosyslog(__FUNCTION__.get_callee().": SQL ERROR: ".db_error($dbh).".");
         return array(array(),0);
     };
 
-    $params = array("%".$search_query."%", $limit);
+    $params = array("%".mb_strtolower($search_query,"UTF-8")."%", $limit);
     $stmt->execute($params);
     if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '" . $sql .", parameters: '" . json_encode_array($params) ."'.");
 
@@ -1418,7 +1415,11 @@ function db_select($db_table, $select_query, $flags=0, $dbh = null){
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " SQL: '".$select_query."'. Fetched: ".count($result)." rows.");
 
     }else{
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  '".db_error($dbh)."'. Query: '".$select_query."'.");
+        $err_msg = "SQL ERROR:  '".db_error($dbh)."'. Query: '".$select_query."'.";
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . $err_msg );
+        if (DEV_MODE){
+            set_session_msg($err_msg, "error");
+        };
     };
     return $result;
 };
@@ -1427,10 +1428,11 @@ function db_sqlite_register_function($dbh, $func_name){
     switch($func_name){
     case "lower":
         if (method_exists($dbh, "sqliteCreateFunction")){ // this is experimental method since PHP 5.1 (http://php.net/manual/ru/pdo.sqlitecreatefunction.php)
-            $dbh->sqliteCreateFunction("lower", function($value){
-                return mb_convert_case($value, MB_CASE_LOWER, "UTF-8");
+            $res = $dbh->sqliteCreateFunction("lower", function($value){
+                $res = mb_convert_case($value, MB_CASE_LOWER, "UTF-8");
+                return $res;
             });
-            return true;
+            return $res;
         }else{
             dosyslog(__FUNCTION__.get_callee().": ERROR: It seems that PDO has not method sqliteCreateFunction().");
             return false;
@@ -1481,6 +1483,7 @@ function db_parse_value($value, $field_type){
         }
         break;
     case "list":
+    case "images":
         if (isset($value) ){
             if (strpos($value, DB_LIST_DELIMITER) !== false){
                 $value = explode(DB_LIST_DELIMITER, trim($value, DB_LIST_DELIMITER));
@@ -1563,6 +1566,7 @@ function db_prepare_value($value, $field_type){
 
     switch($field_type){
         case "list":
+        case "images":
             if (empty($value)){
                 $res = null;
                 break;

@@ -130,6 +130,10 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
     global $ISREDIRECT;
     global $IS_IFRAME_MODE;
 
+    if ($redirect_uri == "HTTP_REFERER"){
+        $redirect_uri = filter_var($_SERVER["HTTP_REFERER"], FILTER_VALIDATE_URL);
+    };
+
 
     if ($IS_IFRAME_MODE) $params["i"] = is_string($IS_IFRAME_MODE) ? $IS_IFRAME_MODE : "1";
 
