@@ -204,7 +204,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
             "PRAGMA schema.synchronous = 0",
             "PRAGMA schema.journal_mode = OFF",
         ));
-        $insert_sql = db_create_insert_query($this->repo_name, array_keys(array_values($data)[0]));
+        $insert_sql = db_create_insert_query($this->repo_name, array_keys(array_values($data)[0]), $options & DB_INSERT_OR_REPLACE);
         $stmt = $dbh->prepare($insert_sql);
         $dbh->beginTransaction();
         foreach($data as $k=>$record){

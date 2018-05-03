@@ -12,6 +12,7 @@ define("DB_RETURN_DELETED",8);  // флаг для db_get() и db_find(), что
 define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get() и db_select(), что надо вернуть записи с ключами, равными id, а не порядковым номрам
 define("DB_RETURN_NEW_FIRST", 128); // флаг для db_get() и db_select(), что надо вернуть записи в порядке убывания created
 define("DB_USE_DBH_PROVIDED", 256); // флаг для db_select(), что надо использовать переданный 4 паарметром db handler (объект класса PDO), а не получать его по имени таблицы
+define("DB_INSERT_OR_REPLACE", 512); // флаг для db_create_insert_query(), что надо вернуть запрос INSERT OR REPLACE
 $_DB = array();
 
 /* *********************************************************** */
@@ -372,11 +373,11 @@ function db_check_schema($db_table){ // проверяет схему табли
 
 
 };
-function db_create_insert_query($db_table, array $keys){
+function db_create_insert_query($db_table, array $keys, $flags = 0){
 
     $table_name = db_get_table($db_table);
 
-    $query_base = "INSERT INTO ".$table_name." (" . implode(", ", $keys) . ") VALUES ";
+    $query_base = "INSERT " . ($flags && DB_INSERT_OR_REPLACE ? "OR REPLACE " : "") . " INTO ".$table_name." (" . implode(", ", $keys) . ") VALUES ";
     $query = "";
 
     $timestamp = time();
