@@ -9,17 +9,19 @@
 
 <div class="<?=$field["name"];?>_container">
     <input type="hidden" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>" value='<?=$field["value"];?>'>
-    <table class="table table-bordered table-condensed">
-        <thead>
-            <tr>
-              <?php foreach($schema as $key => $key_data):?>
-                <th><?=$key_data["caption"];?></th>
-              <?php endforeach;?>
-                <td><a href="#" class="pull-right btn btn-small cmdAdd"><i class="icon icon-plus"></i></a></td>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="scrollable">
+        <table class="table table-bordered table-condensed">
+            <thead>
+                <tr>
+                <?php foreach($schema as $key => $key_data):?>
+                    <th><?=$key_data["caption"];?></th>
+                <?php endforeach;?>
+                    <td><a href="#" class="pull-right btn btn-small cmdAdd"><i class="icon icon-plus"></i></a></td>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
     <?php if(!empty($field["hint"])):?>
         <span class="help-block"><?=$field["hint"];?></span>
     <?php endif;?>

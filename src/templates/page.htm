@@ -17,9 +17,11 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<base href="<?=$CFG["URL"]["base"];?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<style>
-		.app_content {margin-top: 70px;}
-	</style>
+    <?php if (!is_mobile()):?>
+        <style>
+            .app_content {margin-top: 70px;}
+        </style>
+    <?php endif;?>
 
 	<link rel="stylesheet" href="assets/bs2/css/bootstrap-combined.min.css">
 	<link rel="stylesheet" href="assets/bs2/css/font-awesome.css">
@@ -53,11 +55,20 @@ if (!isset($page_fluid)) $page_fluid = false;
 <div class="navbar navbar-fixed-top">
 	<div class="navbar-inner">
 		<div class="container">
+
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+
 			<a href="<?php if($_USER->is_authenticated()):?><?=!empty($CFG["URL"]["dashboard"]) ? $CFG["URL"]["dashboard"] : "index";?><?php else:?>index<?php endif;?><?=$CFG["URL"]["ext"];?>" class="brand"><?=$CFG["GENERAL"]["app_name"];?></a>
 
-			%%topmenu%%
+            <div class="nav-collapse collapse">
+			    %%topmenu%%
+			    %%login_logout_link%%
+            </div>
 
-			%%login_logout_link%%
 
 		</div>
 		<div class="navbar-overlay"></div>
@@ -89,7 +100,6 @@ if (!isset($page_fluid)) $page_fluid = false;
 		</div>
 	</div>
 </div>
-
 
 
 <script>

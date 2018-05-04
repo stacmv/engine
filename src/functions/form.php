@@ -118,12 +118,12 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
             }
         }elseif(!empty($field["form_value_default"])){
             $field["value"] = form_get_field_values($field, "form_value_default");
-            if (is_array($field["value"])){
-                $field["value"] = $field["value"][0];
-            };
+            // if (is_array($field["value"]) && ! in_array($type, array("list", "images")) ) {
+            //     $field["value"] = $field["value"][0];
+            // };
         };
 
-        if ( ($type !== "list") && is_array($field["value"]) ){
+        if (is_array($field["value"]) && ! in_array($type, array("list", "images")) ) {
             if (count($field["value"]) == 1){
                 $field["value"] = $field["value"][0];
             }else{

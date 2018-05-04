@@ -3,13 +3,7 @@ HTML {
 }
 BODY{
 	height: 100%;
-	padding-top: 40px;
 }
-
-.app_content {
-	margin: 60px 0;
-}
-
 
 .post-image img {
 	max-width: 320px;
@@ -54,9 +48,13 @@ A.int:active {
 	vertical-align: middle;
 }
 
-.valign-middle th, 
+.valign-middle th,
 .valign-middle td {
 	vertical-align: middle;
+}
+
+.scrollable{
+    overflow: scroll;
 }
 
 /* For tinysort */
@@ -68,7 +66,7 @@ th.sort {
 	background-position: right center;
 	background-image: url('i/bg.gif');
 }
-  
+
 th.sort.sorted-asc {
     background-image: url('i/asc.gif');
 }
@@ -79,13 +77,13 @@ th.sort.sorted-desc {
 
 
 /* For jquery.table */
-        
-  /* add hover effect for table rows */  
-  td.hovered {  
-     background-color: #ddd; 
+
+  /* add hover effect for table rows */
+  td.hovered {
+     background-color: #ddd;
   }
 
-    
+
   th.sortable {
     cursor: pointer;
     padding-right: 23px;
@@ -93,13 +91,13 @@ th.sort.sorted-desc {
     background-position: right center;
     background-image: url('../img/sort-bg.gif');
   }
-      
+
   th.sortable.sorted-asc,
   th.sortable.sorted-desc  {
     color: #000;
     background-color: #ddd;
   }
-  
+
   th.sortable.sorted-asc {
     background-image: url('../img/sort-asc.gif');
   }
@@ -107,11 +105,11 @@ th.sort.sorted-desc {
   th.sortable.sorted-desc {
     background-image: url('../img/sort-desc.gif');
   }
-  
+
 
   th.sortable:hover {
     color: black;
-    background-color: #ddd; 
+    background-color: #ddd;
     text-decoration: none;
   }
   
