@@ -6,36 +6,39 @@
     return $schema;
   }, array());
 ?>
-
 <div class="<?=$field["name"];?>_container">
     <input type="hidden" name="<?=$field["name_to"];?>" id="<?=$field["name"];?>" value='<?=$field["value"];?>'>
-    <div class="scrollable">
-        <table class="table table-bordered table-condensed">
-            <thead>
-                <tr>
-                <?php foreach($schema as $key => $key_data):?>
-                    <th><?=$key_data["caption"];?></th>
-                <?php endforeach;?>
-                    <td><a href="#" class="pull-right btn btn-small cmdAdd"><i class="icon icon-plus"></i></a></td>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+    <table class="table table-bordered table-condensed">
+        <thead>
+            <tr>
+              <?php foreach($schema as $key => $key_data):?>
+                <th><?=$key_data["caption"];?></th>
+              <?php endforeach;?>
+                <td><a href="#" class="pull-right btn btn-small cmdAdd"><i class="icon icon-plus"></i></a></td>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
     <?php if(!empty($field["hint"])):?>
         <span class="help-block"><?=$field["hint"];?></span>
     <?php endif;?>
 </div>
+
+<?php if (!empty($field["form_row_template"])):?>
+    <?php include cfg_get_filename("templates", $field["form_row_template"]);?>
+<?php else:?>
 <script type="text/template" id="<?=$field["name"];?>_row_template">
     <tr>
         <?php foreach ($schema as $key => $key_data):?>
-          <td><input class="<?=$key;?>" value="{<?=$key;?>}"></td>
+          <td><input class="<?=$key;?>" value="{<?=$key;?>}" style="width:100%"></td>
         <?php endforeach;?>
         <td><a href="#" class="cmdDel close">&times;</a></td>
     </tr>
 </script>
+<?php endif;?>
 <script>
 $(function(){
+    var form_field_name = "<?=$field["name"];?>";
     var state = {};
     var $view = $(".<?=$field["name"];?>_container");
 
@@ -53,7 +56,7 @@ $(function(){
 
         render();
 
-        $view.find("table").on("change", "input", inputChanged);
+        $view.find("table").on("change", ":input", inputChanged);
         $view.find(".table").on("click", ".cmdDel", delRow);
         $view.find(".cmdAdd").on("click", addEmptyRow);
     }
@@ -73,16 +76,27 @@ $(function(){
 
         // render state
         var html = "";
-        var tmpl_html = $("#<?=$field["name"];?>_row_template").html();
-
-        for (var i = 0; i < state.value.length; i++){
-            var row_html = tmpl_html;
-            var row = state.value[i];
+        var $tmpl = $("#<?=$field["name"];?>_row_template");
+        var tmpl_func = function(row){
+            var row_html = $tmpl.html();
             for(var key in row){
                 row_html = row_html.replace("{" + key + "}", row[key]);
             };
-            html += row_html;
+            return row_html;
         };
+        if ($tmpl.attr("onrender") && $tmpl.attr("onrender") in window){
+            tmpl_func = window[$tmpl.attr("onrender")];
+        };
+
+        if (tmpl_func){
+            for (var i = 0; i < state.value.length; i++){
+                var row = state.value[i];
+                var row_html = tmpl_func(row);
+                html += row_html;
+            };
+        }else if ("console" in window){
+            console.error("Empty template for form field '" + form_field_name + "'.");
+        }
 
         $view.find("table tbody").html(html);
     }
@@ -91,7 +105,7 @@ $(function(){
         var state_value = [];
         $view.find("tbody tr").each(function(k,tr){
             state_value[k] = {};
-            $(tr).find("input").each(function(i,input){
+            $(tr).find(":input").each(function(i,input){
                 state_value[k][input.className] = input.value;
             });
         });
@@ -119,7 +133,7 @@ $(function(){
         };
     }
 
-    window.optimit.app["attributes_table.form"] = {api: {addEmptyRow: addEmptyRow, inputChanged: inputChanged}};
+    window.optimit.app["attributes_table.form"] = {api: {addEmptyRow: addEmptyRow, inputChanged: inputChanged}}; // TODO добавить поддержку нескольких виджетов на странице
 
 })
 </script>
