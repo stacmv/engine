@@ -1669,7 +1669,7 @@ function db_prepare_value($value, $field_type){
             if ($value){
                 $res = htmlspecialchars($value, ENT_QUOTES);
             }else{
-                $res = null;
+                $res = "";
             }
             break;
         default:
