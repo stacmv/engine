@@ -139,7 +139,11 @@ function redirect($redirect_uri = "", array $params = array(), $hash_uri = ""){
 
     if ( $redirect_uri ){
         if ( ! filter_var($redirect_uri, FILTER_VALIDATE_URL) ){  // relative uri on this site, not external/full URL
-             $uri = $CFG["URL"]["base"] . $redirect_uri . $CFG["URL"]["ext"];
+            if ($redirect_uri == "/"){
+                $uri = $CFG["URL"]["base"];
+            }else{
+                $uri = $CFG["URL"]["base"] . $redirect_uri . $CFG["URL"]["ext"];
+            }
         }else{
             $uri = $redirect_uri;
         };
