@@ -1518,7 +1518,11 @@ function db_parse_value($value, $field_type){
         };
         break;
     case "string":
-        $value = htmlspecialchars_decode($value, ENT_QUOTES);
+        if (json_decode($value, true) !== false){ // This is valid JSON
+            return $value;
+        }else{
+            $value = htmlspecialchars_decode($value, ENT_QUOTES);
+        };
         break;
     case "boolean":
         if ( in_array( $value, array("1", "yes", "y", "Y", "on", "true") ) ){
@@ -1669,7 +1673,11 @@ function db_prepare_value($value, $field_type){
             break;
         case "string":
             if ($value){
-                $res = htmlspecialchars($value, ENT_QUOTES);
+                if (json_decode($value, true) !== false){ // This is valid JSON
+                    $res = $value;
+                }else{
+                    $res = htmlspecialchars($value, ENT_QUOTES);
+                };
             }else{
                 $res = "";
             }
