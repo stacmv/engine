@@ -1600,7 +1600,9 @@ function db_prepare_value($value, $field_type){
             };
             if (is_array($value)){
                 $res = json_encode_array($value);
-            };
+            }else{
+                $res = json_encode(json_decode($value));
+            }
             break;
         case "number":
             if ($value === "") $res = null;
