@@ -1,14 +1,17 @@
 <?php
+define("UPLOAD_IF_EXIST_COPY", 1);      // Флаг для upload_local_file(): если файл с именем загружаемого файла уже есть, то файл будет загружен с новым именем (поведение по умолчанию).
+define("UPLOAD_IF_EXIST_OVERWRITE", 2); // Флаг для upload_local_file(): если файл с именем загружаемого файла уже есть, то существующий файл будет перезапсиан новым.
+define("UPLOAD_IF_EXIST_SKIP", 4);      // Флаг для upload_local_file(): если файл с именем загружаемого файла уже есть, то новый файл не будет загружен и функция вернет имя существующего файла.
 function upload_get_dir($storage_name, $folder = "", $user_id = ""){
 
-    $dir = FILES_DIR . glog_codify($storage_name, GLOG_CODIFY_FILENAME) ."/";
+    $dir = FILES_DIR . glog_codify($storage_name, GLOG_CODIFY_PATH);
 
     if ( ! empty($user_id) ){
-        $dir .= glog_codify($user_id) . "/";
+        $dir .= glog_codify($user_id, GLOG_CODIFY_PATH);
     };
 
     if ( $folder ){
-        $dir .= glog_codify($folder, GLOG_CODIFY_FILENAME) . "/";
+        $dir .= glog_codify($folder, GLOG_CODIFY_PATH);
     };
 
 
@@ -21,25 +24,45 @@ function upload_get_dir($storage_name, $folder = "", $user_id = ""){
 
     return $dir;
 }
-function upload_file($param_name, $storage_name){
+function upload_file($param_name, $storage_name, $save_as_filename=""){
     global $_PARAMS;
 
     if ( empty($param_name) ){
         dosyslog(__FUNCTION__.": FATAL ERROR: Mandatory parameter param_name is not set.");
         die("Code: eu-" . __LINE__);
     };
-    $upload_dir = upload_get_dir($storage_name);
+    $upload_dir = $upload_path = upload_get_dir($storage_name);
+    if ($save_as_filename){
+        $upload_path = $upload_dir . $save_as_filename;
+    }
 
     if ( filter_var($param_name, FILTER_VALIDATE_URL) ){   // передан URL
-         return upload_remote_file($param_name, $upload_dir);
+         return upload_remote_file($param_name, $upload_path);
     }elseif( file_exists($param_name) && (strpos($param_name, FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
-         return upload_local_file($param_name, $upload_dir);
+         return upload_local_file($param_name, $upload_path);
     }else{// загружен новый файл ; $param_name - имя параметра в $_FILES
 
         $uploaded_files = array();
 
         // New uploaded files.
-        if ( ! empty($_FILES["to"]["name"][$param_name]) ){
+        if ( ! empty($_FILES[$param_name]["name"])){
+            if ($_FILES[$param_name]["error"]){
+                dosyslog(__FUNCTION__.get_callee().": DEBUG: File error for '".$_FILES[$param_name]["name"]."': ".$_FILES[$param_name]["error"]);
+                var_dump($_FILES);
+            };
+
+            if (!$save_as_filename){
+                $save_as_filename = $_FILES[$param_name]["name"];
+            };
+            list($res, $dest_name) = upload_move_uploaded_file($_FILES[$param_name]["tmp_name"],$save_as_filename,  $upload_dir);
+            if ($res){
+                dosyslog(__FUNCTION__.": NOTICE: File for '".$param_name."' moved to storage path '".$dest_name."'.");
+                $uploaded_files[] = $dest_name;
+            }else{
+                dosyslog(__FUNCTION__.": ERROR: Can not move uploaded file for '".$param_name."' to storage path '".$dest_name);
+            };
+
+        }elseif ( ! empty($_FILES["to"]["name"][$param_name]) ){
 
             if (is_array($_FILES["to"]["name"][$param_name])){
 
@@ -49,7 +72,11 @@ function upload_file($param_name, $storage_name){
                         dosyslog(__FUNCTION__.get_callee().": DEBUG: File error for '".$v."': ".$_FILES["to"]["error"][$param_name][$k]);
                         var_dump($_FILES["to"]);
                     };
-                    list($res, $dest_name) = upload_move_uploaded_file($v,$_FILES["to"]["name"][$param_name][$k],  $upload_dir);
+
+                    if (!$save_as_filename){
+                        $save_as_filename = $_FILES["to"]["name"][$param_name][$k];
+                    };
+                    list($res, $dest_name) = upload_move_uploaded_file($v,$save_as_filename,  $upload_dir);
                     if ($res){
                         dosyslog(__FUNCTION__.": NOTICE: File for '".$param_name."' moved to storage path '".$dest_name."'.");
                         $uploaded_files[] = $dest_name;
@@ -62,7 +89,10 @@ function upload_file($param_name, $storage_name){
                 if ($_FILES["to"]["error"][$param_name]){
                     dosyslog(__FUNCTION__.get_callee().": DEBUG: File error for '".$param_name."': ".$_FILES["to"]["error"][$param_name]);
                 };
-                list($res, $dest_name) = upload_move_uploaded_file($_FILES["to"]["tmp_name"][$param_name], $_FILES["to"]["name"][$param_name], $upload_dir);
+                if (!$save_as_filename){
+                    $save_as_filename = $_FILES["to"]["name"][$param_name];
+                };
+                list($res, $dest_name) = upload_move_uploaded_file($_FILES["to"]["tmp_name"][$param_name], $save_as_filename, $upload_dir);
                 if ($dest_name){
                     dosyslog(__FUNCTION__.": NOTICE: File for '".$param_name."' moved to storage path '".$dest_name."'.");
                     $uploaded_files[] = $dest_name;
@@ -77,18 +107,18 @@ function upload_file($param_name, $storage_name){
                 foreach($_PARAMS["to"][$param_name] as $k=>$v){
                     $res = false;
                     if ( filter_var($v, FILTER_VALIDATE_URL) ){   // передан URL
-                        list($res, $dest_name) = upload_remote_file($v, $upload_dir);
+                        list($res, $dest_name) = upload_remote_file($v, $upload_path);
                     }elseif( file_exists($v) && (strpos($v, FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
-                        list($res, $dest_name) = upload_local_file($v, $upload_dir);
+                        list($res, $dest_name) = upload_local_file($v, $upload_path);
                     };
                     if ($res) $uploaded_files[] = $dest_name;
                 };
             }else{
                 $res = false;
                 if ( filter_var($_PARAMS["to"][$param_name], FILTER_VALIDATE_URL) ){   // передан URL
-                    list($res, $dest_name) =  upload_remote_file($_PARAMS["to"][$param_name], $upload_dir);
+                    list($res, $dest_name) =  upload_remote_file($_PARAMS["to"][$param_name], $upload_path);
                 }elseif( file_exists($_PARAMS["to"][$param_name]) && (strpos($_PARAMS["to"][$param_name], FILES_DIR) === 0) ){ // передано имя ранее загруженного файла
-                    list($res, $dest_name) = upload_local_file($_PARAMS["to"][$param_name], $upload_dir);
+                    list($res, $dest_name) = upload_local_file($_PARAMS["to"][$param_name], $upload_path);
                 };
                 if ($res) $uploaded_files[] = $dest_name;
             }
@@ -169,10 +199,17 @@ function upload_move_uploaded_file($tmp_name, $name, $dest_dir){
     }
 
 }
-function upload_local_file($filename, $upload_dir){
+function upload_local_file($filename, $upload_path, $flags = UPLOAD_IF_EXIST_COPY){
 
     $orig_filename  = pathinfo($filename,PATHINFO_FILENAME);
     $orig_extension = pathinfo($filename,PATHINFO_EXTENSION);
+    if ($orig_extension) $orig_extension .= ".".$orig_extension;
+
+    if (is_dir($upload_path)){
+        $upload_dir = $upload_path;
+    }else{
+        $upload_dir = dirname($upload_path) . "/";
+    }
 
     if ( (dirname($filename) == substr($upload_dir, 0,-1)) && file_exists($filename) ){ // нужный файл уже есть в каталоге назначения (был загружен ранее)
         return array(true, $filename);
@@ -183,23 +220,35 @@ function upload_local_file($filename, $upload_dir){
         }
     }
 
-    if ( ! $orig_extension ) $orig_extension = "jpg";
-
-    $dest_name = $upload_dir . get_filename($orig_filename."__".date("YmdHis"), ".".$orig_extension);
-
-
-    if (file_put_contents( $dest_name, file_get_contents($param_name)) ){
-        dosyslog(__FUNCTION__.": NOTICE: Downloaded file from '".$param_name."' and moved to storage path '".$dest_name."'.");
-            return array(true, $dest_name);
+    if ($upload_dir != $upload_path){
+        $dest_name = $upload_path;
     }else{
-        dosyslog(__FUNCTION__.": ERROR: Can not download file from '".$param_name."' and save to storage path '".$dest_name);
+        $dest_name = $upload_dir . get_filename($orig_filename, $orig_extension);
+    };
+    if (file_exists($dest_name)){
+      if ($flags & UPLOAD_IF_EXIST_COPY){
+        $dest_name = $upload_dir . get_filename($orig_filename."__".date("YmdHis"), $orig_extension);
+      }elseif ($flags & UPLOAD_IF_EXIST_SKIP){
+        dosyslog(__FUNCTION__.": NOTICE: File '".$dest_name."' already exists.  '".$filename."' skipped.");
+        return array(true, $dest_name);
+      }elseif($flags & UPLOAD_IF_EXIST_OVERWRITE){
+        dosyslog(__FUNCTION__.": NOTICE: File '".$dest_name."' will be overwritten with contents of '".$filename."'.");
+      }
+    };
+
+
+    if (file_put_contents( $dest_name, file_get_contents($filename)) ){
+        dosyslog(__FUNCTION__.": NOTICE: Downloaded file from '".$filename."' and moved to storage path '".$dest_name."'.");
+        return array(true, $dest_name);
+    }else{
+        dosyslog(__FUNCTION__.": ERROR: Can not download file from '".$filename."' and save to storage path '".$dest_name);
         return array(false, "fail");
     };
 
 }
-function upload_remote_file($filename, $upload_dir){
+function upload_remote_file($filename, $upload_path, $flags = UPLOAD_IF_EXIST_SKIP){
 
     // TODO: добавить проверку доступности удаленного файла, его типа и размера.
 
-    return upload_local_file($filename, $upload_dir);
+    return upload_local_file($filename, $upload_path, $flags);
 }

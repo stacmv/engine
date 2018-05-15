@@ -380,7 +380,7 @@ function SETPARAMS(){
                         if ($tmp === NULL) dosyslog(__FUNCTION__.": ERROR: Parameter '".(!empty($fparam_name) ? $fparam_name : "_undefined_")."' of type '".(!empty($fparam["type"]) ? $fparam["type"] : "_undefined_")."' does not satisfy to type requirements. Discarded. URI: '" . $_URI . "'.");
                         break;
                     case "file": //  here $tmp supposed to be file name.
-                        list($res, $dest_file) = upload_file($tmp, FILES_DIR);
+                        list($res, $dest_file) = upload_file($fparam_name, "uploads_tmp/");
                         if ($res) $tmp = $dest_file;
                         break;
                     case "string":
