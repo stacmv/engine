@@ -5,7 +5,7 @@ function json_encode_array($arr){
 };
 function json_decode_array($str, $urldecode = true){
     $arr = @json_decode($str , true);
-    
+
     switch (json_last_error()) {
         case JSON_ERROR_NONE:
         break;
@@ -28,19 +28,19 @@ function json_decode_array($str, $urldecode = true){
             dosyslog(__FUNCTION__.get_callee() . ": ERROR: JSON: Неизвестная ошибка");
         break;
     }
-   
-    
+
+
     return $urldecode ? json_array_urldecode($arr) : $arr;
 };
 function json_array_urlencode($arr){
-    
+
     if(is_array($arr)){
         foreach($arr as $k=>$v){
-        
+
             if (is_array($v)){
                 $arr[$k] = json_array_urlencode($v);
             }elseif( ! is_numeric($v) ){
-                $arr[$k] = urlencode(addslashes($v));
+                $arr[$k] = urlencode(addslashes(addslashes($v)));
             };
         };
     }else{
@@ -50,10 +50,10 @@ function json_array_urlencode($arr){
     return $arr;
 };
 function json_array_urldecode($arr){
-    
+
     if (is_array($arr)){
         foreach($arr as $k=>$v){
-        
+
             if (is_array($v)){
                 $arr[$k] = json_array_urldecode($v);
             }else{

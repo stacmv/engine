@@ -4,26 +4,53 @@ foreach(@array(
 	$CFG["URL"]["ext"],
 	$CFG["GENERAL"]["app_name"],
 	$model_name,
-	
+
 ) as $k=>$var) if ( ! isset($var)) die("Code: ".basename(__FILE__)."-init-".($k+1));
 
 ?>
 <?php
-	$dldta_add = form_get_fields(db_get_db_table($model_name), "add_".$model_name) && userHasRight("manager");
-	$dldta_import = form_get_fields(db_get_db_table($model_name), "import_"._plural($model_name))  && userHasRight("manager");
+  $default_top_actions = array();
+
+  // Доступна ли операция "Добавить"?
+	if ( form_get_fields(db_get_db_table($model_name), "add_".$model_name) && userHasRight("manager") ){
+    $default_top_actions["add_".$model_name] = array(
+      "caption" => '<i class="icon icon-plus icon-white"></i> Добавить',
+      "url" => "form/add/".$model_name.$CFG["URL"]["ext"],
+      "class" => "btn btn-success",
+      "pos" => -5,
+    );
+  };
+  // Доступна ли операция "Импорт"?
+	if ( form_get_fields(db_get_db_table($model_name), "import_"._plural($model_name))  && userHasRight("manager") ){
+    $default_top_actions["import_"._plural($model_name)] = array(
+      "caption" => 'Импорт',
+      "url" => "form/import/"._plural($model_name).$CFG["URL"]["ext"],
+      "class" => "btn",
+      "pos" => -10,
+    );
+  };
+
+  if (isset($top_actions)){
+    $top_actions = array_merge($default_top_actions, $top_actions);
+    uasort($top_actions, function($a,$b){
+      $a_pos = isset($a["pos"]) ? (int) $a["pos"] : 0;
+      $b_pos = isset($b["pos"]) ? (int) $b["pos"] : 0;
+
+      return $b_pos - $a_pos;
+    });
+  }else{
+    $top_actions = $default_top_actions;
+  };
 ?>
 
-<?php if ($dldta_add || $dldta_import):?>
+<?php if (!empty($top_actions)):?>
 	<div class="row">
 		<div class="form-actions">
 
 			<div class="pull-right">
-				<?php if($dldta_import):?>
-					<a href="form/import/<?=_plural($model_name);?><?=$CFG["URL"]["ext"];?>" class="btn">Импорт</a>
-				<?php endif;?>
-				<?php if($dldta_add):?>
-					<a href="form/add/<?=$model_name;?><?=$CFG["URL"]["ext"];?>" class="btn btn-success"><i class="icon icon-plus icon-white"></i> Добавить</a>
-				<?php endif;?>
+				<?php foreach($top_actions as $ta):?>
+					  <a href="<?=$ta["url"];?>" class="<?=$ta["class"];?>" <?php if (!empty($ta["hint"])):?>title="<?=addslashes($ta["hint"]);?>"<?php endif;?>><?=$ta["caption"];?></a>
+        <?php endforeach;?>
 			</div>
 
 			<?php if (!empty($months_nav)):?>

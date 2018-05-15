@@ -19,6 +19,16 @@ function arr_group(array $arr, $key){
 
 }
 
+function arr_filter_keys(array $arr, array $keys){
+  $res = array();
+  foreach($arr as $k=>$v){
+    if (in_array($k, $keys)){
+      $res[$k] = $v;
+    };
+  };
+  return $res;
+}
+
 function arr__key($key_value){
     $type = gettype($key_value);
 
