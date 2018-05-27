@@ -13,17 +13,17 @@ foreach(@array(
 				<a href="<?=$repo_name;?><?=$CFG["URL"]["ext"];?>?<?=$filter;?>=<?=$nav["prev"]["value"];?>" class="btn btn-small"><i class="icon icon-backward"></i> <?=$nav["prev"]["caption"];?></a>
 			</div>
 		<?php endif;?>
-		
+
 		<div class="span8 text-center">
 			<?php if ($filter == "date"):?>
 				<a href="<?=$repo_name;?><?=$CFG["URL"]["ext"];?>?<?=$filter;?>=<?=glog_isodate();?>" class="btn btn-small">Сегодня: <?=glog_rusdate();?></a>
 			<?php endif;?>
 		</div>
-		
+
 		<?php if($nav["next"]):?>
 			<div class="span2 text-right">
 				<?php if ($nav["next"]):?>
-					<a href="<?=$repo_name;?><?=$CFG["URL"]["ext"];?>?<?=$filter;?>=<?=$nav["next"]["value"];?>" class="btn btn-small"><?=$nav["next"]["caption"];?>> <i class="icon icon-forward"></i></a>
+					<a href="<?=$repo_name;?><?=$CFG["URL"]["ext"];?>?<?=$filter;?>=<?=$nav["next"]["value"];?>" class="btn btn-small"><?=$nav["next"]["caption"];?> <i class="icon icon-forward"></i></a>
 				<?php endif;?>
 			</div>
 		<?php endif;?>

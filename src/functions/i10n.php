@@ -1,32 +1,39 @@
 <?php
 
 function _quote($str){
-    
+
     return "&laquo;" . $str . "&raquo;";
-    
+
 }
 function _t($msg){
     static $tsv;
-    
+
     if ( empty($tsv) ){
-        $tmp = import_tsv(cfg_get_filename("settings", "messages_comments.tsv"));
-        
-        $tsv = array();
-        if ( ! empty($tmp)) {
-            foreach($tmp as $row){
-                $tsv[ $row["name"] ] = $row;
+        // Core app messages
+        $app_messages = arr_index(import_tsv(cfg_get_filename("settings", "messages_comments.tsv")), "name");
+
+        // Modules' messages
+        $modules_messages = array_reduce(engine_modules(), function($modules_messages, $module){
+            $messages_file = cfg_get_filename("settings", "messages_comments.tsv", ENGINE_SCOPE_MODULE, $module);
+            if ($messages_file){
+                $modules_messages = $modules_messages + arr_index(import_tsv($messages_file), "name");
             };
-        };
+            return $modules_messages;
+        }, array());
+
+        $tmp = $app_messages + $modules_messages; // module' messages does not overwrite app' messages.
+
+        $tsv = arr_index($tmp,"name");
     };
-    
+
     return isset($tsv[$msg]["caption"]) ? $tsv[$msg]["caption"] : $msg;
 }
 
 function _plural($word){
-    
+
     // Array $_plural is from https://github.com/cakephp/cakephp/blob/master/src/Utility/Inflector.php
     // TODO Support irregular words and _singular()
-    
+
     static $_plural = array(
         '/(s)tatus$/i' => '\1tatuses',
         '/(quiz)$/i' => '\1zes',
@@ -52,13 +59,13 @@ function _plural($word){
         '/^$/' => '',
         '/$/' => 's',
     );
-    
+
     if (cached()) return cache();
-    
+
     if ($ir = _irregular($word, false)){
         return cache($ir);
     }else{
-        
+
         foreach ($_plural as $rule => $replacement) {
             if (preg_match($rule, $word)) {
                 $plural_word = preg_replace($rule, $replacement, $word);
@@ -66,11 +73,11 @@ function _plural($word){
             }
         }
     };
-    
+
 }
 
 function _singular($word){
-    
+
     $_singular = array(
         '/(s)tatuses$/i' => '\1\2tatus',
         '/^(.*)(menu)s$/i' => '\1\2',
@@ -107,13 +114,13 @@ function _singular($word){
         '/^(.*us)$/' => '\\1',
         '/s$/i' => ''
     );
-    
+
     if (cached()) return cache();
-    
+
     if ($ir = _irregular($word, true)){
         return cache($ir);
     }else{
-        
+
         foreach ($_singular as $rule => $replacement) {
             if (preg_match($rule, $word)) {
                 $singular_word = preg_replace($rule, $replacement, $word);
@@ -123,10 +130,10 @@ function _singular($word){
     };
     return $word;
 };
-    
+
 function _irregular($word, $get_singular = false){
-    
-        
+
+
     /**
      * Irregular rules
      *
@@ -175,13 +182,13 @@ function _irregular($word, $get_singular = false){
         'foe' => 'foes',
         'sieve' => 'sieves'
     );
-    
+
     /**
      * Words that should not be inflected
      *
      * @var array
      */
-     
+
     $_uninflected = array(
         '.*[nrlm]ese', '.*data', '.*deer', '.*fish', '.*measles', '.*ois',
         '.*pox', '.*sheep', 'people', 'feedback', 'stadia', '.*?media',
@@ -189,20 +196,20 @@ function _irregular($word, $get_singular = false){
         'graffiti', 'headquarters', 'information', 'innings', 'news', 'nexus',
         'proceedings', 'research', 'sea[- ]bass', 'series', 'species', 'weather'
     );
-    
+
     $_uninflected_custom = array("crm");
-    
+
     //
-    
-    
+
+
     if (in_array($word, $_uninflected) || in_array($word, $_uninflected_custom)){
         return $word;
     };
-    
+
     if ($get_singular){
         return  array_search($word, $_irregular);
     }else{
         return isset($_irregular[$word]) ? $_irregular[$word] : false;
     };
-    
+
 };

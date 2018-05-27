@@ -1216,7 +1216,7 @@ function db_insert($db_table, ChangesSet $data){
     if ($res){
         $result = $dbh->lastInsertId();
 
-        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
+        if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: ".($res ? "Inserted " . count($data) . " records." : "Insert failed.") . " Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
 
     }else{
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");

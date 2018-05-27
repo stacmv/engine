@@ -2,13 +2,15 @@
 define("ENGINE_SCOPE_ENGINE", 1);
 define("ENGINE_SCOPE_APP", 2);
 define("ENGINE_SCOPE_SITE", 4);
+define("ENGINE_SCOPE_MODULE", 8);
 define("ENGINE_SCOPE_ALL", null);
 
 if (!function_exists("cfg_get_filename")){
-    function cfg_get_filename($type, $filename, $scope = ENGINE_SCOPE_ALL){
+    function cfg_get_filename($type, $filename, $scope = ENGINE_SCOPE_ALL, $module = ""){
         // scope == ENGINE_SCOPE_ENGINE - get file from engine
         // scope == ENGINE_SCOPE_APP - get file from app
         // scope == ENGINE_SCOPE_SITE - get file from app's specific site
+        // scope == ENGINE_SCOPE_MODULE - get file from app's module specified in 'module' argument
         // scope == ENGINE_SCOPE_ALL - get file from site, then if not found, from app then if not found get it from engine
 
         if (cached()) return cache();
@@ -40,6 +42,8 @@ if (!function_exists("cfg_get_filename")){
         case ENGINE_SCOPE_SITE:
             $path[] = SITE_DIR;
             break;
+        case ENGINE_SCOPE_MODULE:
+            $path[] = APP_DIR . "modules/" . glog_codify($module, GLOG_CODIFY_FILENAME) . "/";
         case ENGINE_SCOPE_ALL:
         default:
             $path[] = SITE_DIR;
