@@ -551,8 +551,7 @@ if (!function_exists("set_template_for_user")){
         global $_USER;
         global $_PAGE;
 
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
-        if ($_USER["authenticated"]){
+        if ($_USER->is_authenticated()){
             if ( ! empty($_PAGE["templates"]["user"])){
                 set_template_file("content", $_PAGE["templates"]["user"]);
             }else{
@@ -571,7 +570,7 @@ if (!function_exists("set_template_for_user")){
             }
         };
 
-        if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
+
     };
 };
 if (!function_exists("show")){

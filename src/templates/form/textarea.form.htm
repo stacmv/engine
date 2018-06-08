@@ -1,16 +1,25 @@
 <textarea rows="5" cols="20"
 
-	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
-	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?> 
+	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?>
 	class="form-control input-xxlarge <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
-	<?php if (isset($field["placeholder"])):?>placeholder="<?=$field["placeholder"];?>"<?php endif;?> 
+	<?php if (isset($field["placeholder"])):?>placeholder="<?=$field["placeholder"];?>"<?php endif;?>
 	<?php if ($field["required"]):?>required<?php endif;?>
-><?php if (isset($field["value"])):?><?php if(is_array($field["value"])):?><?=implode("\n",$field["value"]);?><?php else:?><?=$field["value"];?><?php endif;?><?php endif;?></textarea> <?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
+
+    <?php if ($field["type"] == "list"):?>
+        <?php if (isset($field["name"])):?>name="<?=substr($field["name_to"],0,-2);?>"<?php endif;?>
+        ><?php if (isset($field["value"])):?><?=implode("\n",array_filter($field["value"]));?><?php endif;?></textarea> <?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
+
+    <?php else:?>
+        <?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
+        ><?php if (isset($field["value"])):?><?=$field["value"];?><?php endif;?></textarea> <?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
+
+    <?php endif;?>
+
 <?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
 <?php endif;?>
 
-<?php if(is_array($field["value"])):?>
+<?php if($field["type"] == "list"):?>
 	<script>
 		$(function(){
 			$($("#<?=$field["id"];?>")[0].form).on("submit", function(){

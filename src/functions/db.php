@@ -1219,7 +1219,7 @@ function db_insert($db_table, ChangesSet $data){
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
 
     }else{
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($statement)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
         $result = false;
     };
 
