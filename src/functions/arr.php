@@ -1,4 +1,12 @@
 <?php
+function arr_extract(array $arr, $key = "id"){
+
+    return array_reduce($arr, function($arr, $item) use ($key){
+        $arr[] = $item[$key];
+        return $arr;
+    }, array());
+
+}
 function arr_index(array $arr, $key = "id"){
 
     return array_reduce($arr, function($arr, $item) use ($key){
@@ -8,6 +16,7 @@ function arr_index(array $arr, $key = "id"){
     }, array());
 
 }
+
 function arr_group(array $arr, $key){
 
     return array_reduce($arr, function($arr, $item) use ($key){

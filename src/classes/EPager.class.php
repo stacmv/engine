@@ -6,56 +6,57 @@ class EPager implements ArrayAccess, jsonSerializable
     protected $count;        // number of pages
     protected $url_template;
     protected $url_params;
-    
+
     public function __construct($url_template, $items_count, $items_per_page, $current_page, array $url_params=array(), $width = 10){
-        $k = max(1, floor(($width-3)/2));
-        $n = ceil($items_count/$items_per_page);
+        $min_width = 7;
+        if ($width < $min_width){
+            throw new Exception("Pager width should be equal or more than 7. You pass $width.");
+        }
+        $n = ceil($items_count/$items_per_page); // number of pages total
 
         $pager = array();
-            
-        if ($current_page <= $k){
-            $k1 = $k-$current_page;
-            $k2 = $width - $current_page -2;
-        }elseif($n - $current_page <= $k){
-            $k1 = $width - ($n-$current_page) -3;
-            $k2 = 0;
-        }else{
-            $k1 = $k;
-            $k2 = $k-1;
-        }
-        
-            
-            
-        for($i = $current_page - $k1; $i <= $current_page+$k2; $i++){
-            if ( ($i>1) && ($i<$n) ){
-                $pager[] = $i;
-            }
-        }
 
-        if ( (count($pager) > 1) && ($pager[count($pager)-1] < $n-1) ){
-            $pager[] = "...";
+        $pager[] = (int) $current_page;
+
+        // Wings
+        $l = $current_page-1;
+        $r = $current_page+1;
+        while(count($pager) < min($width, $n)){
+            if ($l>=1){
+                array_unshift($pager, $l--);
+                if (count($pager) == min($width, $n)){
+                    break;
+                };
+            };
+            if ($r<=$n){
+                array_push($pager, $r++);
+            }
         };
-        $pager[] = $n;
-        
-        if ($pager[0] > 2){
-            array_unshift($pager, "...");
+
+        // Right end
+        if ( $pager[count($pager)-2] != $n-1){
+            $pager[count($pager)-2] = "...";
         };
-        if ($pager[0] != 1){
-            array_unshift($pager, 1);
+        $pager[count($pager)-1] = $n;
+
+        // Left end
+        if ($pager[1] > 2){
+            $pager[1] = "...";
         };
-        
-        
+        $pager[0] = 1;
+
+
         $this->pager   = $pager;
         $this->count   = $n;
         $this->current = $current_page;
         $this->url_template = $url_template;
         $this->url_params   = $url_params;
     }
-    
+
     public function url($page){
         $data = $this->url_params;
         $data["page"] = $page;
-        
+
         return glog_render_string($this->url_template, $data);
     }
 
@@ -78,22 +79,22 @@ class EPager implements ArrayAccess, jsonSerializable
 
         return $url;
     }
- 
+
     /* ArrayAccess implementation */
     public function offsetSet($offset, $value) {
-        
+
     }
 
     public function offsetExists($offset) {
         return isset($this->$offset);
-        
+
     }
 
     public function offsetUnset($offset) {
     }
 
     public function offsetGet($offset) {
-        
+
         if (isset($this->$offset)) {
             return $this->$offset;
         }else{
@@ -109,17 +110,17 @@ class EPager implements ArrayAccess, jsonSerializable
             return null;
         }
     }
-    
+
     /* jsonSerializable implementation */
     public function jsonSerialize(){
-        
+
         $res = array();
         foreach( get_class_vars(__CLASS__) as $property => $default_value){
             $res[$property] = $this->$property;
         };
-        
+
         $res["url"] = $this->getUrl();
-        
+
         return $res;
 
     }
