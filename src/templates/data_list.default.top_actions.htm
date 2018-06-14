@@ -36,7 +36,8 @@ foreach(@array(
       $a_pos = isset($a["pos"]) ? (int) $a["pos"] : 0;
       $b_pos = isset($b["pos"]) ? (int) $b["pos"] : 0;
 
-      return $b_pos - $a_pos;
+      if ($a_pos == $b_pos) return 0;
+      return $b_pos > $a_pos ? -1 : 1;
     });
   }else{
     $top_actions = $default_top_actions;
