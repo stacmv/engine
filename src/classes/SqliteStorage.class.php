@@ -318,9 +318,6 @@ class SqliteStorage extends EStorage
     }
 
     protected function createSql(){
-        global $_USER;
-
-
         $this->sql_hash = md5(implode("::", array_map("serialize", array(
             $this->sql_select, $this->sql_where, $this->sql_order_by, $this->sql_limit
         ))));
@@ -348,9 +345,6 @@ class SqliteStorage extends EStorage
         }
 
         // Where
-        if ( ! userHasRight("manager") && isset($this->fields["user_id"])){
-            $where_acl_addon = " (user_id = " . (int) $_USER["id"] . ") ";
-        }
         $sql_where = "";
         if ($this->sql_where || !empty($where_acl_addon))  $sql_where .= " WHERE ";
         if ($this->sql_where)                              $sql_where .= $this->sql_where;

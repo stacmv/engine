@@ -16,34 +16,37 @@ class EPager implements ArrayAccess, jsonSerializable
 
         $pager = array();
 
-        $pager[] = (int) $current_page;
+        if ($items_count > $items_per_page){
 
-        // Wings
-        $l = $current_page-1;
-        $r = $current_page+1;
-        while(count($pager) < min($width, $n)){
-            if ($l>=1){
-                array_unshift($pager, $l--);
-                if (count($pager) == min($width, $n)){
-                    break;
+            $pager[] = (int) $current_page;
+
+            // Wings
+            $l = $current_page-1;
+            $r = $current_page+1;
+            while(count($pager) < min($width, $n)){
+                if ($l>=1){
+                    array_unshift($pager, $l--);
+                    if (count($pager) == min($width, $n)){
+                        break;
+                    };
                 };
+                if ($r<=$n){
+                    array_push($pager, $r++);
+                }
             };
-            if ($r<=$n){
-                array_push($pager, $r++);
-            }
-        };
 
-        // Right end
-        if ( $pager[count($pager)-2] != $n-1){
-            $pager[count($pager)-2] = "...";
-        };
-        $pager[count($pager)-1] = $n;
+            // Right end
+            if ( $pager[count($pager)-2] != $n-1){
+                $pager[count($pager)-2] = "...";
+            };
+            $pager[count($pager)-1] = $n;
 
-        // Left end
-        if ($pager[1] > 2){
-            $pager[1] = "...";
+            // Left end
+            if ($pager[1] > 2){
+                $pager[1] = "...";
+            };
+            $pager[0] = 1;
         };
-        $pager[0] = 1;
 
 
         $this->pager   = $pager;

@@ -30,37 +30,34 @@ foreach(@array(
 </style>
 <article class="app_content">
 	<div class="row">
-		<div class="span6 offset3 col-md-6 col-md-offset-3">
-
-			<div class="row">
-				<div class="<?php if($VK_LOGIN):?>span3<?php else:?>span6<?php endif;?>">
-					<div id="login-form" class="span2 col-md-2">
-						<form  method="post" action="<?=$CFG["URL"]["base"];?>login/<?=$auth_type;?><?=$CFG["URL"]["ext"];?>">
-							<input name="login" type="text" required class="input span2" value="" id="UserEmail" placeholder="Логин" autofocus/>
-							<input name="pass" type="password" required class="input span2" value="" id="pass" placeholder="Пароль"/>
-							<input type="submit" class="btn btn-primary btn-large btn-block" id="loginButton" value="Войти" />
-							<?php if (find_page("form/signup")["uri"] == "form/signup"):?>
-								<a href="form/signup<?=$CFG["URL"]["ext"];?>" class="btn btn-block">Регистрация</a>
-							<?php endif;?>
-						</form>
-					</div>
-				</div>
-                <?php if ($VK_LOGIN):?>
-                    <div class="span3">
-                        <div id="vk_auth"></div>
-                        <script type="text/javascript">
-                            VK.Widgets.Auth("vk_auth", {authUrl: 'login/vkontakte.html'});
-                        </script>
-                    </div>
+        <div id="login-form" class="span2 offset5">
+            <form  method="post" action="<?=$CFG["URL"]["base"];?>login/<?=$auth_type;?><?=$CFG["URL"]["ext"];?>">
+                <input name="login" type="text" required class="input span2" value="" id="UserEmail" placeholder="Логин" autofocus/>
+                <input name="pass" type="password" required class="input span2" value="" id="pass" placeholder="Пароль"/>
+                <input type="submit" class="btn btn-primary btn-large btn-block" id="loginButton" value="Войти" />
+                <?php if (find_page("form/signup")["uri"] == "form/signup"):?>
+                    <a href="form/signup<?=$CFG["URL"]["ext"];?>" class="btn btn-block">Регистрация</a>
                 <?php endif;?>
+            </form>
+        </div>
+    </div>
+
+    <?php if ($VK_LOGIN):?>
+        <div class="row">
+            <div class="span2 offset5">
+                <div id="vk_auth"></div>
+                <script type="text/javascript">
+                    VK.Widgets.Auth("vk_auth", {authUrl: 'login/vkontakte.html'});
+                </script>
             </div>
-			<div class="row">
-				<p class="text-center">
-					Возникли вопросы?<br>
-					<a href="mailto:info@optimit.ru">Обратитесь в службу поддержки</a>
-				</p>
-			</div>
-		</div>
+        </div>
+    <?php endif;?>
+
+    <div class="row">
+        <p class="text-center">
+            Возникли вопросы?<br>
+            <a href="mailto:info@optimit.ru">Обратитесь в службу поддержки</a>
+        </p>
 	</div> <!-- /.row -->
 </article> <!-- /.app_content -->
 

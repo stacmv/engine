@@ -7,7 +7,7 @@ define("DB_PREPARE_VALUE", 32); // флаг для db_get(), что надо в�
 define("DB_DONT_PARSE", 64); //  флаг для db_get() и db_select(), что надо вернуть данные как есть, не выполняя db_parse_result()
 define("DB_RETURN_ID", 1);  // флаг для db_find() и db_select(), что надо вернуть только ID
 define("DB_RETURN_ROW",2);  // флаг для db_find() и db_select(), что надо вернуть всю запись
-define("DB_RETURN_ONE",4);  // флаг для db_find(), что надо вернуть только одну запись, а не список
+define("DB_RETURN_ONE",4);  // флаг для db_find() и db_select(), что надо вернуть только одну запись, а не список
 define("DB_RETURN_DELETED",8);  // флаг для db_get() и db_find(), что надо вернуть и удаленные записи тоже
 define("DB_RETURN_ID_INDEXED",16);  // флаг для db_get() и db_select(), что надо вернуть записи с ключами, равными id, а не порядковым номрам
 define("DB_RETURN_NEW_FIRST", 128); // флаг для db_get() и db_select(), что надо вернуть записи в порядке убывания created
@@ -741,12 +741,7 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 
-    if ($returnOptions & DB_RETURN_ONE){
-        if (isset($result[0])) return $result[0];
-        else return null;
-    }else{
-        return $result;
-    };
+    return $result;
 };
 function db_get($db_table, $ids, $flags=0, $limit="", $offset = 0){
 
@@ -1219,7 +1214,7 @@ function db_insert($db_table, ChangesSet $data){
         if (DB_NOTICE_QUERY) dosyslog(__FUNCTION__. get_callee() .": DEBUG: Query: '".$query .", parameters: '" . json_encode_array($insert_data) ."'. Result: ".$result);
 
     }else{
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($statement)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($statement ? $statement : $dbh)."'. Query: '".$query.", parameters: '" . json_encode_array($insert_data) ."'.");
         $result = false;
     };
 
@@ -1422,6 +1417,11 @@ function db_select($db_table, $select_query, $flags=0, $dbh = null){
             set_session_msg($err_msg, "error");
         };
     };
+
+    if ($flags & DB_RETURN_ONE){
+        $result = array_shift($result);
+    };
+
     return $result;
 };
 function db_sqlite_register_function($dbh, $func_name){
@@ -1543,9 +1543,13 @@ function db_prepare_query($db_table, $query){
     $dbh = db_set($db_table);
     try{
         $stmt = $dbh->prepare($query);
-    }catch(PDOException $e){
-        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . " Could not prepare statement for ".$db_table.". PDO message:".$e->getMessage() );
-        die("Code: db-".__LINE__);
+        if (!$stmt){
+            throw new Exception($dbh->errorInfo()[2]);
+        }
+    }catch(Exception $e){
+        $err_msg = " Could not prepare statement for ".$db_table.". PDO message:".$e->getMessage();
+        dosyslog(__FUNCTION__.": FATAL ERROR: " . get_callee() . $err_msg );
+        die("Code: db-".__LINE__.(DEV_MODE ? $err_msg : ""));
     };
     return $stmt;
 }

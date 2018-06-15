@@ -23,7 +23,9 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
             );
             $callback_res = call_user_func($callback, $callback_params);
             if (false === $callback_res["res"]){
-                return array($callback_res[$res], $callback_res["reason"]);
+                $res = $callback_res["res"];
+                $reason = $callback_res["reason"];
+                $errors = $callback_res["errors"];
             }else{
                 $params = $callback_res["params"];
             }
@@ -33,30 +35,33 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
         }
     }
 
+    // Process form data if OnBeforeAdd callback did not return false
+    if (!isset($res)){
+        $formdata = new FormData($db_table, $params);
 
-    //
-    $formdata = new FormData($db_table, $params);
 
+        if ($formdata->is_valid){
 
-    if ($formdata->is_valid){
+            list($res, $added_id) = add_data( $formdata );
+            if ( (int) $added_id ){
+                $reason = "success";
+            }else{
+                $reason = $added_id;
+            };
+            set_session_msg($db_table."_add_".$reason, $reason);
 
-        list($res, $added_id) = add_data( $formdata );
-        if ( (int) $added_id ){
-            $reason = "success";
         }else{
-            $reason = $added_id;
-        };
-        set_session_msg($db_table."_add_".$reason, $reason);
-
-    }else{
-        $res = false;
-        $reason = "validation_error";
-        set_session_msg($db_table."_add_".$reason, "fail");
-    }
+            $res = false;
+            $reason = "validation_error";
+            set_session_msg($db_table."_add_".$reason, "fail");
+            $errors = $formdata->errors;
+        }
+    };
+    //
 
     if (! $res){
         $_SESSION["to"] = $_PARAMS["to"];
-        $_SESSION["form_errors"] = $formdata->errors;
+        $_SESSION["form_errors"] = $errors;
     }else{
         unset($_SESSION["to"]);
         unset($_SESSION["form_errors"]);

@@ -12,7 +12,7 @@ foreach(@array(
   $default_top_actions = array();
 
   // Доступна ли операция "Добавить"?
-	if ( form_get_fields(db_get_db_table($model_name), "add_".$model_name) && userHasRight("manager") ){
+	if ( form_get_fields(db_get_db_table($model_name), "add_".$model_name)){
     $default_top_actions["add_".$model_name] = array(
       "caption" => '<i class="icon icon-plus icon-white"></i> Добавить',
       "url" => "form/add/".$model_name.$CFG["URL"]["ext"],
@@ -21,7 +21,7 @@ foreach(@array(
     );
   };
   // Доступна ли операция "Импорт"?
-	if ( form_get_fields(db_get_db_table($model_name), "import_"._plural($model_name))  && userHasRight("manager") ){
+	if ( form_get_fields(db_get_db_table($model_name), "import_"._plural($model_name))){
     $default_top_actions["import_"._plural($model_name)] = array(
       "caption" => 'Импорт',
       "url" => "form/import/"._plural($model_name).$CFG["URL"]["ext"],
@@ -36,8 +36,7 @@ foreach(@array(
       $a_pos = isset($a["pos"]) ? (int) $a["pos"] : 0;
       $b_pos = isset($b["pos"]) ? (int) $b["pos"] : 0;
 
-      if ($a_pos == $b_pos) return 0;
-      return $b_pos > $a_pos ? -1 : 1;
+      return $b_pos - $a_pos;
     });
   }else{
     $top_actions = $default_top_actions;
