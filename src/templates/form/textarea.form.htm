@@ -7,7 +7,7 @@
 
     <?php if ($field["type"] == "list"):?>
         <?php if (isset($field["name"])):?>name="<?=substr($field["name_to"],0,-2);?>"<?php endif;?>
-        ><?php if (isset($field["value"])):?><?=implode("\n",array_filter($field["value"]));?><?php endif;?></textarea> <?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
+        ><?php if (isset($field["value"])):?><?=implode("\n",array_filter(db_parse_value($field["value"],$field["type"])));?><?php endif;?></textarea> <?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
 
     <?php else:?>
         <?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>

@@ -741,8 +741,8 @@ function db_find($db_table, $field, $value, $returnOptions=DB_RETURN_ID, $order_
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: " . get_callee() . " Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 
-    return $result;
-};
+        return $result;
+    };
 function db_get($db_table, $ids, $flags=0, $limit="", $offset = 0){
 
     if (! $ids) {
@@ -1485,20 +1485,22 @@ function db_parse_value($value, $field_type){
         break;
     case "list":
     case "images":
-        if (isset($value) ){
-            if (strpos($value, DB_LIST_DELIMITER) !== false){
-                $value = explode(DB_LIST_DELIMITER, trim($value, DB_LIST_DELIMITER));
+        if (isset($value)){
+            if (is_scalar($value)){
+                if (strpos($value, DB_LIST_DELIMITER) !== false){
+                    $value = explode(DB_LIST_DELIMITER, trim($value, DB_LIST_DELIMITER));
 
-                if (
-                        ! empty($value) &&
-                        ($value[0] === "") &&
-                        ($value[ count($value)-1 ] === "")
-                   ){  // убираем первый и последний пустые элементы, если есть (они добавляются с версии 1.1.0 для удобства поиска, см. db_prepare_value())
-                    $value = array_slice($value, 1,-1);
+                    if (
+                            ! empty($value) &&
+                            ($value[0] === "") &&
+                            ($value[ count($value)-1 ] === "")
+                    ){  // убираем первый и последний пустые элементы, если есть (они добавляются с версии 1.1.0 для удобства поиска, см. db_prepare_value())
+                        $value = array_slice($value, 1,-1);
+                    };
+
+                }else{
+                    $value = array($value);
                 };
-
-            }else{
-                $value = array($value);
             };
         }else{
             $value = array();
@@ -1609,7 +1611,7 @@ function db_prepare_value($value, $field_type){
             if (is_array($value)){
                 $res = json_encode_array($value);
             }else{
-                $res = json_encode(json_decode($value));
+                $res = json_encode_array(json_decode($value, true));
             }
             break;
         case "number":
