@@ -1662,12 +1662,14 @@ function db_prepare_value($value, $field_type){
 
                 if(in_array( $value, array("", "0", "no", "n", "N", "off", "false", "null"), true )){
                     return null;
-                }else{
+                }elseif(is_integer($value)){
                     list($month, $day, $year) = explode("/", date("m/d/Y", $value));
                     if ( ! checkdate($month, $day, $year) ){
                         dosyslog(__FUNCTION__.get_callee().": ERROR: Invalid timestamp: '".$value."'.");
                         $res = time();
                     };
+                }else{
+                    $res = time();
                 };
             };
             break;

@@ -12,8 +12,9 @@ foreach(@array(
   $default_top_actions = array();
 
   // Доступна ли операция "Добавить"?
-	if ( form_get_fields(db_get_db_table($model_name), "add_".$model_name)){
+	if ( form_get_fields(db_get_db_table($model_name), "add_".$model_name) && userHasRight("manager") ){
     $default_top_actions["add_".$model_name] = array(
+      "type" => "button",
       "caption" => '<i class="icon icon-plus icon-white"></i> Добавить',
       "url" => "form/add/".$model_name.$CFG["URL"]["ext"],
       "class" => "btn btn-success",
@@ -21,8 +22,9 @@ foreach(@array(
     );
   };
   // Доступна ли операция "Импорт"?
-	if ( form_get_fields(db_get_db_table($model_name), "import_"._plural($model_name))){
+	if ( form_get_fields(db_get_db_table($model_name), "import_"._plural($model_name))  && userHasRight("manager") ){
     $default_top_actions["import_"._plural($model_name)] = array(
+      "type" => "button",
       "caption" => 'Импорт',
       "url" => "form/import/"._plural($model_name).$CFG["URL"]["ext"],
       "class" => "btn",
@@ -36,7 +38,8 @@ foreach(@array(
       $a_pos = isset($a["pos"]) ? (int) $a["pos"] : 0;
       $b_pos = isset($b["pos"]) ? (int) $b["pos"] : 0;
 
-      return $b_pos - $a_pos;
+      if ($a_pos == $b_pos) return 0;
+      return $b_pos > $a_pos ? -1 : 1;
     });
   }else{
     $top_actions = $default_top_actions;
@@ -49,8 +52,12 @@ foreach(@array(
 
 			<div class="pull-right">
 				<?php foreach($top_actions as $ta):?>
+                    <?php if ($ta["type"] == "html"):?>
+                        <div style="display:inline-block"><?=$ta["html"];?></div>
+                    <?php else:?>
 					  <a href="<?=$ta["url"];?>" class="<?=$ta["class"];?>" <?php if (!empty($ta["hint"])):?>title="<?=addslashes($ta["hint"]);?>"<?php endif;?>><?=$ta["caption"];?></a>
-        <?php endforeach;?>
+                    <?php endif;?>
+                <?php endforeach;?>
 			</div>
 
 			<?php if (!empty($months_nav)):?>

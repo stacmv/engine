@@ -55,7 +55,11 @@ function send_message($emailOrUserId, $template, $data, $options=""){
     // parse template.
     if (isset($options["template_parsed"])){
         $subject = $options["template_parsed"]["subject"];
-        $message = nl2br($options["template_parsed"]["message"]);
+        if (empty($options["template_parsed"]["type"])){
+            $message = nl2br($options["template_parsed"]["message"]);
+        }else{
+            $message = $options["template_parsed"]["message"];
+        }
     }else{
         $t = glog_render( cfg_get_filename("email_templates", $template.".htm"), $data );
         if (empty($t)){
