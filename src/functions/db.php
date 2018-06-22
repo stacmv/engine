@@ -561,12 +561,18 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
             continue;
         }
 
-        if (isset($changes->from[$key]) &&  (db_prepare_value($changes->from[$key], $field_type) != db_prepare_value($object[$key], $field_type))){
-            // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
-            if (is_string($changes->from[$key]) && is_string($object[$key]) && (preg_replace('~\R~u', "\n", $changes->from[$key]) == preg_replace('~\R~u', "\n", $object[$key])) ){
-                // Это не конфликт.
-            }else{
-                $conflicted[] = $key . "(passed 'from': '".(is_string($changes->from[$key]) ? $changes->from[$key] : json_encode($changes->from[$key]))."', in db: '".(is_string($object[$key]) ? $object[$key] : json_encode($object[$key]))."')";
+        if (isset($changes->from[$key])){
+            $form_from = db_prepare_value($changes->from[$key], $field_type);
+            $stored_in_db = db_prepare_value($object[$key], $field_type);
+            if ($form_from != $stored_in_db){
+                // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
+                if (is_string($changes->from[$key]) && is_string($object[$key]) && (preg_replace('~\R~u', "\n", $changes->from[$key]) == preg_replace('~\R~u', "\n", $object[$key])) ){
+                    // Это не конфликт.
+                }elseif($form_from == htmlspecialchars_decode($stored_in_db)){
+                    // Это не конфликт.
+                }else{
+                    $conflicted[] = $key . "(passed 'from': '".(is_string($changes->from[$key]) ? $changes->from[$key] : json_encode($changes->from[$key]))."', in db: '".(is_string($object[$key]) ? $object[$key] : json_encode($object[$key]))."')";
+                };
             };
         };
     };
@@ -1681,10 +1687,10 @@ function db_prepare_value($value, $field_type){
             break;
         case "string":
             if ($value){
-                if (json_decode($value, true) !== false){ // This is valid JSON
+                if (!is_null(json_decode($value, true))){ // This is valid JSON
                     $res = $value;
                 }else{
-                    $res = htmlspecialchars($value, ENT_QUOTES);
+                    $res = htmlspecialchars($value, ENT_QUOTES, ini_get("default_charset"), false);
                 };
             }else{
                 $res = "";
