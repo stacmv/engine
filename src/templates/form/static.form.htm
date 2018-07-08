@@ -1,8 +1,14 @@
 <p
 	<?php if (isset($field["name"])):?>data-name="<?=$field["name_to"];?>"<?php endif;?>
-	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?> 
-	class="form-control-static <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>" 
-><?php if (isset($field["value"])):?><?=$field["value"];?><?php endif;?></p>
+	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"<?php endif;?>
+	class="form-control-static <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
+><?php if (isset($field["value"])):?>
+    <?php if ($field["type"] == "timestamp"):?>
+        <?=show_date($field["value"], SHOW_DATE_AGO | SHOW_DATE_TIME_DIFF);?>
+    <?php else:?>
+        <?=$field["value"];?>
+    <?php endif;?>
+<?php endif;?></p>
 <?php if(!empty($field["hint"])):?>
 	<span class="help-block"><?=$field["hint"];?></span>
 <?php endif;?>
