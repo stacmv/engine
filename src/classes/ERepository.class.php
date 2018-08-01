@@ -139,9 +139,11 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
 
         $modelClass = static::_getModelClassName($this->repo_name);
 
+        dosyslog(__FUNCTION__.": DEBUG: start creating '".count($res)."' objects of class '".$modelClass."'.");
         foreach($res as $k=>$row){
             $res[$k] = new $modelClass($row);
         };
+        dosyslog(__FUNCTION__.": DEBUG: end creating '".count($res)."' objects of class '".$modelClass."'.");
 
         return $res;
 
