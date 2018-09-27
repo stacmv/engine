@@ -1,5 +1,5 @@
 <?php
-function get_topmenu(){
+function get_topmenu(array $badges = array()){
     $menu = array();
     $menu_file = cfg_get_filename("settings", "menu.tsv");
     $tmp = import_tsv($menu_file);
@@ -7,7 +7,7 @@ function get_topmenu(){
         dosyslog(__FUNCTION__.": FATAL ERROR: Can not import menu file.");
         die("Code: df-".__LINE__."-topmenu");
     };
-    
+
     // Skip commented lines
     $menu = array_filter($tmp, function($l){
         if (substr($l["href"],0,1) == ";"){
@@ -16,11 +16,11 @@ function get_topmenu(){
         };
         return true;
     });
-   
-        
-    // формирование topmenu для конкретного пользователя
+
+
+    // С„РѕСЂРјРёСЂРѕРІР°РЅРёРµ topmenu РґР»СЏ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
     $topmenu = array();
-   
+
     foreach($menu as $menuItem){
         $rights = ! empty($menuItem["rights"]) ? explode(",",$menuItem["rights"]) : array();
         if ( $rights ) {
@@ -29,8 +29,15 @@ function get_topmenu(){
         }else{
             $isOk = true;
         };
-        
+
         if ($isOk){
+
+            // badges
+            if (isset($badges[$menuItem["href"]])){
+                $menuItem["badge"] = $badges[$menuItem["href"]];
+            }
+            //
+
             if ( !empty($menuItem["parent"]) && isset($topmenu[ $menuItem["parent"] ]) ){
                 if (empty($topmenu[ $menuItem["parent"] ]["submenu"])) $topmenu[ $menuItem["parent"] ]["submenu"] = array();
                 $topmenu[ $menuItem["parent"] ]["submenu"][ $menuItem["href"] ] = $menuItem;
@@ -39,6 +46,6 @@ function get_topmenu(){
             };
         };
     };
-    
+
     return $topmenu;
 };

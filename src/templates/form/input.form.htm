@@ -36,7 +36,7 @@
 	<script>
 		$(function(){
 			$("#<?=$field["id"];?>").
-				attr("value", $("#<?=$field["id"];?>").val().split("-").reverse().join(".") )
+				attr("value", $("#<?=$field["id"];?>").val().substr(0,10).split("-").reverse().join(".") )
 				.mask("99.99.9999")
 				.datepicker({
 					changeMonth: true,

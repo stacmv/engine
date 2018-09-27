@@ -484,32 +484,16 @@ if (!function_exists("get_rights_all")){
         return $rights;
     };
 }
-if (!function_exists("get_user_login")){
-    function get_user_login($user_id = ""){
-        global $_USER;
-
-        if ( ! $user_id ){
-            if ( isset($_USER["login"])){
-                $login = $_USER["login"];
-            };
-        }else{
-
-            $user = db_get("users",$user_id);
-
-            if (!empty($user["login"])){
-                return $user["login"];
-            }
-        }
-
-        return "";
-    }
-}
 if (!function_exists("logout")){
     function logout(){
         global $_USER;
+        global $CFG;
         unset($_SESSION["msg"]);
         unset($_SESSION["to"]);
         unset($_SESSION["authenticated"]);
+
+        unset($_COOKIE["auth_mobile_token"]);
+        setcookie("auth_mobile_token", null, time()-3600, parse_url($CFG["URL"]["base"], PHP_URL_PATH), $_SERVER["HTTP_HOST"], false, true);
 
         dosyslog(__FUNCTION__.": INFO: User '".$_USER->get_login()."' logged out.");
 

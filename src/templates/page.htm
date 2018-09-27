@@ -29,6 +29,9 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<link rel="stylesheet" href="assets/bs2/css/datepicker.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/bootstrap-editable.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/custom.css">
+	<?php if (file_exists("assets/css/custom.css")):?>
+		<link rel="stylesheet" href="assets/css/custom.css?<?=filemtime("assets/css/custom.css");?>">
+	<?php endif;?>
 
 	%%assets_css%%
 
