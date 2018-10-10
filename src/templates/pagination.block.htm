@@ -1,5 +1,5 @@
 
-<?php if (!empty($pager)):?>
+<?php if (!empty($pager) && ($pager["count"] > 1)):?>
 <div class="pagination  pagination-centered">
   <ul>
 	<?php if($pager["current"]>1):?>

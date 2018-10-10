@@ -24,7 +24,7 @@ class ChangesSet {
         $str_to_arr = function($s){
             $a = array();
             $m = array();
-            if (preg_match_all('/(\w+)\s=\s(\[".+"\]\n|"[^"]+")/u', $s, $m)){
+            if (preg_match_all('/(\w+)\s=\s(\[".+"\]\n|"[^"]+")/u', html_entity_decode($s), $m)){
 
                 foreach ($m[0] as $k => $v) {
                     $a[$m[1][$k]] = json_decode(str_replace(["\n","\t"],['\n', '\t'], trim($m[2][$k])), true);

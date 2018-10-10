@@ -296,7 +296,8 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             };
         }else{
             if ( ! is_null($redirect_on_fail) ){
-                redirect($redirect_on_fail ? $redirect_on_fail : "form/edit/".$params["object"] ."/".$params["id"]);
+                $redirect_uri = $redirect_on_fail ? $redirect_on_fail : "form/edit/".$params["object"] ."/".$params["id"];
+                redirect($redirect_uri);
             };
         };
     }
@@ -310,6 +311,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
                 "formdata" => $formdata,
                 "res"      => $res,
                 "reason"   => $reason,
+                "redirect_uri" => $redirect_uri,
             );
             call_user_func($callback, $callback_params);
         }else{
@@ -566,11 +568,6 @@ function login_simple_action(){
         session_regenerate_id();
         $_SESSION["authenticated"] = $user["id"];
         dosyslog(__FUNCTION__.": INFO: User with login '".$login."' is logged in.");
-
-        // if (is_mobile()){
-            setcookie("auth_mobile_token", implode("||", array($user["id"], $t=time(), sha1($user["id"].$t.$user["pass"]))), $t+60*60*24, parse_url($CFG["URL"]["base"], PHP_URL_PATH), $_SERVER["HTTP_HOST"], false, true);
-        // };
-
     }else{
         set_session_msg("login_login_fail","error");
     }
@@ -646,7 +643,12 @@ function set_search_filter_action(){
     };
 
     $fields = form_get_fields($repo_name, "search_".$repo_name);
-    if (!$fields) return ;
+    if (!$fields){
+        if (DEV_MODE){
+            set_session_msg("Для работы поиска нужно задать поля для формы search_".$repo_name ." для таблицы ".$repo_name." в db.xml.", "warning");
+        };
+        return ;
+    };
 
     $search_query = $_PARAMS["search"];
 
@@ -658,6 +660,7 @@ function set_search_filter_action(){
     if (!$search_query) return ;
 
 
+    $_DATA["show_data_uri_params"] = array("search" => $search_query); // используется для пагинации в show_data_action
 
     $search_where = implode(" OR ", array_filter(array_map(function($field) use ($search_query){
         if (filter_var($search_query, FILTER_VALIDATE_EMAIL)){
@@ -710,8 +713,7 @@ function set_search_filter_action(){
 function set_topmenu_action(){
     global $_DATA;
 
-    $badges = !empty($_DATA["topmenu_badges"]) ? $_DATA["topmenu_badges"] : array();
-    $_DATA["topmenu"] = get_topmenu($badges);
+    $_DATA["topmenu"] = get_topmenu();
 
 };
 function set_xml_content_type_action(){

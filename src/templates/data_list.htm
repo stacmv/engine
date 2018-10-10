@@ -35,16 +35,20 @@ $o["header_span"] = !empty($o["header_span"]) ? $o["header_span"] : min(ceil(mb_
 	</div>
 
     <?php if (isset($_PAGE["params"]["search"])):?>
-        <form action method="get" class="form-search">
-            <input type="text" class="input-xxlarge search-query" name="search" value="<?=$search_query;?>" placeholder="<?=$search_placeholder;?>">
-            <button type="submit" class="btn">Поиск</button>
-        </form>
-        <script>
-        $("form.form-search").on("submit", function(e){
-            window.optimit.app.unsaved = false;
-            return true;
-        });
-        </script>
+        <?php if (isset($search_placeholder)):?>
+            <form action method="get" class="form-search">
+                <input type="text" class="input-xxlarge search-query" name="search" value="<?=$search_query;?>" placeholder="<?=$search_placeholder;?>">
+                <button type="submit" class="btn">Поиск</button>
+            </form>
+            <script>
+            $("form.form-search").on("submit", function(e){
+                window.optimit.app.unsaved = false;
+                return true;
+            });
+            </script>
+        <?php elseif (DEV_MODE):?>
+            <div class="alert alert-warning">Для работы поиска нужно добавить action set_search_filter перед show_data для страницы <?=$_PAGE["uri"];?>.</div>
+        <?php endif;?>
     <?php endif;?>
 
 	<?php if(empty($items)):?>
