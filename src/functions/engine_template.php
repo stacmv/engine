@@ -246,6 +246,6 @@ function expand_youtube_links($data_item){
 
 
 
-    return preg_replace("/https:\/\/(youtu\.be|www\.youtube\.com\/embed)\/(\w+)/", "\n<div class='embed-container'><iframe src='http://www.youtube.com/embed/$2' frameborder='0' allowfullscreen></iframe></div>", $data_item);
+    return preg_replace("/https:\/\/(youtu\.be|www\.youtube\.com\/embed)\/([\w\-]+)/", "\n<div class='embed-container'><iframe src='http://www.youtube.com/embed/$2' frameborder='0' allowfullscreen></iframe></div>", $data_item);
 
 }

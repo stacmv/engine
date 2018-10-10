@@ -23,12 +23,19 @@ if (!isset($page_fluid)) $page_fluid = false;
         </style>
     <?php endif;?>
 
+    <?php if (find_page("rss")):?>
+        <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="<?=$CFG["URL"]["base"] . "rss" . $CFG["URL"]["ext"];?>" />
+    <?php endif;?>
+
 	<link rel="stylesheet" href="assets/bs2/css/bootstrap-combined.min.css">
 	<link rel="stylesheet" href="assets/bs2/css/font-awesome.css">
 	<link rel="stylesheet" href="assets/bs2/css/multiple-select.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/datepicker.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/bootstrap-editable.css" type="text/css" />
 	<link rel="stylesheet" href="assets/bs2/css/custom.css">
+	<?php if (file_exists("assets/css/custom.css")):?>
+		<link rel="stylesheet" href="assets/css/custom.css?<?=filemtime("assets/css/custom.css");?>">
+	<?php endif;?>
 
 	%%assets_css%%
 

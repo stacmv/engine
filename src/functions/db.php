@@ -87,7 +87,7 @@ function db_get_meta($db_table, $attr){
     $tables = $db["table"];
 
     if ($tables){
-        if (!isset($tables[0])){ // therу is only one table defined for db in xml
+        if (!isset($tables[0])){ // there is only one table defined for db in xml
             $tables = array($tables);
         };
 
@@ -552,6 +552,10 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
     // Check if object is in state it supposed to be in.
     $conflicted = array(); // список полей, у которых состояние from не совпадает с текущим состоянием в БД.
     $not_existed = array(); // поля, которые отсутствуют у объекта, взятого из БД.
+    $conflicts_ignore = db_get_meta($db_table,"conflicts_ignore"); // список полей, конфликты в которых надо игнорировать
+    if ($conflicts_ignore){
+        $conflicts_ignore = array_map("trim", explode(",", $conflicts_ignore));
+    };
     foreach ($changes->to as $key=>$value){
         if ( ! array_key_exists($key, $object) ){
             $not_existed[] = $key;
@@ -567,14 +571,19 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
         if (isset($changes->from[$key])){
             $form_from = db_prepare_value($changes->from[$key], $field_type);
             $stored_in_db = db_prepare_value($object[$key], $field_type);
-            if ($form_from != $stored_in_db){
+            if (strcmp($form_from, $stored_in_db) !=0 ){
                 // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
                 if (is_string($changes->from[$key]) && is_string($object[$key]) && (preg_replace('~\R~u', "\n", $changes->from[$key]) == preg_replace('~\R~u', "\n", $object[$key])) ){
                     // Это не конфликт.
-                }elseif($form_from == htmlspecialchars_decode($stored_in_db)){
+                }elseif(strip_tags(html_entity_decode($form_from)) == strip_tags(html_entity_decode($stored_in_db))){
+                    // Хак на случай если в строках были HTML entities типа &nbsp;
+                    // Это не конфликт.
+                }elseif($form_from == $stored_in_db){
+                    // случай null и 0
+                }elseif(!empty($conflicts_ignore) && in_array($key, $conflicts_ignore)) {
                     // Это не конфликт.
                 }else{
-                    $conflicted[] = $key . "(passed 'from': '".(is_string($changes->from[$key]) ? $changes->from[$key] : json_encode($changes->from[$key]))."', in db: '".(is_string($object[$key]) ? $object[$key] : json_encode($object[$key]))."')";
+                    $conflicted[] = $key . "(passed 'from': '".(is_string($changes->from[$key]) ? $form_from : json_encode($form_from))."', in db: '".(is_string($object[$key]) ? $stored_in_db : json_encode($stored_in_db))."')";
                 };
             };
         };
@@ -585,7 +594,7 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " These fields are not exist in [".$db_table."]: ". implode(", ", $not_existed).".");
     };
     if ( ! empty($conflicted) ){
-        dosyslog(__FUNCTION__.": WARNING " . get_callee() . " Changes conflict: object state changed during editing time: ". implode(",", $conflicted) . ".");
+        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Changes conflict: object state changed during editing time: ". implode(",", $conflicted) . ".");
         return array(false,"changes_conflict");
     };
 
