@@ -12,6 +12,7 @@ class EPager implements ArrayAccess, jsonSerializable
         if ($width < $min_width){
             throw new Exception("Pager width should be equal or more than 7. You pass $width.");
         }
+        if ($current_page < 1) $current_page = 1;
         $n = ceil($items_count/$items_per_page); // number of pages total
 
         $pager = array();
