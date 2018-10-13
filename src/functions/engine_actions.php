@@ -568,6 +568,11 @@ function login_simple_action(){
         session_regenerate_id();
         $_SESSION["authenticated"] = $user["id"];
         dosyslog(__FUNCTION__.": INFO: User with login '".$login."' is logged in.");
+
+        // if (is_mobile()){
+            setcookie("auth_mobile_token", implode("||", array($user["id"], $t=time(), sha1($user["id"].$t.$user["pass"]))), $t+60*60*24, parse_url($CFG["URL"]["base"], PHP_URL_PATH), $_SERVER["HTTP_HOST"], false, true);
+        // };
+
     }else{
         set_session_msg("login_login_fail","error");
     }
@@ -713,7 +718,8 @@ function set_search_filter_action(){
 function set_topmenu_action(){
     global $_DATA;
 
-    $_DATA["topmenu"] = get_topmenu();
+    $badges = !empty($_DATA["topmenu_badges"]) ? $_DATA["topmenu_badges"] : array();
+    $_DATA["topmenu"] = get_topmenu($badges);
 
 };
 function set_xml_content_type_action(){
