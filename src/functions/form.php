@@ -69,7 +69,7 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
         }else{
             $field["name_from"] = "from[" . $name . "]";
 
-            if ($type == "list"){
+            if (in_array($type, ["list", "images"])){
                 $field["name_to"]   = "to[" . $name . "][]";
             }else{
                 $field["name_to"]   = "to[" . $name . "]";
@@ -111,6 +111,7 @@ function form_prepare_field($field, $is_stand_alone = false, $value = "", $value
                     break;
                 case "money":
                 case "list":
+                case "images":
                     $field["value"] = $value;
                     break;
                 default:

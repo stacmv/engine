@@ -2,13 +2,12 @@
 function get_images($repo_name, $field_name, $uid, $uuid =""){
     $images = array();
 
-    if (!defined("IMAGES_DIR")) die("IMAGES_DIR is not defined.");
-
     if (substr($uuid,0,3) == "B64"){ // uuid = base64_encoded filename
         $images[] = base64_decode(substr($uuid,3));
         return $images;
     };
 
+    if (!defined("IMAGES_DIR")) die("IMAGES_DIR is not defined.");
 
 
     $sub_dir = IMAGES_DIR.db_get_db_table($repo_name). "/" . $field_name . "/";

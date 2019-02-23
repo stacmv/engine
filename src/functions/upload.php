@@ -62,7 +62,9 @@ function upload_file($param_name, $storage_name, $save_as_filename=""){
                 dosyslog(__FUNCTION__.": ERROR: Can not move uploaded file for '".$param_name."' to storage path '".$dest_name);
             };
 
-        }elseif ( ! empty($_FILES["to"]["name"][$param_name]) ){
+        }
+
+        if ( ! empty($_FILES["to"]["name"][$param_name]) ){
 
             if (is_array($_FILES["to"]["name"][$param_name])){
 
@@ -80,6 +82,7 @@ function upload_file($param_name, $storage_name, $save_as_filename=""){
                     if ($res){
                         dosyslog(__FUNCTION__.": NOTICE: File for '".$param_name."' moved to storage path '".$dest_name."'.");
                         $uploaded_files[] = $dest_name;
+                        $save_as_filename = null; // чтобы не записать несколько файлов под одним именем
                     }else{
                         dosyslog(__FUNCTION__.": ERROR: Can not move uploaded file for '".$param_name."' to storage path '".$dest_name);
                     };
@@ -100,9 +103,9 @@ function upload_file($param_name, $storage_name, $save_as_filename=""){
                     dosyslog(__FUNCTION__.": ERROR: Can not move uploaded file for '".$param_name."' to storage path '".$dest_name."'.");
                 };
             }
+        }
 
-        } elseif ( ! empty($_PARAMS["to"][$param_name]) ){ // Previously uploaded files or remote urls
-
+        if ( ! empty($_PARAMS["to"][$param_name]) ){ // Previously uploaded files or remote urls
             if(is_array($_PARAMS["to"][$param_name])){
                 foreach($_PARAMS["to"][$param_name] as $k=>$v){
                     $res = false;
@@ -122,9 +125,7 @@ function upload_file($param_name, $storage_name, $save_as_filename=""){
                 };
                 if ($res) $uploaded_files[] = $dest_name;
             }
-        };
-
-
+        }
 
         // //
         if ($uploaded_files){
