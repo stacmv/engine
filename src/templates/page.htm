@@ -116,7 +116,6 @@ if (!isset($page_fluid)) $page_fluid = false;
 	});
 </script>
 
-<?php if (userHasRight("manager")):?>
 <script>
 window.optimit = {app: {unsaved:false<?php if (!empty($CFG["DADATA"]["token"])):?>, dadata_token: '<?=$CFG["DADATA"]["token"];?>'<?php endif;?>}};
 $(function(){
@@ -135,7 +134,6 @@ $(function(){
 	});
 });
 </script>
-<?php endif;?>
 <?php if ( ! DEV_MODE ) :?>
 	<!-- Yandex.Metrika counter -->
 	%%yandex.metrika.block%%
