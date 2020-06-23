@@ -99,7 +99,7 @@ if (!isset($page_fluid)) $page_fluid = false;
 	<div class="navbar-inner">
 		<div class="container footer-margin-top">
 
-			<div class="muted text-muted">&copy; 2015<?php if(date("Y")>2015):?>&ndash;<?=date("Y");?><?php endif;?> &laquo;<a href="<?=$CFG["URL"]["base"];?>"><?php if (!empty($CFG["GENERAL"]["company_name"])):?><?=$CFG["GENERAL"]["company_name"];?><?php else:?><?=$CFG["GENERAL"]["app_name"];?><?php endif;?></a>&raquo; &nbsp;&nbsp;&nbsp; <small class="muted">Версия: <?=$CFG["GENERAL"]["app_version"];?></small>
+			<div class="muted text-muted">&copy; <?=date("Y", filemtime(APP_DIR));?><?php if(date("Y") > date("Y", filemtime(APP_DIR))):?>&ndash;<?=date("Y");?><?php endif;?> &laquo;<a href="<?=$CFG["URL"]["base"];?>"><?php if (!empty($CFG["GENERAL"]["company_name"])):?><?=$CFG["GENERAL"]["company_name"];?><?php else:?><?=$CFG["GENERAL"]["app_name"];?><?php endif;?></a>&raquo; &nbsp;&nbsp;&nbsp; <small class="muted">Версия: <?=$CFG["GENERAL"]["app_version"];?></small>
 
 				<div class="pull-right optimit"><small>Поддержка &laquo;ОптимИТ&raquo;</small></div>
 			</div>

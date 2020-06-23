@@ -594,7 +594,7 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
         dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " These fields are not exist in [".$db_table."]: ". implode(", ", $not_existed).".");
     };
     if ( ! empty($conflicted) ){
-        dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " Changes conflict: object state changed during editing time: ". implode(",", $conflicted) . ".");
+        dosyslog(__FUNCTION__.": WARNING " . get_callee() . " Changes conflict: object state changed during editing time: ". implode(",", $conflicted) . ".");
         return array(false,"changes_conflict");
     };
 
@@ -1005,7 +1005,7 @@ function db_get_list($db_table, array $fields = array("id"), $limit="", $flags =
                 };
             }else{
                 $result = $tmp;
-            };
+            }
         }else{
             dosyslog(__FUNCTION__.": ERROR: " . get_callee() . " SQL ERROR:  [" . $db_table . "]: '".db_error($dbh).". Query: ".$query);
         };

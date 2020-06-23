@@ -1,10 +1,9 @@
 <?php
 function arr_extract(array $arr, $key = "id"){
 
-    return array_reduce($arr, function($arr, $item) use ($key){
-        $arr[] = $item[$key];
-        return $arr;
-    }, array());
+    return array_map(function($item) use ($key){
+        return isset($item[$key]) ? $item[$key] : null;
+    }, $arr);
 
 }
 function arr_index(array $arr, $key = "id"){
