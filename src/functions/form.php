@@ -351,7 +351,9 @@ function form_get_field_values($field, $key = "form_values"){
                 $values = array_map("trim", $values);
             }else{
                 $values = array_map(function($v){
-                    return array_map("trim", $v);
+                    return array_map(function($v) {
+                        return is_scalar($v) ? trim($v) : $v;
+                    }, $v);
                 }, $values);
             };
         };

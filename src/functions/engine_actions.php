@@ -90,7 +90,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
                     };
 
                 }else{
-                    // Форма заполнена в ажминке
+                    // Форма заполнена в админке
                     if (db_get_meta($db_table, "add_success_redirect")){
                         $redirect_uri = db_get_meta($db_table, "add_success_redirect");
                     }elseif(!empty($CFG["URL"]["redirect_on_success_default"])){
@@ -122,6 +122,7 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
             $callback_params = array(
                 "args"     => func_get_args(),
                 "formdata" => $formdata,
+                'params'   => $params,
                 "res"      => $res,
                 "reason"   => $reason,
                 "added_id" => $added_id,
@@ -235,7 +236,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
             );
             $callback_res = call_user_func($callback, $callback_params);
             if (false === $callback_res["res"]){
-                return array($callback_res[$res], $callback_res["reason"]);
+                return array($callback_res["res"], $callback_res["reason"]);
             }else{
                 $params = $callback_res["params"];
             }
@@ -324,7 +325,7 @@ function edit_data_action($db_table="", $redirect_on_success="", $redirect_on_fa
 };
 function delete_data_action($db_table="", $redirect_on_success="", $redirect_on_fail=""){
     global $_PARAMS;
-    global $_DATA;
+    global $CFG;
 
 
     if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");

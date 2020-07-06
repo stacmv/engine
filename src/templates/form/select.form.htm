@@ -15,7 +15,10 @@
         <?php if (isset($field["form_values"]) && ($field["form_values"] == "lst")):?>
             <?php $value = $caption = $v;?>
         <?php else:?>
-		    <?php $value = $v["value"]; $caption = $v["caption"];?>
+            <?php $value = $v["value"]; $caption = $v["caption"];?>
+            <?php if (!empty($v['data'])):?>
+                <?php $data_attr = $v['data'];?>
+            <?php endif;?>
         <?php endif;?>
 		<?php if ($value == "optgroup"):?>
 			<?php if ($in_optgroup):?>
@@ -28,7 +31,7 @@
 
 
 		<?php if ( ! is_int($caption) ):?>
-			<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$caption;?></option>
+			<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>" <?php if (!empty($data_attr)):?><?php foreach($data_attr as $data_attr_key => $data_attr_value):?>data-<?=$data_attr_key;?>="<?=$data_attr_value;?>" <?php endforeach;?><?php endif;?>><?=$caption;?></option>
 		<?php else:?>
 			<option <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
 		<?php endif;?>

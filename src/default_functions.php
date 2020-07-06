@@ -318,6 +318,8 @@ if (!function_exists("get_gravatar")){
      * @source http://gravatar.com/site/implement/images/php/
      */
     function get_gravatar( $email, $s = 80, $d = 'mm', $r = 'g', $img = false, $atts = array() ) {
+        if (!$email) return "";
+        
         $url = 'http://www.gravatar.com/avatar/';
         $url .= md5( strtolower( trim( $email ) ) );
         $url .= "?s=$s&d=$d&r=$r";
