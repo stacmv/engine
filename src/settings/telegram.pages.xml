@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pages>
+	<page uri="login/telegram" comment="Вход через Telegram">
+		<params>
+			<id><type>string</type><source>request</source></id>
+			<first_name><type>string</type><source>request</source></first_name>
+			<last_name><type>string</type><source>request</source></last_name>
+			<username><type>string</type><source>request</source></username>
+			<photo_url><type>string</type><source>request</source></photo_url>
+			<auth_date><type>string</type><source>request</source></auth_date>
+			<hash><type>string</type><source>request</source></hash>
+		</params>
+		<actions>login_telegram</actions>
+	</page>
+
+</pages>
