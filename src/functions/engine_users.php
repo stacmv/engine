@@ -71,3 +71,17 @@ if (!function_exists("get_user_sex")){
         return cache("female");
     }
 }
+
+if (!function_exists("get_users_for_select")){
+    function get_users_for_select(){
+        $users = db_get("users", "all");
+
+        return array_map(function($user){
+            return array(
+                "value" => $user["id"],
+                "caption" => get_user_name($user),
+            );
+        }, $users);
+
+    }
+}
