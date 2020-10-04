@@ -65,7 +65,12 @@ foreach(@array(
 				  function onTelegramAuth(user) {
 					$.post('login/telegram<?=$CFG["URL"]["ext"];?>', user, function(data){
 						if (data && data.redirect) {
-							location.href = data.redirect;
+							if (data.redirect != '.html') {
+								location.href = data.redirect;
+							} else {
+								console.log(user);
+								console.log(data);
+							}
 						}
 					});
 				  }
