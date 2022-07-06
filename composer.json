@@ -9,8 +9,8 @@
     ],
 	"minimum_stability": "dev",
     "require": {
-		"php": ">=5.4",
-		"optimit/glog_util": "dev-master",
+		"php": ">=8.0",
+		"optimit/glog_util": "^8.0",
 		"erusev/parsedown": "dev-master",
 		"mobiledetect/mobiledetectlib": "^2.8",
 		"intervention/image": "^2.3@dev"

@@ -313,7 +313,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
     }
 
     /* jsonSerializable implementation */
-    public function jsonSerialize(){
+    public function jsonSerialize(): array {
 
         $res =  array_map(function($item){
             return $item->jsonSerialize();
@@ -331,12 +331,12 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
 
 
     /* IteratorAggregate implementation */
-    public function getIterator() {
+    public function getIterator(): ArrayIterator {
         return new ArrayIterator($this->fetchAll());
     }
 
     /* Countable implementation */
-    public function count(){
+    public function count(): int{
         $tmp = $this->select("count(*)")->fetchAssoc();
         $count = $tmp["count(*)"];
         return $count;

@@ -571,7 +571,7 @@ function db_edit($db_table, $id, ChangesSet $changes, $comment=""){
         if (isset($changes->from[$key])){
             $form_from = db_prepare_value($changes->from[$key], $field_type);
             $stored_in_db = db_prepare_value($object[$key], $field_type);
-            if (strcmp($form_from, $stored_in_db) !=0 ){
+            if (strcmp((string) $form_from, (string) $stored_in_db) !=0 ){
                 // Проблема в переводах строки?  Хак. На случай когда в БД уже есть данные с неверными переводами строки.
                 if (is_string($changes->from[$key]) && is_string($object[$key]) && (preg_replace('~\R~u', "\n", $changes->from[$key]) == preg_replace('~\R~u', "\n", $object[$key])) ){
                     // Это не конфликт.
@@ -1497,7 +1497,7 @@ function db_parse_value($value, $field_type){
         $value = (string) bcadd($value/100, 0, DB_MONEY_PRECISION);
         break;
     case "phone":
-        if (!preg_match("/\d{10}$/", $value)){
+        if (!preg_match("/\d{10}$/", (string) $value)){
             // do nothing
         }else{
             $value = db_prepare_value($value, "phone");
@@ -1540,7 +1540,7 @@ function db_parse_value($value, $field_type){
         };
         break;
     case "string":
-        if (json_decode($value, true) !== false){ // This is valid JSON
+        if (json_decode((string) $value, true) !== false){ // This is valid JSON
             return $value;
         }else{
             $value = htmlspecialchars_decode($value, ENT_QUOTES);

@@ -132,7 +132,7 @@ function GETURI(){
     $uri = ! empty($_GET["uri"]) ? $_GET["uri"] : "/";
 
     if ("index"==$uri) $uri = "/";
-    if ( ("/"!=$uri) && ("/" == $uri{0}) ) $uri = substr($uri,1);
+    if ( ("/"!=$uri) && ("/" == $uri[0]) ) $uri = substr($uri,1);
 
     $_URI = $uri;
 

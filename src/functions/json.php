@@ -40,11 +40,11 @@ function json_array_urlencode($arr){
             if (is_array($v)){
                 $arr[$k] = json_array_urlencode($v);
             }elseif( ! is_numeric($v) ){
-                $arr[$k] = urlencode(addslashes(addslashes($v)));
+                $arr[$k] = urlencode(addslashes(addslashes((string) $v)));
             };
         };
     }else{
-        $arr = urlencode($arr);
+        $arr = urlencode((string) $arr);
     }
 
     return $arr;

@@ -236,7 +236,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     }
 
     /* ArrayAccess implementation for model attributes */
-    public function offsetSet($offset, $value) {
+    public function offsetSet($offset, $value): void {
         $set_method_name = "set".ucfirst($offset);
         if (isset($this->data[$offset])) {
             $this->data[$offset] = $value;
@@ -247,7 +247,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
         }
     }
 
-    public function offsetExists($offset) {
+    public function offsetExists($offset): bool {
 
         if (method_exists($this, "get".ucfirst($offset)) ){
             return true;
@@ -261,7 +261,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
 
     }
 
-    public function offsetUnset($offset) {
+    public function offsetUnset($offset): void {
         if (isset($this->data[$offset])) {
             unset($this->data[$offset]);
         } else {
@@ -270,7 +270,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
 
     }
 
-    public function offsetGet($offset) {
+    public function offsetGet($offset): mixed {
 
         if (method_exists($this, "get".ucfirst($offset)) ){
             return call_user_func(array($this, "get".ucfirst($offset)));
@@ -290,7 +290,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     }
 
     /* jsonSerializable implementation */
-    public function jsonSerialize(){
+    public function jsonSerialize(): array {
 
         $item = $this->data;
 
@@ -305,7 +305,7 @@ abstract class EModel implements ArrayAccess, jsonSerializable, IteratorAggregat
     }
 
     /* IteratorAggregate implementation */
-    public function getIterator() {
+    public function getIterator(): ArrayIterator {
         return new ArrayIterator($this->data);
     }
 

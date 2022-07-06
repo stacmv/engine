@@ -67,17 +67,17 @@ class EUser extends Model implements ArrayAccess
 
     // ArrayAccess implementation
 
-    function offsetExists($offset){
+    function offsetExists($offset): bool {
         return isset($this->data[$offset]);
 
     }
-    function offsetGet($offset){
+    function offsetGet($offset): mixed {
         return isset($this->data[$offset]) ? $this->data[$offset] : null;
     }
-    function offsetSet($offset, $value){
+    function offsetSet($offset, $value): void {
         $this->data[$offset] = $value;
     }
-    function offsetUnset($offset){
+    function offsetUnset($offset): void {
         if (isset($this->data[$offset])){
             unset($this->data[$offset]);
         };
