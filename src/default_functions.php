@@ -319,7 +319,7 @@ if (!function_exists("get_gravatar")){
      */
     function get_gravatar( $email, $s = 80, $d = 'mm', $r = 'g', $img = false, $atts = array() ) {
         if (!$email) return "";
-        
+
         $url = 'http://www.gravatar.com/avatar/';
         $url .= md5( strtolower( trim( $email ) ) );
         $url .= "?s=$s&d=$d&r=$r";
@@ -495,7 +495,7 @@ if (!function_exists("logout")){
         unset($_SESSION["authenticated"]);
 
         unset($_COOKIE["auth_mobile_token"]);
-        setcookie("auth_mobile_token", null, time()-3600, parse_url($CFG["URL"]["base"], PHP_URL_PATH), $_SERVER["HTTP_HOST"], false, true);
+        setcookie("auth_mobile_token", "", time()-3600, parse_url($CFG["URL"]["base"], PHP_URL_PATH), $_SERVER["HTTP_HOST"], false, true);
 
         dosyslog(__FUNCTION__.": INFO: User '".$_USER->get_login()."' logged out.");
 
@@ -508,7 +508,7 @@ if (!function_exists("register_user_ip")) {
 
         if (TEST_MODE) dosyslog(__FUNCTION__.": NOTICE: Memory usage: ".(memory_get_usage(true)/1024/1024)." Mb.");
 
-        if ( ! $user_id || ! $login || ! ip ) return false;
+        if ( ! $user_id || ! $login || ! $ip ) return false;
 
         $user_id = (int) sqlite_escape_string($user_id);
         $login   = sqlite_escape_string($login);

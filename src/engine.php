@@ -210,7 +210,7 @@ function SENDHEADERS(){
     };
     if (isset($_RESPONSE["cookies"])){
         foreach ($_RESPONSE["cookies"] as $name=>$cookie){
-            setcookie($name,$cookie["value"],$cookie["expire"], $cookie["path"], $cookie["domain"]);
+            setcookie($name, (string) $cookie["value"],$cookie["expire"], $cookie["path"], $cookie["domain"]);
         };
     };
 

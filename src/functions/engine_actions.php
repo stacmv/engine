@@ -570,9 +570,7 @@ function login_simple_action(){
         $_SESSION["authenticated"] = $user["id"];
         dosyslog(__FUNCTION__.": INFO: User with login '".$login."' is logged in.");
 
-        // if (is_mobile()){
-            setcookie("auth_mobile_token", implode("||", array($user["id"], $t=time(), sha1($user["id"].$t.$user["pass"]))), $t+60*60*24, parse_url($CFG["URL"]["base"], PHP_URL_PATH), $_SERVER["HTTP_HOST"], false, true);
-        // };
+        setcookie("auth_mobile_token", implode("||", array($user["id"], $t=time(), sha1($user["id"].$t.$user["pass"]))), $t+60*60*24, parse_url($CFG["URL"]["base"], PHP_URL_PATH), $_SERVER["HTTP_HOST"], false, true);
 
     }else{
         set_session_msg("login_login_fail","error");
