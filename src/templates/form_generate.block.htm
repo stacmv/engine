@@ -8,12 +8,12 @@
 <?php foreach($fields_form as $field):?>
 	<?php if ( $field["type"] == "list"):?>
 		<?php foreach((array)$field["value_from"] as $value):?>
-			<input type="hidden" name="<?=$field["name_from"];?>" value='<?=$value;?>'>
+			<input type="hidden" name="<?=$field["name_from"];?>" value='<?=htmlentities($value, ENT_QUOTES);?>'>
 		<?php endforeach;?>
 	<?php else:?>
 		<input type="hidden" name="<?=$field["name_from"];?>" value='<?=$field["value_from"];?>'>
 	<?php endif;?>
-	
+
 	<?php if ($field["template"] != "hidden"):?>
 		<div class="control-group">
 			<label class="control-label" <?php if (!empty($field["id"])):?>for="<?=$field["id"];?>"<?php endif;?>>
@@ -29,5 +29,5 @@
 	<?php else:?>
 		<?php include $field["template_file"];?>
 	<?php endif;?>
-	
+
 <?php endforeach;?>
