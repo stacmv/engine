@@ -13,7 +13,8 @@
 		"optimit/glog_util": "^8.0",
 		"erusev/parsedown": "dev-master",
 		"mobiledetect/mobiledetectlib": "^2.8",
-		"intervention/image": "^2.3@dev"
+		"intervention/image": "^2.3@dev",
+		"ext-mbstring": "*"
 	},
 	"suggest": {
 		"giggsey/libphonenumber-for-php": "Allows validating international phone numbers"
