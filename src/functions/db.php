@@ -1273,14 +1273,14 @@ function db_last_modified($db_table){
 
 	return $last_modified ? $last_modified : null;
 }
-function db_search_substr($db_table, $field, $search_query, $limit=100, $flags = 18){
+function db_search_substr(string $db_table, string $field, string $search_query, int $limit=100, int $flags = 18){
 
     $dbh = db_set($db_table);
 
     // SQLITE3 specific code
     $db_name = db_get_name($db_table);
     if ( ! db_sqlite_register_function($dbh, "lower") ){
-        dosyslog(__FUNCTION__.": ERROR: Can not register 'lower' function with SQLIET db '".$db_name."'. Search results may be incorrect.");
+        dosyslog(__FUNCTION__.": ERROR: Can not register 'lower' function with SQLITE db '".$db_name."'. Search results may be incorrect.");
     };
     unset($db_name);
     //
@@ -1449,11 +1449,10 @@ function db_sqlite_register_function($dbh, $func_name){
     switch($func_name){
     case "lower":
         if (method_exists($dbh, "sqliteCreateFunction")){ // this is experimental method since PHP 5.1 (http://php.net/manual/ru/pdo.sqlitecreatefunction.php)
-            $res = $dbh->sqliteCreateFunction("lower", function($value){
-                $res = mb_convert_case($value, MB_CASE_LOWER, "UTF-8");
-                return $res;
-            });
-            return $res;
+          return $dbh->sqliteCreateFunction("lower", function($value){
+              $value = (string) $value; // maybe NULL in db
+            return mb_convert_case($value, MB_CASE_LOWER, "UTF-8");
+          });
         }else{
             dosyslog(__FUNCTION__.get_callee().": ERROR: It seems that PDO has not method sqliteCreateFunction().");
             return false;
