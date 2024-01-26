@@ -1,46 +1,51 @@
-<?php if (is_array($field["value"])):?>
-	<?=$field["value"] = $field["value"][0];?>
-<?php endif;?>
-<input type="hidden" name="<?=$field["name_to"];?>" value="null">
+<?php if (is_array($field["value"])): ?>
+  <?= $field["value"] = $field["value"][0]; ?>
+<?php endif; ?>
+<input type="hidden" name="<?= $field["name_to"]; ?>" value="null">
 <select
-	<?php if (isset($field["name"])):?>name="<?=$field["name_to"];?>"<?php endif;?>
-	<?php if (isset($field["id"])):?>id="<?=$field["id"];?>"
-	<?php elseif (isset($field["name"])):?>id="<?=$field["name"];?>"
-	<?php endif;?>
-	class="form-control <?php if (isset($field["class"])):?><?=$field["class"];?><?php endif;?>"
+  <?php
+  if (isset($field["name"])): ?>name="<?= $field["name_to"]; ?>"<?php endif; ?>
+  <?php if (isset($field["id"])): ?>id="<?= $field["id"]; ?>"
+<?php elseif (isset($field["name"])): ?>id="<?= $field["name"]; ?>"
+<?php endif; ?>
+  class="form-control <?php
+  if (isset($field["class"])): ?><?= $field["class"]; ?><?php endif; ?>"
 >
-	<option></option>
-	<?php $in_optgroup = false;?>
-	<?php foreach($field["values"] as $v):?>
-        <?php if (isset($field["form_values"]) && ($field["form_values"] == "lst")):?>
-            <?php $value = $caption = $v;?>
-        <?php else:?>
-            <?php $value = $v["value"]; $caption = $v["caption"];?>
-            <?php if (!empty($v['data'])):?>
-                <?php $data_attr = $v['data'];?>
-            <?php endif;?>
-        <?php endif;?>
-		<?php if ($value == "optgroup"):?>
-			<?php if ($in_optgroup):?>
-				</optgroup>
-			<?php endif;?>
-			<optgroup label="<?=$caption;?>">
-			<?php $in_optgroup = true;?>
-			<?php continue;?>
-		<?php endif;?>
+    <option></option>
+  <?php $in_optgroup = false; ?>
+  <?php foreach ($field["values"] as $v): ?>
+<?php if (isset($field["form_values"]) && ($field["form_values"] == "lst")): ?>
+  <?php $value = $caption = $v; ?>
+<?php else: ?>
+  <?php $value = $v["value"];
+  $caption = $v["caption"]; ?>
+  <?php if (!empty($v['data'])): ?>
+    <?php $data_attr = $v['data']; ?>
+  <?php endif; ?>
+<?php endif; ?>
+<?php if ($value == "optgroup"): ?>
+<?php if ($in_optgroup): ?>
+    </optgroup>
+<?php endif; ?>
+    <optgroup label="<?= $caption; ?>">
+      <?php $in_optgroup = true; ?>
+      <?php continue; ?>
+      <?php endif; ?>
 
 
-		<?php if ( ! is_int($caption) ):?>
-			<option value="<?=$value;?>" <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>" <?php if (!empty($data_attr)):?><?php foreach($data_attr as $data_attr_key => $data_attr_value):?>data-<?=$data_attr_key;?>="<?=$data_attr_value;?>" <?php endforeach;?><?php endif;?>><?=$caption;?></option>
-		<?php else:?>
-			<option <?php if ( ! empty($field["value"]) && ($field["value"] == $value) ):?> selected<?php endif;?> id="<?=$field["name"]."_".glog_codify($value);?>"><?=$value;?></option>
-		<?php endif;?>
-	<?php endforeach;?>
-	<?php if ($in_optgroup):?>
-		</optgroup>
-	<?php endif;?>
+      <?php if (!is_int($caption)): ?>
+          <option value="<?= $value; ?>" <?php
+          if (!empty($field["value"]) && ($field["value"] == $value)): ?> selected<?php endif; ?> id="<?= $field["name"] . "_" . glog_codify($value); ?>" <?php if (!empty($data_attr)): ?><?php foreach ($data_attr as $data_attr_key => $data_attr_value): ?>data-<?= $data_attr_key; ?>="<?= $data_attr_value; ?>" <?php
+          endforeach; ?><?php endif; ?>><?= $caption; ?></option>
+      <?php else: ?>
+          <option <?php if (!empty($field["value"]) && ($field["value"] == $value)): ?> selected<?php endif; ?> id="<?= $field["name"] . "_" . glog_codify($value); ?>"><?= $value; ?></option>
+      <?php endif; ?>
+      <?php endforeach; ?>
+      <?php if ($in_optgroup): ?>
+    </optgroup>
+<?php endif; ?>
 
-</select><?php if ( ! $field["label"] && $field["required"]):?><span class="help-inline">(обязательно)</span><?php endif;?>
-<?php if(!empty($field["hint"])):?>
-	<span class="help-block"><?=unescape_template_data($field["hint"]);?></span>
-<?php endif;?>
+</select><?php if (!$field["label"] && $field["required"]): ?><span class="help-inline">(обязательно)</span><?php endif; ?>
+<?php if (!empty($field["hint"])): ?>
+    <span class="help-block"><?= unescape_template_data($field["hint"]); ?></span>
+<?php endif; ?>

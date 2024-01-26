@@ -1,26 +1,28 @@
 <?php
-if (!function_exists("get_user_name")){
-    function get_user_name($user){
-        if (cached()) return cached();
+if (!function_exists("get_user_name")) {
+    function get_user_name($user)
+    {
+        if (cached()) return cache();
 
         if ($user === 0) return _t("System");
-        if ( is_numeric($user) ) $user = db_get("users", $user);
+        if (is_numeric($user)) $user = db_get("users", $user);
 
-        if ($user && !empty($user["name"])){
+        if ($user && !empty($user["name"])) {
             return cache($user["name"]);
-        }elseif($user && !empty($user["login"])){
+        } elseif ($user && !empty($user["login"])) {
             return cache(_t("User") . " " . $user["login"]);
-        }else{
+        } else {
             return cache(_t("Unknown"));
         };
     }
 }
-if (!function_exists("get_user_email")){
-    function get_user_email($user){
-        if (cached()) return cached();
+if (!function_exists("get_user_email")) {
+    function get_user_email($user)
+    {
+        if (cached()) return cache();
 
         if ($user === 0) return _t("System");
-        if ( is_numeric($user) ) $user = db_get("users", $user);
+        if (is_numeric($user)) $user = db_get("users", $user);
 
         if ($user) {
             return cache($user["email"]);
@@ -29,19 +31,20 @@ if (!function_exists("get_user_email")){
         };
     }
 }
-if (!function_exists("get_user_login")){
-    function get_user_login($user_id = ""){
+if (!function_exists("get_user_login")) {
+    function get_user_login($user_id = "")
+    {
         global $_USER;
 
-        if ( ! $user_id ){
-            if ( isset($_USER["login"])){
+        if (!$user_id) {
+            if (isset($_USER["login"])) {
                 $login = $_USER["login"];
             };
-        }else{
+        } else {
 
-            $user = db_get("users",$user_id);
+            $user = db_get("users", $user_id);
 
-            if (!empty($user["login"])){
+            if (!empty($user["login"])) {
                 return $user["login"];
             }
         }
@@ -49,21 +52,22 @@ if (!function_exists("get_user_login")){
         return "";
     }
 }
-if (!function_exists("get_user_sex")){
-    function get_user_sex($user_id = ""){
+if (!function_exists("get_user_sex")) {
+    function get_user_sex($user_id = "")
+    {
         global $_USER;
 
-        if (cached()) return cached();
+        if (cached()) return cache();
 
-        if ( ! $user_id ){
-            if ( isset($_USER["sex"])){
+        if (!$user_id) {
+            if (isset($_USER["sex"])) {
                 return $_USER["sex"];
             };
-        }else{
+        } else {
 
-            $user = db_get("users",$user_id);
+            $user = db_get("users", $user_id);
 
-            if (!empty($user["sex"])){
+            if (!empty($user["sex"])) {
                 return cache($user["sex"]);
             }
         }
@@ -72,16 +76,16 @@ if (!function_exists("get_user_sex")){
     }
 }
 
-if (!function_exists("get_users_for_select")){
-    function get_users_for_select(){
+if (!function_exists("get_users_for_select")) {
+    function get_users_for_select()
+    {
         $users = db_get("users", "all");
 
-        return array_map(function($user){
+        return array_map(function ($user) {
             return array(
                 "value" => $user["id"],
                 "caption" => get_user_name($user),
             );
         }, $users);
-
     }
 }
