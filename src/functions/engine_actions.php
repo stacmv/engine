@@ -121,11 +121,15 @@ function add_data_action($db_table="", $redirect_on_success="", $redirect_on_fai
         if (function_exists($callback)){
             $callback_params = array(
                 "args"     => func_get_args(),
-                "formdata" => $formdata,
+                // $formdata не создаётся, когда хук onbeforeadd отклонил сохранение
+                // (FormData конструируется только в ветке без onbeforeadd-отказа).
+                // Без этой проверки onafteradd-хук ссылался бы на неопределённую
+                // переменную на пути отклонения.
+                "formdata" => isset($formdata) ? $formdata : null,
                 'params'   => $params,
                 "res"      => $res,
                 "reason"   => $reason,
-                "added_id" => $added_id,
+                "added_id" => isset($added_id) ? $added_id : null,
             );
             call_user_func($callback, $callback_params);
         }else{

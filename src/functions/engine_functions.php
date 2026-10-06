@@ -104,7 +104,11 @@ function get_filename($name, $ext = "") {//
 
 	$result = strtolower($result);
 
-	$result = urlencode($result);
+	// GA patch: urlencode() put percent-escapes into the file name itself, so a
+	// source file like "IMG-...WA0001~2.jpg" landed on disk as "...wa0001%7E2..."
+	// and could never be fetched back — the URL layer decodes the escape and the
+	// file is gone. Keep only characters that survive a URL round trip untouched.
+	$result = preg_replace('/[^a-z0-9_\-]/', '-', $result);
 
 	$result .= $ext ;
 

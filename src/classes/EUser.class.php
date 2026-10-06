@@ -47,7 +47,9 @@ class EUser extends Model implements ArrayAccess
         if (isset($_SESSION["authenticated"])){
             dosyslog(__METHOD__.get_callee().": DEBUG: User 'authenticated' value: '".serialize($_SESSION["authenticated"])."'.");
         }elseif (isset($_COOKIE["auth_mobile_token"])){
-            list($user_id, $logged_time, $token) = explode("||", $_COOKIE["auth_mobile_token"]);
+            $parts = explode("||", $_COOKIE["auth_mobile_token"]);
+            if (count($parts) !== 3) return false;
+            list($user_id, $logged_time, $token) = $parts;
             if ((int)$user_id){
                 $user = EUsers::find_one("id", (int) $user_id);
                 if ($user){
