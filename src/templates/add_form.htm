@@ -35,7 +35,7 @@ foreach(@array(
 </article>
 
 <?php if(file_exists("assets/app/".$form_name.".js")):?>
-	<script src="assets/app/<?=$form_name;?>.js"></script>
+	<script src="assets/app/<?=$form_name;?>.js?<?=filemtime("assets/app/".$form_name.".js");?>"></script>
 <?php endif;?>
 
 <?php

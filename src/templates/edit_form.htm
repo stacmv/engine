@@ -24,8 +24,9 @@ foreach(@array(
 	</div> <!-- /.row -->
 </article>
 
-<?php if(file_exists("assets/app/".$action."_".$object_name.".js")):?>
-	<script src="assets/app/<?=$action;?>_<?=$object_name;?>.js"></script>
+<?php $__js = "assets/app/".$action."_".$object_name.".js"; ?>
+<?php if(file_exists($__js)):?>
+	<script src="<?=$__js;?>?<?=filemtime($__js);?>"></script>
 <?php endif;?>
 <?php
 	unset($_SESSION["msg"]);
