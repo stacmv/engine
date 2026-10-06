@@ -11,8 +11,6 @@ function image_action(){
     $IS_API_CALL = true;
     clear_actions();
 
-    Image::configure(array('driver' => 'gd'));
-
     $repo_name   = $_PARAMS["repo_name"];
     $field_name   = $_PARAMS["field_name"];
     $uid    = $_PARAMS["uid"];
@@ -20,10 +18,22 @@ function image_action(){
     $width  = $_PARAMS["width"];
     $height = $_PARAMS["height"];
 
+    if (!($width || $height)) {
+        $_RESPONSE["headers"]["HTTP"] = "HTTP/1.1 400 Bad Request";
+        $_RESPONSE["body"] = "";
+        return;
+    }
 
+    $thumb_name = Thumbnail::thumb_name($repo_name, $field_name, $uid, $uuid, $width, $height);
+    $cache_ttl = defined("MEDIA_THUMB_CACHE_TTL") ? MEDIA_THUMB_CACHE_TTL : (60*60*24*30);
 
+    // Try to serve from cache first (skip image processing entirely)
+    $cached = file_cache_get($thumb_name, true);
+    if ($cached) {
+        _image_send($cached, $cache_ttl);
+    }
 
-
+    // Cache miss — generate the thumbnail
     $images = get_images($repo_name, $field_name, $uid, $uuid);
     if (!empty($images[0])){
         $image_file = $images[0];
@@ -31,51 +41,50 @@ function image_action(){
         $image_file = Thumbnail::no_image_file();
     }
 
-    $thumb_name = Thumbnail::thumb_name($repo_name, $field_name, $uid, $uuid, $width, $height);
-
-
-    $check = true;
-    // Check image
-    if (!file_exists($image_file) && !filter_var($image_file, FILTER_VALIDATE_URL)) $check = false;
-
-
-
-    if ($check && ($width || $height)){
-
-        try{
-            $image = Image::make($image_file);
-
-            $aspect_ratio = $image->width() / $image->height();
-
-            if ($width && ! $height){
-                 $height = (int) ($width / $aspect_ratio);
-                 $method = "resize";
-            } elseif ( ! $width && $height) {
-                $width = (int) ($height * $aspect_ratio);
-                $method = "resize";
-            }else{
-                $method = "fit";
-            }
-
-
-
-            $image->$method($width, $height/*, function ($constraint) {
-                $constraint->upsize();
-            }*/);
-
-            $_RESPONSE["headers"]["Content-type"] = "image/jpeg";
-            $_RESPONSE["body"] = file_cache_set($thumb_name, (string) $image->encode("jpg", 75), 60*60*24 );
-        }catch(Exception $e){
-            dump($image_file,"image");die();
-            dosyslog(__FUNCTION__.": ERROR: Can not create thumbnal for '".$repo_name."' '".$uid."' '".$width."x".$height."'. Error: ".$e->getMessage());
-            $_RESPONSE["headers"]["Content-type"] = "image/jpeg";
-            $_RESPONSE["body"] = file_get_contents(Thumbnail::no_image_file());
-        }
-    }else{
+    if (!file_exists($image_file) && !filter_var($image_file, FILTER_VALIDATE_URL)) {
         $_RESPONSE["headers"]["HTTP"] = "HTTP/1.1 400 Bad Request";
         $_RESPONSE["body"] = "";
+        return;
     }
 
+    Image::configure(['driver' => 'gd']);
+
+    try{
+        $image = Image::make($image_file);
+
+        if ($width && ! $height){
+            $image->resize($width, null, function ($c) { $c->aspectRatio(); });
+        } elseif ( ! $width && $height) {
+            $image->resize(null, $height, function ($c) { $c->aspectRatio(); });
+        }else{
+            $image->fit($width, $height);
+        }
+
+        $body = file_cache_set($thumb_name, (string) $image->encode("jpg", 75), $cache_ttl);
+        _image_send($body, $cache_ttl);
+    }catch(Exception $e){
+        dosyslog(__FUNCTION__.": ERROR: Can not create thumbnail for '".$repo_name."' '".$uid."' '".$width."x".$height."'. Error: ".$e->getMessage());
+        _image_send(file_get_contents(Thumbnail::no_image_file()), 0);
+    }
+
+}
+
+/**
+ * Send image bytes directly to the browser and exit.
+ * Overrides PHP session's no-cache headers so browsers can cache images.
+ */
+function _image_send(string $body, int $cache_ttl): void {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    header_remove('Pragma');
+    header('Content-Type: image/jpeg');
+    header('Content-Length: ' . strlen($body));
+    if ($cache_ttl > 0) {
+        header('Cache-Control: private, max-age=' . $cache_ttl);
+    }
+    echo $body;
+    exit;
 }
 
 function image_upload_action(){

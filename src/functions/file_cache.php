@@ -124,7 +124,32 @@ function _file_cache($command, $key, $value, $ttl){
             return;
 
         case "set": // set into cache
-            $key_file = get_file_cached_file($key, $ttl);
+            // Check if we already have a valid cached file for this key
+            $key_file = null;
+            if (isset($file_cache[$key])){
+                $existing_file = $file_cache[$key];
+                $time = time();
+                // If the existing file is still valid, reuse it
+                if ($time <= get_file_cached_time($existing_file)){
+                    $key_file = $existing_file;
+                    dosyslog(__FUNCTION__.get_callee().": DEBUG: Переиспользование: ".$key." из " . $existing_file.".");
+                }
+            }
+
+            // If no valid existing file, create a new one
+            if (!$key_file){
+                $key_file = get_file_cached_file($key, $ttl);
+                // Clean up old versions of this key
+                $old_versions = get_file_cached_versions($key);
+                if ($old_versions){
+                    foreach($old_versions as $old_file){
+                        if ($old_file !== $key_file && file_exists($old_file)){
+                            @unlink($old_file);
+                        }
+                    }
+                }
+            }
+
             if (is_array($value)){
                 $content = "json_encode\n" . json_encode($value);
             }else{

@@ -2,14 +2,15 @@
 <pages>
 	<page uri="image" title="">
 		<params>
-			<uuid><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>1</pos></uuid>
-			<width><type>number</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>2</pos></width>
-			<height><type>number</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>3</pos></height>
-			<repo_name><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>4</pos></repo_name>
-			<field_name><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>5</pos></field_name>
-			<uid><type>string</type><source>get</source><regexp>|image/([\w\d\-\.=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>6</pos></uid>
+			<uuid><type>string</type><source>get</source><regexp>|image/([\w\d\-_=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>1</pos></uuid>
+			<width><type>number</type><source>get</source><regexp>|image/([\w\d\-_=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>2</pos></width>
+			<height><type>number</type><source>get</source><regexp>|image/([\w\d\-_=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>3</pos></height>
+			<repo_name><type>string</type><source>get</source><regexp>|image/([\w\d\-_=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>4</pos></repo_name>
+			<field_name><type>string</type><source>get</source><regexp>|image/([\w\d\-_=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>5</pos></field_name>
+			<uid><type>string</type><source>get</source><regexp>|image/([\w\d\-_=]+)/(\d+)/(\d+)(?:/([\w\.]+)/([\w\.]+)/([\w\d\-\.]+))?|</regexp><pos>6</pos></uid>
 		</params>
 		<actions>image</actions>
+		<acl>access</acl>
 	</page>
 	<page uri="image/upload" title="">
 		<params>
