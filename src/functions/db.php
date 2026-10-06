@@ -1251,7 +1251,7 @@ function db_is_exists($db_table){
     $res = db_select($db_table, "SELECT count(*) as c FROM sqlite_master WHERE type='table' AND name='".$table."'");
 
     if (isset($res[0]["c"])){
-        return (boolean) $res[0]["c"];
+        return (bool) $res[0]["c"];
     }else{
         return false;
     };
@@ -1490,7 +1490,7 @@ function db_parse_value($value, $field_type){
         $value = (int) $value;
         break;
     case "double":
-        $value = (double) $value;
+        $value = (float) $value;
         break;
     case "money":
         $value = (string) bcadd($value/100, 0, DB_MONEY_PRECISION);
@@ -1551,7 +1551,7 @@ function db_parse_value($value, $field_type){
         }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false") )){
             return false;
         }else{
-            return (boolean) $value ? true : false;
+            return (bool) $value ? true : false;
         };
         break;
     }; // switch
@@ -1642,7 +1642,7 @@ function db_prepare_value($value, $field_type){
         case "double":
             if ($value === "") $res = null;
             elseif ( ! is_null($value) ){
-                $res = (double) $value;
+                $res = (float) $value;
             };
             break;
         case "money":
@@ -1669,7 +1669,7 @@ function db_prepare_value($value, $field_type){
              }elseif(in_array( $value, array("", "0", "no", "n", "N", "off", "false", "null") )){
                  return null;
              }else{
-                 return (boolean) $value ? 1 : null;
+                 return (bool) $value ? 1 : null;
              };
              break;
         case "timestamp": // prepare as timestamp

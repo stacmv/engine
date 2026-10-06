@@ -43,7 +43,7 @@ class ChangesSet {
 
         return new self($changes_to, $changes_from);
     }
-    public function __construct(array $to = array(), array $from = null ){
+    public function __construct(array $to = array(), ?array $from = null ){
 
         $this->to = $to;
         $this->from = $from ? $from : array();

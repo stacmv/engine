@@ -282,7 +282,7 @@ abstract class ERepository implements IteratorAggregate, jsonSerializable, Count
             default:
                 if (!empty($this->fields[$whereClause]) && ! empty($this->fields[$whereClause]["type"])){
                     if ($this->fields[$whereClause]["type"] == "boolean"){
-                        $this->where_clause = $whereClause . " IS " . ((boolean) $value ? " NOT " : "") . " NULL ";
+                        $this->where_clause = $whereClause . " IS " . ((bool) $value ? " NOT " : "") . " NULL ";
                         break;
                     }else{
                         $value = db_prepare_value($value, $this->fields[$whereClause]["type"]);

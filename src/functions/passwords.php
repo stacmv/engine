@@ -14,7 +14,7 @@ function passwords_verify($pass, $hash){
 
     
     if ( (PHP_VERSION_ID >= 50500) && (function_exists("password_hash") ) ) {
-        if (substr($hash, 0, 7) == "$2y$10$"){
+        if (substr($hash, 0, 4) == "$2y$"){
             return password_verify($pass, $hash);
         }else{
             $salt = substr($hash,0,4);

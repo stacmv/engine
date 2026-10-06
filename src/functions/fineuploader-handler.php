@@ -330,9 +330,9 @@ class UploadHandler {
         $val = trim($str);
         $last = strtolower($str[strlen($str)-1]);
         switch($last) {
-            case 'g': $val = (double) $val *  1024;
-            case 'm': $val = (double) $val *  1024;
-            case 'k': $val = (double) $val *  1024;
+            case 'g': $val = (float) $val *  1024;
+            case 'm': $val = (float) $val *  1024;
+            case 'k': $val = (float) $val *  1024;
         }
         return $val;
     }
