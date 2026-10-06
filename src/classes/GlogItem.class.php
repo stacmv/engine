@@ -12,7 +12,7 @@ class GlogItem extends Model implements ArrayAccess, jsonSerializable, IteratorA
     
     
 
-    public function historyBuilder(EModel $item = null, $options = ""){
+    public function historyBuilder(?EModel $item = null, $options = ""){
         
     }
     public function __construct(Model $model, Glog $glog){

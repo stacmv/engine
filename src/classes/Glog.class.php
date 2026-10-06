@@ -17,7 +17,7 @@ final class Glog
 
 
     
-    public function urlBuilder(EModel $item = null, $options = ""){
+    public function urlBuilder(?EModel $item = null, $options = ""){
         
         
         $a_link = array();

@@ -11,15 +11,6 @@ use PHPUnit\Framework\TestCase;
  */
 class PhpCompatibilityTest extends TestCase
 {
-    /**
-     * Known remaining deprecations that GA never patched (implicit nullable
-     * parameters). Ported as-is on purpose; fix separately and drop from here.
-     */
-    private const KNOWN_UNFIXED = [
-        "classes/Glog.class.php",
-        "classes/GlogItem.class.php",
-    ];
-
     public function testEverySourceFilePassesLintWithoutDeprecations(): void
     {
         $root = dirname(__DIR__, 2) . '/src';
@@ -28,10 +19,6 @@ class PhpCompatibilityTest extends TestCase
         $problems = [];
         foreach ($it as $file) {
             if ($file->getExtension() !== 'php') {
-                continue;
-            }
-            $rel = str_replace(DIRECTORY_SEPARATOR, "/", substr($file->getPathname(), strlen($root) + 1));
-            if (in_array($rel, self::KNOWN_UNFIXED, true)) {
                 continue;
             }
             $cmd = escapeshellarg(PHP_BINARY) . ' -d error_reporting=-1 -d display_errors=1 -l ' . escapeshellarg($file->getPathname()) . ' 2>&1';
