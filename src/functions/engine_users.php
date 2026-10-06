@@ -81,6 +81,13 @@ if (!function_exists("get_users_for_select")) {
     {
         $users = db_get("users", "all");
 
+        // Hide non-human users (system bots, role actors, external mirrors)
+        // from team-mate / friend selectors. They're not interactive users
+        // — only their content surfaces, via posts.visibility_scope.
+        $users = array_filter($users, function ($u) {
+            return empty($u["type"]) || $u["type"] === "human";
+        });
+
         return array_map(function ($user) {
             return array(
                 "value" => $user["id"],
